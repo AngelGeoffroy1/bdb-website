@@ -28,6 +28,10 @@ app.get('/', (req, res) => {
 // Route pour gérer l'envoi d'email
 app.post('/send-email', (req, res) => {
     const { name, email, message } = req.body;
+    if (!name || !email || !message) {
+        return res.status(400).send('Tous les champs sont requis.');
+    }
+
     const mailOptions = {
         from: email,
         to: 'bob@bobsarl.com',
