@@ -215,17 +215,17 @@
                 <!-- Formulaire de contact -->
                 <div class="contact-form-container" data-aos="fade-right">
                     <h3>Nous contacter</h3>
-                    <form class="contact-form">
+                    <form class="contact-form" action="/send-email" method="POST">
                         <div class="form-group">
-                            <input type="text" id="name" placeholder="Votre nom" required>
+                            <input type="text" id="name" name="name" placeholder="Votre nom" required>
                             <span class="focus-border"></span>
                         </div>
                         <div class="form-group">
-                            <input type="email" id="email" placeholder="Votre email" required>
+                            <input type="email" id="email" name="email" placeholder="Votre email" required>
                             <span class="focus-border"></span>
                         </div>
                         <div class="form-group">
-                            <textarea id="message" placeholder="Votre message" required></textarea>
+                            <textarea id="message" name="message" placeholder="Votre message" required></textarea>
                             <span class="focus-border"></span>
                         </div>
                         <button type="submit" class="submit-btn">
