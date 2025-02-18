@@ -1,9 +1,11 @@
 [build]
-  publish = "."
-  command = ""
+  base = "."
+  publish = "public"
+  command = "npm run build"
 
 [build.environment]
   NODE_VERSION = "18"
+  NODE_ENV = "production"
 
 [[redirects]]
   from = "/*"
