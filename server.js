@@ -40,6 +40,8 @@ app.post('/send-email', (req, res) => {
 
 // Démarrer le serveur
 const PORT = 3000;
+console.log('Serveur en cours de démarrage...');
+
 app.listen(PORT, () => {
     console.log(`Serveur démarré sur http://localhost:${PORT}`);
 }); 
