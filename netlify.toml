@@ -2,5 +2,4 @@
   base = "."
   publish = "public"
   command = "npm run build"
-
-[build.environment
+  functions = "func
