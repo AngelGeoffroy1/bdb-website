@@ -215,17 +215,17 @@
                 <!-- Formulaire de contact -->
                 <div class="contact-form-container" data-aos="fade-right">
                     <h3>Nous contacter</h3>
-                    <form class="contact-form">
+                    <form class="contact-form" action="/.netlify/functions/sendEmail" method="POST">
                         <div class="form-group">
-                            <input type="text" id="name" placeholder="Votre nom" required>
+                            <input type="text" id="name" name="name" placeholder="Votre nom" required>
                             <span class="focus-border"></span>
                         </div>
                         <div class="form-group">
-                            <input type="email" id="email" placeholder="Votre email" required>
+                            <input type="email" id="email" name="email" placeholder="Votre email" required>
                             <span class="focus-border"></span>
                         </div>
                         <div class="form-group">
-                            <textarea id="message" placeholder="Votre message" required></textarea>
+                            <textarea id="message" name="message" placeholder="Votre message" required></textarea>
                             <span class="focus-border"></span>
                         </div>
                         <button type="submit" class="submit-btn">
@@ -355,24 +355,19 @@
         });
 
         // Formulaire de contact
-        document.querySelector('.contact-form').addEventListener('submit', (e) => {
+        document.querySelector('.contact-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Simulation d'envoi
-            const submitBtn = e.target.querySelector('.submit-btn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = `
-                <span>Envoyé !</span>
-                <div class="btn-fill" style="transform: translateX(0)"></div>
-            `;
-            submitBtn.style.backgroundColor = 'var(--accent-color)';
-            submitBtn.style.color = 'var(--background-color)';
-            
-            setTimeout(() => {
-                submitBtn.innerHTML = originalText;
-                submitBtn.style.backgroundColor = 'transparent';
-                submitBtn.style.color = 'var(--text-color)';
+            const formData = new FormData(e.target);
+            const response = await fetch('/send-email', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                alert('Email envoyé avec succès !');
                 e.target.reset();
-            }, 2000);
+            } else {
+                alert('Erreur lors de l\'envoi de l\'email.');
+            }
         });
 
         AOS.init({
