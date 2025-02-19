@@ -7,6 +7,37 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <style>
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            background-color: #4CAF50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .notification.error {
+            background-color: #f44336;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
     <nav>
@@ -305,6 +336,8 @@
         <p class="copyright">© 2024 BDB. Tous droits réservés.</p>
     </footer>
 
+    <div id="notification" class="notification"></div>
+
     <script>
         // Menu hamburger
         const hamburger = document.querySelector('.hamburger-menu');
@@ -354,6 +387,21 @@
             });
         });
 
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            
+            // Force a reflow
+            notification.offsetHeight;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
         // Formulaire de contact
         document.querySelector('.contact-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -373,16 +421,17 @@
                     body: JSON.stringify(data)
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
-                    alert('Message envoyé avec succès !');
+                    showNotification(result.message, 'success');
                     e.target.reset();
                 } else {
-                    const errorText = await response.text();
-                    alert(`Erreur lors de l'envoi du message : ${errorText}`);
+                    showNotification(result.message, 'error');
                 }
             } catch (error) {
-                alert('Erreur lors de l\'envoi du message. Veuillez réessayer.');
                 console.error('Erreur:', error);
+                showNotification('Une erreur est survenue lors de l\'envoi du message. Veuillez réessayer.', 'error');
             }
         });
 

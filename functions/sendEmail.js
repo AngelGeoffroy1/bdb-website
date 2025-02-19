@@ -6,7 +6,10 @@ exports.handler = async (event) => {
     if (!name || !email || !message) {
         return {
             statusCode: 400,
-            body: 'Tous les champs sont requis.'
+            body: JSON.stringify({
+                success: false,
+                message: 'Tous les champs sont requis.'
+            })
         };
     }
 
@@ -19,22 +22,56 @@ exports.handler = async (event) => {
     });
 
     const mailOptions = {
-        from: email,
-        to: 'bob@bobsarl.com',
-        subject: `Nouveau message de ${name}`,
-        text: message
+        from: `"Formulaire BDB" <${process.env.GMAIL_USER}>`,
+        to: process.env.GMAIL_USER,
+        replyTo: email,
+        subject: `[Contact BDB] Nouveau message de ${name}`,
+        text: `Nouveau message reçu via le formulaire de contact BDB :
+
+De : ${name}
+Email : ${email}
+
+Message :
+${message}
+
+---
+Cet email a été envoyé via le formulaire de contact du site BDB.`,
+        html: `
+            <h2>Nouveau message reçu via le formulaire de contact BDB</h2>
+            <p><strong>De :</strong> ${name}</p>
+            <p><strong>Email :</strong> ${email}</p>
+            <br>
+            <p><strong>Message :</strong></p>
+            <p style="white-space: pre-wrap;">${message}</p>
+            <br>
+            <hr>
+            <p style="color: #666; font-size: 0.9em;">Cet email a été envoyé via le formulaire de contact du site BDB.</p>
+        `
     };
 
     try {
         await transporter.sendMail(mailOptions);
         return {
             statusCode: 200,
-            body: 'Email envoyé avec succès'
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                success: true,
+                message: 'Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.'
+            })
         };
     } catch (error) {
+        console.error('Erreur d\'envoi:', error);
         return {
             statusCode: 500,
-            body: 'Erreur lors de l\'envoi de l\'email'
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                success: false,
+                message: 'Une erreur est survenue lors de l\'envoi du message. Veuillez réessayer plus tard.'
+            })
         };
     }
 }; 
