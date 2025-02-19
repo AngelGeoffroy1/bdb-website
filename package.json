@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "cp -r index.html styles.css Asset public/"
+    "build": "mkdir -p public && cp -r Asset public/ && cp styles.css public/"
   },
   "dependencies": {
     "express": "^4.18.2",
