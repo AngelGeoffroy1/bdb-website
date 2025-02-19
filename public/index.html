@@ -358,15 +358,31 @@
         document.querySelector('.contact-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
-            const response = await fetch('/send-email', {
-                method: 'POST',
-                body: formData
-            });
-            if (response.ok) {
-                alert('Email envoyé avec succès !');
-                e.target.reset();
-            } else {
-                alert('Erreur lors de l\'envoi de l\'email.');
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                message: formData.get('message')
+            };
+            
+            try {
+                const response = await fetch('/.netlify/functions/sendEmail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('Message envoyé avec succès !');
+                    e.target.reset();
+                } else {
+                    const errorText = await response.text();
+                    alert(`Erreur lors de l'envoi du message : ${errorText}`);
+                }
+            } catch (error) {
+                alert('Erreur lors de l\'envoi du message. Veuillez réessayer.');
+                console.error('Erreur:', error);
             }
         });
 

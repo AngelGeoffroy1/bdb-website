@@ -9,6 +9,11 @@
   NODE_ENV = "production"
 
 [[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
   from = "/politique-confidentialite"
   to = "/politique-confidentialite.html"
   status = 200
