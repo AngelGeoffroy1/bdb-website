@@ -1,21 +1,24 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async (event) => {
-    // Log pour déboguer
-    console.log('Environnement variables:', {
-        hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
-        keyFirstChars: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 10) + '...' : 'non définie'
-    });
-
-    if (!process.env.STRIPE_SECRET_KEY) {
+    // Vérification des clés Stripe
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PUBLIC_KEY) {
         return {
             statusCode: 500,
             body: JSON.stringify({
                 error: 'Configuration Stripe manquante',
-                details: 'La clé API Stripe n\'est pas configurée'
+                details: 'Les clés API Stripe ne sont pas correctement configurées'
             })
         };
     }
+
+    // Log détaillé des variables d'environnement
+    console.log('Environnement variables:', {
+        hasStripeSecretKey: !!process.env.STRIPE_SECRET_KEY,
+        hasStripePublicKey: !!process.env.STRIPE_PUBLIC_KEY,
+        secretKeyFirstChars: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 10) + '...' : 'non définie',
+        publicKeyFirstChars: process.env.STRIPE_PUBLIC_KEY ? process.env.STRIPE_PUBLIC_KEY.substring(0, 10) + '...' : 'non définie'
+    });
 
     if (event.httpMethod !== 'POST') {
         return {
@@ -25,6 +28,13 @@ exports.handler = async (event) => {
     }
 
     try {
+        // Log du corps de la requête
+        console.log('Requête reçue:', {
+            method: event.httpMethod,
+            headers: event.headers,
+            body: event.body ? JSON.parse(event.body) : null
+        });
+
         const {
             amount,
             currency = 'eur',
@@ -54,6 +64,7 @@ exports.handler = async (event) => {
                 quantity: quantity.toString()
             }
         });
+        console.log('Client Stripe créé:', customer.id);
 
         console.log('Création de la ephemeral key...');
         // Créer une ephemeral key pour ce client
@@ -61,6 +72,7 @@ exports.handler = async (event) => {
             { customer: customer.id },
             { apiVersion: '2023-10-16' }
         );
+        console.log('Ephemeral key créée');
 
         console.log('Création du PaymentIntent...');
         // Créer le PaymentIntent
@@ -79,7 +91,25 @@ exports.handler = async (event) => {
             }
         });
 
-        console.log('PaymentIntent créé avec succès:', paymentIntent.id);
+        console.log('PaymentIntent créé avec succès:', {
+            paymentIntentId: paymentIntent.id,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            customerId: customer.id
+        });
+
+        const response = {
+            client_secret: paymentIntent.client_secret,
+            publishable_key: process.env.STRIPE_PUBLIC_KEY,
+            customer_id: customer.id,
+            ephemeral_key: ephemeralKey.secret
+        };
+
+        console.log('Réponse préparée:', {
+            ...response,
+            client_secret: response.client_secret.substring(0, 10) + '...',
+            ephemeral_key: response.ephemeral_key.substring(0, 10) + '...'
+        });
 
         return {
             statusCode: 200,
@@ -88,24 +118,28 @@ exports.handler = async (event) => {
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                client_secret: paymentIntent.client_secret,
-                publishable_key: process.env.STRIPE_PUBLIC_KEY,
-                customer_id: customer.id,
-                ephemeral_key: ephemeralKey.secret
-            })
+            body: JSON.stringify(response)
         };
     } catch (error) {
-        console.error('Erreur Stripe détaillée:', error);
+        console.error('Erreur Stripe détaillée:', {
+            message: error.message,
+            type: error.type,
+            code: error.code,
+            param: error.param,
+            statusCode: error.statusCode
+        });
+
         return {
-            statusCode: 500,
+            statusCode: error.statusCode || 500,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                error: error.message || 'Erreur lors de la création du paiement'
+                error: error.message || 'Erreur lors de la création du paiement',
+                type: error.type,
+                code: error.code
             })
         };
     }
