@@ -25,7 +25,16 @@ exports.handler = async (event) => {
     }
 
     try {
-        const { amount, currency = 'eur', description } = JSON.parse(event.body);
+        const {
+            amount,
+            currency = 'eur',
+            customer_email,
+            firstName,
+            lastName,
+            customer_phone,
+            event_id,
+            quantity
+        } = JSON.parse(event.body);
 
         if (!amount) {
             return {
@@ -34,31 +43,56 @@ exports.handler = async (event) => {
             };
         }
 
-        // Log pour déboguer
-        console.log('Création du PaymentIntent avec:', { amount, currency, description });
+        console.log('Création du client Stripe...');
+        // Créer ou récupérer un client Stripe
+        const customer = await stripe.customers.create({
+            email: customer_email,
+            name: `${firstName} ${lastName}`,
+            phone: customer_phone,
+            metadata: {
+                event_id,
+                quantity: quantity.toString()
+            }
+        });
 
+        console.log('Création de la ephemeral key...');
+        // Créer une ephemeral key pour ce client
+        const ephemeralKey = await stripe.ephemeralKeys.create(
+            { customer: customer.id },
+            { apiVersion: '2023-10-16' }
+        );
+
+        console.log('Création du PaymentIntent...');
+        // Créer le PaymentIntent
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount * 100), // Stripe utilise les centimes
+            amount: Math.round(amount), // L'app envoie déjà le montant en centimes
             currency,
-            description,
+            customer: customer.id,
             automatic_payment_methods: {
                 enabled: true,
             },
+            metadata: {
+                event_id,
+                quantity: quantity.toString(),
+                customer_email,
+                customer_name: `${firstName} ${lastName}`
+            }
         });
 
-        // Log pour déboguer
         console.log('PaymentIntent créé avec succès:', paymentIntent.id);
 
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': '*', // Permet les requêtes CORS
+                'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                clientSecret: paymentIntent.client_secret,
-                paymentIntentId: paymentIntent.id
+                client_secret: paymentIntent.client_secret,
+                publishable_key: process.env.STRIPE_PUBLIC_KEY,
+                customer_id: customer.id,
+                ephemeral_key: ephemeralKey.secret
             })
         };
     } catch (error) {
@@ -66,13 +100,12 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers: {
-                'Access-Control-Allow-Origin': '*', // Permet les requêtes CORS
+                'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                error: 'Erreur lors de la création du paiement',
-                details: error.message
+                error: error.message || 'Erreur lors de la création du paiement'
             })
         };
     }
