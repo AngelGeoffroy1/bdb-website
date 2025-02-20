@@ -12,12 +12,11 @@ exports.handler = async (event) => {
         };
     }
 
-    // Log détaillé des variables d'environnement
-    console.log('Environnement variables:', {
-        hasStripeSecretKey: !!process.env.STRIPE_SECRET_KEY,
-        hasStripePublicKey: !!process.env.STRIPE_PUBLIC_KEY,
-        secretKeyFirstChars: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 10) + '...' : 'non définie',
-        publicKeyFirstChars: process.env.STRIPE_PUBLIC_KEY ? process.env.STRIPE_PUBLIC_KEY.substring(0, 10) + '...' : 'non définie'
+    // Log détaillé des variables d'environnement (masqués pour la production)
+    console.log('Environnement Stripe:', {
+        mode: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test',
+        hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+        hasPublicKey: !!process.env.STRIPE_PUBLIC_KEY
     });
 
     if (event.httpMethod !== 'POST') {
@@ -28,13 +27,6 @@ exports.handler = async (event) => {
     }
 
     try {
-        // Log du corps de la requête
-        console.log('Requête reçue:', {
-            method: event.httpMethod,
-            headers: event.headers,
-            body: event.body ? JSON.parse(event.body) : null
-        });
-
         const {
             amount,
             currency = 'eur',
@@ -53,7 +45,6 @@ exports.handler = async (event) => {
             };
         }
 
-        console.log('Création du client Stripe...');
         // Créer ou récupérer un client Stripe
         const customer = await stripe.customers.create({
             email: customer_email,
@@ -61,23 +52,20 @@ exports.handler = async (event) => {
             phone: customer_phone,
             metadata: {
                 event_id,
-                quantity: quantity.toString()
+                quantity: quantity.toString(),
+                environment: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test'
             }
         });
-        console.log('Client Stripe créé:', customer.id);
 
-        console.log('Création de la ephemeral key...');
         // Créer une ephemeral key pour ce client
         const ephemeralKey = await stripe.ephemeralKeys.create(
             { customer: customer.id },
-            { apiVersion: '2023-10-16' }
+            { apiVersion: '2023-10-16' } // Version la plus récente et stable
         );
-        console.log('Ephemeral key créée');
 
-        console.log('Création du PaymentIntent...');
-        // Créer le PaymentIntent
+        // Créer le PaymentIntent avec plus de détails pour la production
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount), // L'app envoie déjà le montant en centimes
+            amount: Math.round(amount),
             currency,
             customer: customer.id,
             automatic_payment_methods: {
@@ -87,15 +75,12 @@ exports.handler = async (event) => {
                 event_id,
                 quantity: quantity.toString(),
                 customer_email,
-                customer_name: `${firstName} ${lastName}`
-            }
-        });
-
-        console.log('PaymentIntent créé avec succès:', {
-            paymentIntentId: paymentIntent.id,
-            amount: paymentIntent.amount,
-            currency: paymentIntent.currency,
-            customerId: customer.id
+                customer_name: `${firstName} ${lastName}`,
+                environment: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test'
+            },
+            receipt_email: customer_email, // Envoi automatique du reçu
+            statement_descriptor: 'BDB EVENT', // Description sur le relevé bancaire
+            statement_descriptor_suffix: event_id.substring(0, 8) // Suffixe sur le relevé bancaire
         });
 
         const response = {
@@ -105,10 +90,13 @@ exports.handler = async (event) => {
             ephemeral_key: ephemeralKey.secret
         };
 
-        console.log('Réponse préparée:', {
-            ...response,
-            client_secret: response.client_secret.substring(0, 10) + '...',
-            ephemeral_key: response.ephemeral_key.substring(0, 10) + '...'
+        // Log sécurisé pour la production
+        console.log('Transaction initiée:', {
+            paymentIntentId: paymentIntent.id,
+            customerId: customer.id,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            environment: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test'
         });
 
         return {
@@ -121,12 +109,12 @@ exports.handler = async (event) => {
             body: JSON.stringify(response)
         };
     } catch (error) {
-        console.error('Erreur Stripe détaillée:', {
+        // Log d'erreur sécurisé pour la production
+        console.error('Erreur de transaction:', {
             message: error.message,
             type: error.type,
             code: error.code,
-            param: error.param,
-            statusCode: error.statusCode
+            environment: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test'
         });
 
         return {
