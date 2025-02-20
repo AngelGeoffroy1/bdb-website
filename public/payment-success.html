@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDB - Paiement réussi</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .success-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .success-icon {
+            font-size: 48px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .success-title {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">✓</div>
+        <h1 class="success-title">Paiement réussi !</h1>
+        <p class="success-message">Merci pour votre paiement. Votre transaction a été traitée avec succès.</p>
+        <a href="/" class="back-button">Retour à l'accueil</a>
+    </div>
+
+    <script>
+        // Vérifie le statut du paiement si nécessaire
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentIntent = urlParams.get('payment_intent');
+        const paymentIntentClientSecret = urlParams.get('payment_intent_client_secret');
+
+        if (paymentIntent) {
+            // Vous pouvez ajouter ici une vérification supplémentaire du statut du paiement
+            console.log('Payment Intent ID:', paymentIntent);
+        }
+    </script>
+</body>
+</html> 

@@ -7,6 +7,7 @@
 [build.environment]
   NODE_VERSION = "18"
   NODE_ENV = "production"
+  STRIPE_PUBLIC_KEY = "pk_test_51HLuKAAqjNmyAK5HnPGD6prY03l9azoyhmJV9ARPIh9EQXWaTPRfLVHqOZCyp8dwX897LrvK93DEyYa3Uc4pHMOJ000AGXpBY7"
 
 [[redirects]]
   from = "/politique-confidentialite"

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDB - Paiement</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #payment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #payment-element {
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .payment-button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .payment-button:hover {
+            background: #45a049;
+        }
+
+        .payment-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #payment-message {
+            color: #4CAF50;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        #payment-message.error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <h2>Paiement sécurisé</h2>
+        <form id="payment-form">
+            <div id="payment-element"></div>
+            <button id="submit" class="payment-button">
+                <span id="button-text">Payer maintenant</span>
+                <div class="spinner hidden" id="spinner"></div>
+            </button>
+            <div id="payment-message"></div>
+        </form>
+    </div>
+
+    <script>
+        const stripe = Stripe(process.env.STRIPE_PUBLIC_KEY);
+        let elements;
+
+        async function initialize() {
+            try {
+                const response = await fetch('/.netlify/functions/createPaymentIntent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: 1000, // 10€ par exemple
+                        currency: 'eur',
+                        description: 'Test de paiement BDB'
+                    })
+                });
+
+                const { clientSecret } = await response.json();
+
+                elements = stripe.elements({ clientSecret });
+                const paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+            } catch (error) {
+                console.error('Erreur:', error);
+                showMessage('Une erreur est survenue lors de l\'initialisation du paiement.', true);
+            }
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            setLoading(true);
+
+            try {
+                const { error } = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        return_url: `${window.location.origin}/payment-success.html`,
+                    },
+                });
+
+                if (error) {
+                    showMessage(error.message, true);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showMessage('Une erreur est survenue lors du paiement.', true);
+            }
+
+            setLoading(false);
+        }
+
+        function showMessage(messageText, isError = false) {
+            const messageContainer = document.querySelector('#payment-message');
+            messageContainer.classList.toggle('error', isError);
+            messageContainer.textContent = messageText;
+            messageContainer.style.display = 'block';
+        }
+
+        function setLoading(isLoading) {
+            const submit = document.querySelector('#submit');
+            const spinner = document.querySelector('#spinner');
+            const buttonText = document.querySelector('#button-text');
+
+            submit.disabled = isLoading;
+            spinner.classList.toggle('hidden', !isLoading);
+            buttonText.classList.toggle('hidden', isLoading);
+        }
+
+        document.querySelector('#payment-form').addEventListener('submit', handleSubmit);
+        initialize();
+    </script>
+</body>
+</html> 
