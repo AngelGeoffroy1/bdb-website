@@ -1,0 +1,10 @@
+{
+  "name": "babylone-notification-functions",
+  "version": "1.0.0",
+  "description": "Fonctions serverless pour les notifications de Babylone",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0",
+    "node-fetch": "^2.6.7",
+    "apn": "^2.2.0"
+  }
+} 
