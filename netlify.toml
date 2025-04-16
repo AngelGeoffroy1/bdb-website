@@ -10,6 +10,9 @@
   STRIPE_PUBLIC_KEY = "pk_test_51HLuKAAqjNmyAK5HnPGD6prY03l9azoyhmJV9ARPIh9EQXWaTPRfLVHqOZCyp8dwX897LrvK93DEyYa3Uc4pHMOJ000AGXpBY7"
   STRIPE_SECRET_KEY = "sk_test_51HLuKAAqjNmyAK5HQaUb552N0AQhFbpU8WX0l4IX4gqImYhtu5x4vEauvRrFXzIYX3I9Yy6aJtEr2ING4aIRJoa100gVIxFKXx"
 
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 [[redirects]]
   from = "/politique-confidentialite"
   to = "/politique-confidentialite.html"
