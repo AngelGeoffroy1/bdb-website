@@ -31,23 +31,36 @@ exports.handler = async (event, context) => {
     }
 
     // Configuration APN avec les variables d'environnement
-    const apnKey = process.env.APN_KEY;
-    
-    // Déterminer si la clé est au format PEM complet
-    const isPEM = apnKey.includes("-----BEGIN PRIVATE KEY-----");
-    
-    // Essayer différentes approches pour formater la clé
     let cleanedKey;
-    if (isPEM) {
-      // La clé est déjà au format PEM
-      cleanedKey = apnKey;
+    
+    // Vérifier si nous utilisons la version Base64 de la clé
+    if (process.env.APN_KEY_BASE64) {
+      try {
+        // Décoder la clé Base64
+        cleanedKey = Buffer.from(process.env.APN_KEY_BASE64, 'base64').toString('utf-8');
+        console.log("🔑 Utilisation de la clé APN_KEY_BASE64 (décodée)");
+      } catch (error) {
+        console.error("❌ Erreur lors du décodage de la clé Base64:", error);
+        throw new Error("Impossible de décoder la clé APN_KEY_BASE64");
+      }
     } else {
-      // Essayer de formater la clé en PEM si elle ne l'est pas
-      cleanedKey = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
+      // Utiliser la méthode existante avec APN_KEY
+      const apnKey = process.env.APN_KEY;
       
-      // Si la clé contient déjà des \n littéraux, les remplacer
-      if (apnKey.includes('\\n')) {
-        cleanedKey = apnKey.replace(/\\n/g, '\n');
+      // Déterminer si la clé est au format PEM complet
+      const isPEM = apnKey.includes("-----BEGIN PRIVATE KEY-----");
+      
+      if (isPEM) {
+        // La clé est déjà au format PEM
+        cleanedKey = apnKey;
+      } else {
+        // Essayer de formater la clé en PEM si elle ne l'est pas
+        cleanedKey = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
+        
+        // Si la clé contient déjà des \n littéraux, les remplacer
+        if (apnKey.includes('\\n')) {
+          cleanedKey = apnKey.replace(/\\n/g, '\n');
+        }
       }
     }
     
