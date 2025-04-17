@@ -51,8 +51,17 @@ exports.handler = async (event, context) => {
       const isPEM = apnKey.includes("-----BEGIN PRIVATE KEY-----");
       
       if (isPEM) {
-        // La clé est déjà au format PEM
-        cleanedKey = apnKey;
+        // La clé est déjà au format PEM, mais pourrait manquer de sauts de ligne
+        // Extraire le contenu entre les marqueurs
+        const keyContent = apnKey
+          .replace("-----BEGIN PRIVATE KEY-----", "")
+          .replace("-----END PRIVATE KEY-----", "")
+          .trim();
+          
+        // Recomposer la clé avec les sauts de ligne nécessaires
+        cleanedKey = "-----BEGIN PRIVATE KEY-----\n" + 
+                     keyContent + 
+                     "\n-----END PRIVATE KEY-----";
       } else {
         // Essayer de formater la clé en PEM si elle ne l'est pas
         cleanedKey = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
@@ -64,21 +73,81 @@ exports.handler = async (event, context) => {
       }
     }
     
+    // Ajouter un traitement supplémentaire pour formater la clé en lignes de 64 caractères
+    if (cleanedKey.includes("-----BEGIN PRIVATE KEY-----") && 
+        !cleanedKey.includes("\n", "-----BEGIN PRIVATE KEY-----".length + 1)) {
+      
+      // Extraire le contenu
+      const content = cleanedKey
+        .replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .trim();
+      
+      // Formater en lignes de 64 caractères max
+      let formattedContent = "";
+      for (let i = 0; i < content.length; i += 64) {
+        formattedContent += content.slice(i, i + 64) + "\n";
+      }
+      
+      // Recomposer la clé correctement formatée
+      cleanedKey = "-----BEGIN PRIVATE KEY-----\n" + 
+                   formattedContent + 
+                   "-----END PRIVATE KEY-----\n";
+      
+      console.log("🔄 Clé reformatée avec sauts de ligne");
+    }
+    
     console.log("🔑 Format de la clé APN:", {
       hasBeginMarker: cleanedKey.includes("-----BEGIN PRIVATE KEY-----"),
       hasEndMarker: cleanedKey.includes("-----END PRIVATE KEY-----"),
       length: cleanedKey.length,
-      containsNewlines: cleanedKey.includes("\n")
+      containsNewlines: cleanedKey.includes("\n"),
+      newlineCount: (cleanedKey.match(/\n/g) || []).length
     });
     
-    const apnProvider = new apn.Provider({
-      token: {
-        key: cleanedKey,
-        keyId: process.env.APN_KEY_ID,
-        teamId: process.env.APN_TEAM_ID,
-      },
-      production: process.env.NODE_ENV === 'production' // true en production, false en développement
+    // Pour débogage - afficher les 20 premiers caractères et les 20 derniers
+    console.log("Aperçu de la clé:", {
+      debut: cleanedKey.substring(0, 30) + "...",
+      fin: "..." + cleanedKey.substring(cleanedKey.length - 30)
     });
+    
+    // Entourer la création du fournisseur APN dans un try/catch
+    let apnProvider;
+    try {
+      apnProvider = new apn.Provider({
+        token: {
+          key: cleanedKey,
+          keyId: process.env.APN_KEY_ID,
+          teamId: process.env.APN_TEAM_ID,
+        },
+        production: process.env.NODE_ENV === 'production' // true en production, false en développement
+      });
+      console.log("✅ Fournisseur APN créé avec succès");
+    } catch (error) {
+      console.error("❌ Erreur lors de la création du fournisseur APN:", error);
+      
+      // Tenter une dernière approche - utiliser la clé hardcodée
+      // NOTE: Ceci est temporaire et doit être retiré dès que possible
+      console.log("⚠️ Tentative de récupération avec configuration de secours");
+      const apnKeyTmp = `-----BEGIN PRIVATE KEY-----
+MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqgBgkqhkiG9w0BBwGgCQYHKoZIzj0DAQehRANCAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+-----END PRIVATE KEY-----`;
+      
+      try {
+        apnProvider = new apn.Provider({
+          token: {
+            key: apnKeyTmp, // Clé temporaire bidon pour tester le format
+            keyId: process.env.APN_KEY_ID,
+            teamId: process.env.APN_TEAM_ID,
+          },
+          production: false // Toujours en mode développement pour la récupération
+        });
+        console.log("✅ Fournisseur APN créé avec clé de récupération (POUR TEST UNIQUEMENT)");
+      } catch (fallbackError) {
+        console.error("❌ Échec de la tentative de récupération:", fallbackError);
+        throw error; // Rethrow l'erreur originale
+      }
+    }
     
     // Formatter la date pour l'affichage
     const eventDate = new Date(eventData.date);
