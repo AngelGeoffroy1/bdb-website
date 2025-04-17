@@ -1,4 +1,7 @@
 const apn = require('apn');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 exports.handler = async (event, context) => {
   // Vérification de la méthode HTTP
@@ -111,12 +114,18 @@ exports.handler = async (event, context) => {
       fin: "..." + cleanedKey.substring(cleanedKey.length - 30)
     });
     
+    // Sauvegarder la clé dans un fichier temporaire (nécessaire pour apn)
+    const tmpDir = os.tmpdir();
+    const keyFilePath = path.join(tmpDir, 'apn-key.p8');
+    fs.writeFileSync(keyFilePath, cleanedKey);
+    console.log("📝 Clé sauvegardée dans un fichier temporaire:", keyFilePath);
+    
     // Entourer la création du fournisseur APN dans un try/catch
     let apnProvider;
     try {
       apnProvider = new apn.Provider({
         token: {
-          key: cleanedKey,
+          key: keyFilePath, // Chemin vers le fichier de clé
           keyId: process.env.APN_KEY_ID,
           teamId: process.env.APN_TEAM_ID,
         },
@@ -126,27 +135,16 @@ exports.handler = async (event, context) => {
     } catch (error) {
       console.error("❌ Erreur lors de la création du fournisseur APN:", error);
       
-      // Tenter une dernière approche - utiliser la clé hardcodée
-      // NOTE: Ceci est temporaire et doit être retiré dès que possible
-      console.log("⚠️ Tentative de récupération avec configuration de secours");
-      const apnKeyTmp = `-----BEGIN PRIVATE KEY-----
-MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqgBgkqhkiG9w0BBwGgCQYHKoZIzj0DAQehRANCAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
------END PRIVATE KEY-----`;
-      
-      try {
-        apnProvider = new apn.Provider({
-          token: {
-            key: apnKeyTmp, // Clé temporaire bidon pour tester le format
-            keyId: process.env.APN_KEY_ID,
-            teamId: process.env.APN_TEAM_ID,
-          },
-          production: false // Toujours en mode développement pour la récupération
+      // Log plus détaillé pour comprendre l'erreur
+      if (error.cause) {
+        console.error("Cause détaillée:", {
+          message: error.cause.message,
+          code: error.cause.code,
+          path: error.cause.path
         });
-        console.log("✅ Fournisseur APN créé avec clé de récupération (POUR TEST UNIQUEMENT)");
-      } catch (fallbackError) {
-        console.error("❌ Échec de la tentative de récupération:", fallbackError);
-        throw error; // Rethrow l'erreur originale
       }
+      
+      throw error;
     }
     
     // Formatter la date pour l'affichage
@@ -183,6 +181,14 @@ MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     const results = await Promise.all(
       deviceTokens.map(token => apnProvider.send(notification, token))
     );
+
+    // Nettoyer le fichier temporaire
+    try {
+      fs.unlinkSync(keyFilePath);
+      console.log("🧹 Fichier de clé temporaire supprimé");
+    } catch (cleanupError) {
+      console.warn("⚠️ Impossible de supprimer le fichier temporaire:", cleanupError);
+    }
 
     // Analyser les résultats
     const failedTokens = results.flatMap((result, index) => 
