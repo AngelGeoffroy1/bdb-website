@@ -3,6 +3,28 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+/**
+ * Formate une clé en format PEM standard
+ * @param {string} key - La clé à formater
+ * @returns {string} - La clé formatée
+ */
+function formatPEMKey(key) {
+  // Extraire le contenu (sans les marqueurs PEM)
+  const pemContent = key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/g, '').trim();
+  
+  // Supprimer tous les sauts de ligne existants
+  const contentWithoutNewlines = pemContent.replace(/\n/g, '');
+  
+  // Reformater avec des lignes de 64 caractères
+  let formattedContent = '';
+  for (let i = 0; i < contentWithoutNewlines.length; i += 64) {
+    formattedContent += contentWithoutNewlines.slice(i, i + 64) + '\n';
+  }
+  
+  // Reconstruire la clé au format PEM
+  return '-----BEGIN PRIVATE KEY-----\n' + formattedContent + '-----END PRIVATE KEY-----\n';
+}
+
 exports.handler = async (event, context) => {
   // Vérification de la méthode HTTP
   if (event.httpMethod !== 'POST') {
@@ -40,8 +62,11 @@ exports.handler = async (event, context) => {
     if (process.env.APN_KEY_BASE64) {
       try {
         // Décoder la clé Base64
-        cleanedKey = Buffer.from(process.env.APN_KEY_BASE64, 'base64').toString('utf-8');
+        const decodedKey = Buffer.from(process.env.APN_KEY_BASE64, 'base64').toString('utf-8');
         console.log("🔑 Utilisation de la clé APN_KEY_BASE64 (décodée)");
+        
+        // Formater au format PEM standard
+        cleanedKey = formatPEMKey(decodedKey);
       } catch (error) {
         console.error("❌ Erreur lors du décodage de la clé Base64:", error);
         throw new Error("Impossible de décoder la clé APN_KEY_BASE64");
@@ -50,54 +75,8 @@ exports.handler = async (event, context) => {
       // Utiliser la méthode existante avec APN_KEY
       const apnKey = process.env.APN_KEY;
       
-      // Déterminer si la clé est au format PEM complet
-      const isPEM = apnKey.includes("-----BEGIN PRIVATE KEY-----");
-      
-      if (isPEM) {
-        // La clé est déjà au format PEM, mais pourrait manquer de sauts de ligne
-        // Extraire le contenu entre les marqueurs
-        const keyContent = apnKey
-          .replace("-----BEGIN PRIVATE KEY-----", "")
-          .replace("-----END PRIVATE KEY-----", "")
-          .trim();
-          
-        // Recomposer la clé avec les sauts de ligne nécessaires
-        cleanedKey = "-----BEGIN PRIVATE KEY-----\n" + 
-                     keyContent + 
-                     "\n-----END PRIVATE KEY-----";
-      } else {
-        // Essayer de formater la clé en PEM si elle ne l'est pas
-        cleanedKey = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
-        
-        // Si la clé contient déjà des \n littéraux, les remplacer
-        if (apnKey.includes('\\n')) {
-          cleanedKey = apnKey.replace(/\\n/g, '\n');
-        }
-      }
-    }
-    
-    // Ajouter un traitement supplémentaire pour formater la clé en lignes de 64 caractères
-    if (cleanedKey.includes("-----BEGIN PRIVATE KEY-----") && 
-        !cleanedKey.includes("\n", "-----BEGIN PRIVATE KEY-----".length + 1)) {
-      
-      // Extraire le contenu
-      const content = cleanedKey
-        .replace("-----BEGIN PRIVATE KEY-----", "")
-        .replace("-----END PRIVATE KEY-----", "")
-        .trim();
-      
-      // Formater en lignes de 64 caractères max
-      let formattedContent = "";
-      for (let i = 0; i < content.length; i += 64) {
-        formattedContent += content.slice(i, i + 64) + "\n";
-      }
-      
-      // Recomposer la clé correctement formatée
-      cleanedKey = "-----BEGIN PRIVATE KEY-----\n" + 
-                   formattedContent + 
-                   "-----END PRIVATE KEY-----\n";
-      
-      console.log("🔄 Clé reformatée avec sauts de ligne");
+      // Formater au format PEM standard
+      cleanedKey = formatPEMKey(apnKey);
     }
     
     console.log("🔑 Format de la clé APN:", {
