@@ -31,9 +31,36 @@ exports.handler = async (event, context) => {
     }
 
     // Configuration APN avec les variables d'environnement
+    const apnKey = process.env.APN_KEY;
+    
+    // Déterminer si la clé est au format PEM complet
+    const isPEM = apnKey.includes("-----BEGIN PRIVATE KEY-----");
+    
+    // Essayer différentes approches pour formater la clé
+    let cleanedKey;
+    if (isPEM) {
+      // La clé est déjà au format PEM
+      cleanedKey = apnKey;
+    } else {
+      // Essayer de formater la clé en PEM si elle ne l'est pas
+      cleanedKey = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
+      
+      // Si la clé contient déjà des \n littéraux, les remplacer
+      if (apnKey.includes('\\n')) {
+        cleanedKey = apnKey.replace(/\\n/g, '\n');
+      }
+    }
+    
+    console.log("🔑 Format de la clé APN:", {
+      hasBeginMarker: cleanedKey.includes("-----BEGIN PRIVATE KEY-----"),
+      hasEndMarker: cleanedKey.includes("-----END PRIVATE KEY-----"),
+      length: cleanedKey.length,
+      containsNewlines: cleanedKey.includes("\n")
+    });
+    
     const apnProvider = new apn.Provider({
       token: {
-        key: process.env.APN_KEY.replace(/\\n/g, '\n'),
+        key: cleanedKey,
         keyId: process.env.APN_KEY_ID,
         teamId: process.env.APN_TEAM_ID,
       },
