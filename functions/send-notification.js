@@ -4,11 +4,32 @@ const os = require('os');
 const path = require('path');
 
 /**
+ * Nettoie la clé des caractères indésirables ajoutés par Netlify
+ * @param {string} key - La clé à nettoyer
+ * @returns {string} - La clé nettoyée
+ */
+function cleanKeyFromNetlify(key) {
+  // Enlever les triples guillemets que Netlify ajoute
+  let cleanedKey = key.replace(/"""/g, '');
+  
+  // Enlever les guillemets simples ou doubles entourant la clé
+  cleanedKey = cleanedKey.replace(/^["']|["']$/g, '');
+  
+  // Supprimer tout caractère non imprimable ou non ASCII
+  cleanedKey = cleanedKey.replace(/[^\x20-\x7E\n]/g, '');
+  
+  return cleanedKey;
+}
+
+/**
  * Formate une clé en format PEM standard
  * @param {string} key - La clé à formater
  * @returns {string} - La clé formatée
  */
 function formatPEMKey(key) {
+  // Nettoyer d'abord la clé
+  key = cleanKeyFromNetlify(key);
+  
   // Extraire le contenu (sans les marqueurs PEM)
   const pemContent = key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----/g, '').trim();
   
@@ -62,14 +83,23 @@ exports.handler = async (event, context) => {
     console.log("🔑 Utilisation de la clé APN_KEY standard");
     const apnKey = process.env.APN_KEY;
     
+    // Nettoyage préalable de la clé
+    const cleanedApnKey = cleanKeyFromNetlify(apnKey);
+    console.log("🧹 Nettoyage de la clé - Avant/Après:", {
+      avantLongueur: apnKey.length,
+      apresLongueur: cleanedApnKey.length,
+      tripleGuillemetsPresents: apnKey.includes('"""'),
+      tripleGuillemetsRestants: cleanedApnKey.includes('"""')
+    });
+    
     // Transformer la clé pour qu'elle soit au format PEM
-    if (apnKey.includes("-----BEGIN PRIVATE KEY-----")) {
+    if (cleanedApnKey.includes("-----BEGIN PRIVATE KEY-----")) {
       // La clé a déjà les marqueurs - on la formate directement
-      cleanedKey = formatPEMKey(apnKey);
+      cleanedKey = formatPEMKey(cleanedApnKey);
     } else {
       // On ajoute les marqueurs PEM
       console.log("🔧 Ajout des marqueurs PEM à la clé");
-      const keyWithMarkers = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
+      const keyWithMarkers = `-----BEGIN PRIVATE KEY-----\n${cleanedApnKey}\n-----END PRIVATE KEY-----`;
       cleanedKey = formatPEMKey(keyWithMarkers);
     }
     

@@ -5,6 +5,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
     "node-fetch": "^2.6.7",
-    "apn": "^2.2.0"
+    "apn": "^2.2.0",
+    "dotenv": "^16.4.1"
   }
 } 

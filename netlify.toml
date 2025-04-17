@@ -48,7 +48,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["node_modules/apn/**/*"]
+  included_files = ["node_modules/apn/**/*", "**/.env"]
 
 [[redirects]]
   from = "/api/*"
