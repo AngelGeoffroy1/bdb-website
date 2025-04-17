@@ -58,25 +58,19 @@ exports.handler = async (event, context) => {
     // Configuration APN avec les variables d'environnement
     let cleanedKey;
     
-    // Vérifier si nous utilisons la version Base64 de la clé
-    if (process.env.APN_KEY_BASE64) {
-      try {
-        // Décoder la clé Base64
-        const decodedKey = Buffer.from(process.env.APN_KEY_BASE64, 'base64').toString('utf-8');
-        console.log("🔑 Utilisation de la clé APN_KEY_BASE64 (décodée)");
-        
-        // Formater au format PEM standard
-        cleanedKey = formatPEMKey(decodedKey);
-      } catch (error) {
-        console.error("❌ Erreur lors du décodage de la clé Base64:", error);
-        throw new Error("Impossible de décoder la clé APN_KEY_BASE64");
-      }
-    } else {
-      // Utiliser la méthode existante avec APN_KEY
-      const apnKey = process.env.APN_KEY;
-      
-      // Formater au format PEM standard
+    // Utiliser uniquement la clé APN_KEY standard
+    console.log("🔑 Utilisation de la clé APN_KEY standard");
+    const apnKey = process.env.APN_KEY;
+    
+    // Transformer la clé pour qu'elle soit au format PEM
+    if (apnKey.includes("-----BEGIN PRIVATE KEY-----")) {
+      // La clé a déjà les marqueurs - on la formate directement
       cleanedKey = formatPEMKey(apnKey);
+    } else {
+      // On ajoute les marqueurs PEM
+      console.log("🔧 Ajout des marqueurs PEM à la clé");
+      const keyWithMarkers = `-----BEGIN PRIVATE KEY-----\n${apnKey}\n-----END PRIVATE KEY-----`;
+      cleanedKey = formatPEMKey(keyWithMarkers);
     }
     
     console.log("🔑 Format de la clé APN:", {
@@ -87,10 +81,13 @@ exports.handler = async (event, context) => {
       newlineCount: (cleanedKey.match(/\n/g) || []).length
     });
     
-    // Pour débogage - afficher les 20 premiers caractères et les 20 derniers
-    console.log("Aperçu de la clé:", {
-      debut: cleanedKey.substring(0, 30) + "...",
-      fin: "..." + cleanedKey.substring(cleanedKey.length - 30)
+    // Pour débogage - afficher les premiers et derniers caractères visibles
+    const visibleStart = cleanedKey.substring(0, 40).replace(/[^\x20-\x7E]/g, '?');
+    const visibleEnd = cleanedKey.substring(cleanedKey.length - 40).replace(/[^\x20-\x7E]/g, '?');
+    
+    console.log("Aperçu de la clé (caractères visibles seulement):", {
+      debut: visibleStart,
+      fin: visibleEnd
     });
     
     // Sauvegarder la clé dans un fichier temporaire (nécessaire pour apn)
@@ -98,6 +95,14 @@ exports.handler = async (event, context) => {
     const keyFilePath = path.join(tmpDir, 'apn-key.p8');
     fs.writeFileSync(keyFilePath, cleanedKey);
     console.log("📝 Clé sauvegardée dans un fichier temporaire:", keyFilePath);
+    
+    // Afficher le contenu réel du fichier pour le débogage
+    const fileContent = fs.readFileSync(keyFilePath, 'utf8');
+    console.log("📄 Contenu du fichier de clé:", { 
+      taille: fileContent.length,
+      debut: fileContent.substring(0, 40).replace(/[^\x20-\x7E]/g, '?'),
+      fin: fileContent.substring(fileContent.length - 40).replace(/[^\x20-\x7E]/g, '?')
+    });
     
     // Entourer la création du fournisseur APN dans un try/catch
     let apnProvider;
