@@ -4,8 +4,11 @@ const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const app = express();
 
-// Servir les fichiers statiques depuis le répertoire courant
-app.use(express.static('./'));
+// Servir les fichiers statiques depuis le répertoire public
+app.use(express.static('./public'));
+
+// Servir également les fichiers depuis le répertoire Asset à la racine
+app.use('/Asset', express.static(path.join(__dirname, 'Asset')));
 
 // Middleware pour analyser les requêtes POST
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,7 +25,7 @@ const transporter = nodemailer.createTransport({
 
 // Route par défaut
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 // Route pour gérer l'envoi d'email

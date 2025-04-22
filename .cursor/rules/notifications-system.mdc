@@ -1,0 +1,54 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Système de Notifications BDB
+
+Le projet BDB intègre un système de notifications push pour maintenir les utilisateurs informés des nouveaux événements et mises à jour.
+
+## Infrastructure
+
+- Utilise Apple Push Notification service (APNs) via le package [apn](mdc:package.json)
+- Fonctions serverless dédiées pour l'envoi des notifications
+- Intégration avec Supabase pour stocker les tokens des appareils
+
+## Fonctions principales
+
+### Envoi de notifications
+
+[functions/send-notification.js](mdc:functions/send-notification.js) est la fonction principale qui:
+- Valide les paramètres de la notification
+- Configure la connexion APNs avec les certificats appropriés
+- Envoie les notifications aux appareils ciblés
+- Gère les retours et erreurs
+
+### Notifications d'événements
+
+[functions/new-event-notification.js](mdc:functions/new-event-notification.js) est spécialisée pour:
+- Notifier les utilisateurs des nouveaux événements publiés
+- Cibler les utilisateurs selon leurs préférences et associations suivies
+- Formater les notifications avec les détails pertinents
+
+## Configuration APNs
+
+La configuration nécessite:
+- Certificats APNs valides
+- Variables d'environnement pour les chemins des certificats
+- Distinction entre environnement de test (sandbox) et production
+
+## Structure des notifications
+
+Les notifications sont structurées avec:
+- Un titre court et descriptif
+- Un corps de message avec les détails essentiels
+- Des données supplémentaires pour diriger l'utilisateur dans l'app
+- Des badges et sons pour améliorer l'expérience utilisateur
+
+## Déclencheurs
+
+Les notifications sont déclenchées par:
+- Création d'un nouvel événement
+- Modification importante d'un événement
+- Confirmation de paiement
+- Actions administratives importantes

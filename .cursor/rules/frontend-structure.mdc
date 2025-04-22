@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Structure Frontend BDB
+
+Le site vitrine BDB utilise une approche traditionnelle avec du HTML, CSS et JavaScript vanilla (sans framework).
+
+## Pages principales
+
+- [public/index.html](mdc:public/index.html) : Page d'accueil du site avec toutes les sections principales
+- [conditions-utilisation.html](mdc:conditions-utilisation.html) : Page des conditions d'utilisation
+- Une redirection est configurée dans [netlify.toml](mdc:netlify.toml) pour la politique de confidentialité
+
+## Styles CSS
+
+Tous les styles sont définis dans un seul fichier [styles.css](mdc:styles.css) qui est organisé par sections:
+
+- Variables globales et reset CSS
+- Styles de navigation et header
+- Sections principales (fonctionnalités, événements, etc.)
+- Media queries pour le responsive design
+- Animations et transitions
+
+## Assets et ressources
+
+Les images et autres ressources sont stockées dans deux dossiers:
+- [Asset/](mdc:Asset) : Ressources pour le développement local
+- [public/Asset/](mdc:public/Asset) : Ressources pour le déploiement (copiées lors du build)
+
+## Structure des sections
+
+Le site est organisé en sections identifiées par des IDs:
+- `#accueil` : Section d'introduction
+- `#fonctionnalites` : Présentation des fonctionnalités de l'app
+- `#how-it-works` : Guide d'utilisation en étapes
+- `#evenements` : Galerie des événements phares
+- `#contact` : Formulaire de contact
+
+## JavaScript
+
+Le JavaScript est principalement intégré directement dans les pages HTML et gère:
+- Les animations (avec la bibliothèque AOS)
+- Les interations du formulaire de contact
+- Le menu responsive mobile
+- Les notifications système

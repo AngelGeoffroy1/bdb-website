@@ -1,0 +1,34 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Structure du Projet BDB Website
+
+## Architecture générale
+
+Le projet BDB Website est un site vitrine pour l'application mobile BDB (Le Bureau des Bureaux) destinée aux étudiants de Bordeaux. Voici sa structure principale :
+
+- **Frontend** : Pages HTML statiques avec CSS et JavaScript vanilla
+- **Backend** : Express.js avec Netlify Functions pour les fonctionnalités serverless
+- **Déploiement** : Configuration Netlify avec des redirections personnalisées
+- **Paiement** : Intégration Stripe pour la billetterie d'événements
+- **Notifications** : Système de notifications push Apple (APN)
+
+## Fichiers principaux
+
+- Le point d'entrée du serveur local est [server.js](mdc:server.js)
+- La page principale est [public/index.html](mdc:public/index.html)
+- Les styles sont définis dans [styles.css](mdc:styles.css)
+- La configuration de déploiement est dans [netlify.toml](mdc:netlify.toml)
+- Les dépendances sont listées dans [package.json](mdc:package.json)
+
+## Configuration de l'environnement
+
+Le projet utilise des variables d'environnement pour les API keys et configurations sensibles, définies dans le fichier [.env](mdc:.env) et configurées dans [netlify.toml](mdc:netlify.toml).
+
+## Scripts NPM
+
+- `npm start` : Démarrer le serveur de production
+- `npm run dev` : Démarrer le serveur de développement avec nodemon
+- `npm run build` : Construire le site pour le déploiement

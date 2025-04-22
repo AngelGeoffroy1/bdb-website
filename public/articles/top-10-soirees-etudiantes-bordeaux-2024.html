@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 10 des soirées étudiantes à Bordeaux en 2024 | BDB</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Découvrez notre classement des 10 meilleures soirées étudiantes à Bordeaux en 2024. Événements des BDE, clubs, boîtes de nuit et bars prisés par les étudiants bordelais.">
+    <meta name="keywords" content="soirées étudiantes Bordeaux, BDE Bordeaux, événements étudiants 2024, meilleures soirées Bordeaux, soirées thématiques étudiantes, La Plage Bordeaux, I Boat, clubs étudiants Bordeaux">
+    <meta name="author" content="BDB Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://bureaudesbureaux.com/articles/top-10-soirees-etudiantes-bordeaux-2024.html">
+    <meta property="og:title" content="Top 10 des soirées étudiantes à Bordeaux en 2024 | BDB">
+    <meta property="og:description" content="Découvrez notre classement des 10 meilleures soirées étudiantes à Bordeaux en 2024. Événements des BDE, clubs, boîtes de nuit et bars prisés par les étudiants bordelais.">
+    <meta property="og:image" content="https://bureaudesbureaux.com/Asset/Event 01.png">
+    <meta property="article:published_time" content="2024-04-15T08:00:00+01:00">
+    <meta property="article:modified_time" content="2024-04-15T10:30:00+01:00">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bureaudesbureaux.com/articles/top-10-soirees-etudiantes-bordeaux-2024.html">
+    <meta property="twitter:title" content="Top 10 des soirées étudiantes à Bordeaux en 2024 | BDB">
+    <meta property="twitter:description" content="Découvrez notre classement des 10 meilleures soirées étudiantes à Bordeaux en 2024. Événements des BDE, clubs, boîtes de nuit et bars prisés par les étudiants bordelais.">
+    <meta property="twitter:image" content="https://bureaudesbureaux.com/Asset/Event 01.png">
+    
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://bureaudesbureaux.com/articles/top-10-soirees-etudiantes-bordeaux-2024.html">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    <link rel="apple-touch-icon" href="/Asset/apple-touch-icon.png">
+    
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #000;
+            --accent-color: #DAFC3B;
+            --text-color: #f5f5f5;
+            --bg-dark: #0a0a0a;
+            --bg-light: #1a1a1a;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        .article-hero {
+            position: relative;
+            height: 80vh;
+            min-height: 600px;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('../Asset/Event 01.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .article-hero-content {
+            max-width: 800px;
+            z-index: 1;
+        }
+        
+        .article-hero h1 {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .article-date {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out 0.2s;
+            animation-fill-mode: both;
+        }
+        
+        .article-lead {
+            font-size: 1.4rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            animation: fadeInUp 1s ease-out 0.4s;
+            animation-fill-mode: both;
+        }
+        
+        .article-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        
+        .article-section {
+            margin-bottom: 40px;
+        }
+        
+        .article-section h2 {
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .article-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+        
+        .article-section:hover h2::after {
+            width: 100px;
+        }
+        
+        .article-section h3 {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            margin: 25px 0 15px;
+        }
+        
+        .article-section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        
+        .article-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .article-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .event-card {
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .event-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0;
+            background-color: var(--accent-color);
+            transition: height 0.3s ease;
+        }
+        
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .event-card:hover::before {
+            height: 100%;
+        }
+        
+        .event-number {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: black;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .event-title {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin: 0 0 15px;
+        }
+        
+        .event-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .event-detail {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .event-detail i {
+            margin-right: 5px;
+            color: var(--accent-color);
+        }
+        
+        .article-share {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 50px 0;
+        }
+        
+        .share-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--bg-light);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .share-button:hover {
+            background-color: var(--accent-color);
+            color: black;
+            transform: translateY(-3px);
+        }
+        
+        .article-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 50px 0;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-previous, .nav-next {
+            max-width: 45%;
+        }
+        
+        .nav-label {
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 5px;
+        }
+        
+        .nav-title {
+            color: var(--accent-color);
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-title:hover {
+            color: white;
+        }
+        
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 30px 0;
+        }
+        
+        .article-tag {
+            background-color: var(--bg-light);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .article-tag:hover {
+            background-color: var(--accent-color);
+            color: black;
+        }
+        
+        .back-to-blog {
+            display: inline-block;
+            margin-top: 30px;
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .back-to-blog:hover {
+            color: white;
+        }
+        
+        .back-to-blog i {
+            margin-right: 5px;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .article-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .article-lead {
+                font-size: 1.2rem;
+            }
+            
+            .article-section h2 {
+                font-size: 1.6rem;
+            }
+            
+            .event-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="../index.html" class="brand-link">
+                    <img src="../Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <button class="hamburger-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="nav-links" role="navigation" aria-label="Menu principal">
+                <a href="../index.html">Accueil</a>
+                <a href="../index.html#fonctionnalites">Fonctionnalités</a>
+                <a href="../index.html#how-it-works">Comment ça marche</a>
+                <a href="../index.html#evenements">Événements</a>
+                <a href="../index.html#contact">Contact</a>
+                <a href="../blog.html" class="active">Blog</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="article-hero">
+        <div class="article-hero-content">
+            <h1>Top 10 des soirées étudiantes à Bordeaux en 2024</h1>
+            <p class="article-date">Publié le 15 avril 2024 | Par l'équipe BDB</p>
+            <p class="article-lead">Découvrez notre sélection des meilleures soirées étudiantes à ne pas manquer cette année à Bordeaux. Des événements organisés par les BDE les plus actifs aux soirées thématiques incontournables.</p>
+        </div>
+    </section>
+
+    <main class="article-container">
+        <a href="../blog.html" class="back-to-blog"><i class="fas fa-arrow-left"></i> Retour au blog</a>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>Pourquoi Bordeaux est une ville étudiante festive</h2>
+            <p>Avec plus de 100 000 étudiants, Bordeaux s'impose comme l'une des villes universitaires les plus dynamiques de France. La richesse de sa vie nocturne n'est pas étrangère à cet attrait : bars à ambiance, clubs, soirées organisées par les associations étudiantes... la ville offre un choix varié pour tous les goûts et tous les budgets.</p>
+            <p>Cette année 2024 marque le grand retour des événements festifs après plusieurs années perturbées. Les BDE et associations redoublent d'efforts pour proposer des concepts originaux et des soirées mémorables. C'est pourquoi nous avons décidé de vous présenter notre Top 10 des soirées étudiantes à ne pas manquer à Bordeaux cette année.</p>
+            <img src="../Asset/EventPhare 01.png" alt="Soirée étudiante à Bordeaux" class="article-image" data-aos="zoom-in">
+        </section>
+
+        <section class="article-section" data-aos="fade-up">
+            <h2>Notre top 10 des soirées étudiantes à Bordeaux</h2>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">1</span>Gala de l'ESC Bordeaux</h3>
+                <p>Le gala annuel de Kedge Business School est sans conteste l'événement étudiant le plus prestigieux de Bordeaux. Il rassemble plus de 1500 étudiants dans un cadre somptueux au Palais de la Bourse. Tenue de soirée exigée, ambiance électro-chic et open bar font de cette soirée un incontournable.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Novembre 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Palais de la Bourse</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 40-60€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">2</span>La Beach Party du BDE NOSCHOOL</h3>
+                <p>Cette soirée sur le thème de la plage marque la fin de l'année universitaire. Plus de 800 étudiants se retrouvent sur une plage privée au bord du lac avec DJ sets, animations et bars éphémères. L'ambiance festive et décontractée en fait un événement incontournable en juin.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Juin 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Lac de Bordeaux</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 15-25€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">3</span>La Nuit des Assos</h3>
+                <p>Organisée en collaboration par plusieurs BDE, cette soirée réunit plus de 1000 étudiants de toutes filières au Hangar 14. C'est l'occasion de découvrir les associations étudiantes de Bordeaux dans une ambiance festive avec plusieurs scènes musicales.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Octobre 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Hangar 14</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 10-15€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">4</span>La Color Party de Sciences Po</h3>
+                <p>Inspirée du festival Holi, cette soirée colorée est devenue un classique de la vie étudiante bordelaise. Dans une ambiance électro, les participants se lancent des poudres colorées biodégradables tout en dansant. Un événement unique et photogénique !</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Avril 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Darwin Ecosystème</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 12-18€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">5</span>Soirée d'intégration UBx</h3>
+                <p>Chaque année, l'Université de Bordeaux organise une immense soirée d'intégration pour accueillir les nouveaux étudiants. Avec plusieurs espaces thématiques et une programmation musicale variée, c'est l'événement idéal pour faire des rencontres en début d'année.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Septembre 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Campus Pessac</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 8-12€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">6</span>La Boat Party de l'I.Boat</h3>
+                <p>Ce n'est pas directement organisé par des associations étudiantes, mais les soirées sur l'I.Boat sont incontournables pour les étudiants bordelais. La célèbre péniche transformée en club propose régulièrement des événements avec tarifs étudiants, notamment au printemps.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Mai 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> I.Boat (Bassins à Flot)</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 12-25€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">7</span>Halloween Party du BDE INSEEC</h3>
+                <p>La soirée Halloween organisée par le BDE INSEEC est réputée pour ses décors spectaculaires et son ambiance terrifiante. Déguisement obligatoire, maquillages professionnels sur place et animations horrifiques. L'événement affiche complet chaque année.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Octobre 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> La Manufacture</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 15-20€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">8</span>La Nuit de l'Ingénieur</h3>
+                <p>Cette soirée organisée par les écoles d'ingénieurs de Bordeaux (ENSEIRB-MATMECA, ENSC, etc.) rassemble plus de 800 futurs ingénieurs dans une ambiance festive. Jeux, animations scientifiques décalées et DJ sets sont au programme.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Mars 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Théâtre Fémina</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 10-15€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">9</span>Wine Not? - La soirée œnologie</h3>
+                <p>Bordeaux oblige, cette soirée dédiée à la découverte des vins connaît un succès grandissant. Organisée par plusieurs associations étudiantes, elle propose des dégustations commentées par des professionnels suivies d'une soirée festive. L'élégance à la bordelaise !</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Novembre 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Cité du Vin</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 25-35€</span>
+                </div>
+            </div>
+            
+            <div class="event-card" data-aos="fade-up">
+                <h3 class="event-title"><span class="event-number">10</span>Summer Break</h3>
+                <p>Pour clôturer notre classement, la soirée "Summer Break" marque le début des vacances d'été pour les étudiants bordelais. Organisée sur la plage du Lac, elle propose un concept day-to-night avec activités nautiques l'après-midi et DJ sets en soirée.</p>
+                <div class="event-details">
+                    <span class="event-detail"><i class="fas fa-calendar"></i> Juin 2024</span>
+                    <span class="event-detail"><i class="fas fa-map-marker-alt"></i> Plage du Lac</span>
+                    <span class="event-detail"><i class="fas fa-ticket-alt"></i> 10-20€</span>
+                </div>
+            </div>
+        </section>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>Comment acheter vos billets en toute sécurité</h2>
+            <p>Pour profiter de ces événements, nous vous recommandons de suivre les pages officielles des associations étudiantes organisatrices sur les réseaux sociaux. La plupart des billets sont désormais vendus en ligne, notamment via l'application BDB qui vous garantit des billets authentiques et sécurisés.</p>
+            <p>Attention aux arnaques ! Chaque année, des faux événements circulent sur les réseaux sociaux. Vérifiez toujours que les billets proviennent des organisateurs officiels ou de plateformes de billetterie reconnues.</p>
+        </section>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>Conclusion</h2>
+            <p>Bordeaux confirme sa réputation de ville étudiante dynamique avec une offre festive riche et variée en 2024. Que vous soyez amateur de grandes soirées prestigieuses ou de concepts plus intimistes, vous trouverez forcément votre bonheur parmi notre sélection.</p>
+            <p>N'oubliez pas que l'application BDB vous permet de découvrir tous les événements étudiants de Bordeaux, d'acheter vos billets en quelques clics et de suivre vos associations préférées pour ne manquer aucune annonce.</p>
+            <p>Alors, quelle sera votre prochaine soirée à Bordeaux ?</p>
+        </section>
+        
+        <div class="article-tags">
+            <span class="article-tag">Soirées étudiantes</span>
+            <span class="article-tag">Bordeaux</span>
+            <span class="article-tag">BDE</span>
+            <span class="article-tag">Événements 2024</span>
+            <span class="article-tag">Vie étudiante</span>
+        </div>
+        
+        <div class="article-share">
+            <a href="#" class="share-button" aria-label="Partager sur Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="share-button" aria-label="Partager sur Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="share-button" aria-label="Partager sur Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="share-button" aria-label="Partager par email">
+                <i class="fas fa-envelope"></i>
+            </a>
+        </div>
+        
+        <div class="article-navigation">
+            <div class="nav-previous">
+                <span class="nav-label">Article précédent</span>
+                <a href="evenements-sportifs-etudiants-bordeaux.html" class="nav-title">Les événements sportifs étudiants à ne pas manquer</a>
+            </div>
+            <div class="nav-next">
+                <span class="nav-label">Article suivant</span>
+                <a href="guide-associations-etudiantes-bordeaux.html" class="nav-title">Guide des associations étudiantes de Bordeaux</a>
+            </div>
+        </div>
+        
+        <a href="../blog.html" class="back-to-blog"><i class="fas fa-arrow-left"></i> Retour au blog</a>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="legal-links">
+                <a href="../politique-confidentialite.html">Politique de confidentialité</a>
+                <a href="../conditions-utilisation.html">Conditions d'utilisation</a>
+                <a href="../blog.html">Blog</a>
+            </div>
+        </div>
+        <p class="copyright">© 2024 BDB. Tous droits réservés.</p>
+    </footer>
+
+    <!-- Schema.org markup for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://bureaudesbureaux.com/articles/top-10-soirees-etudiantes-bordeaux-2024.html"
+      },
+      "headline": "Top 10 des soirées étudiantes à Bordeaux en 2024",
+      "description": "Découvrez notre classement des 10 meilleures soirées étudiantes à Bordeaux en 2024. Événements des BDE, clubs, boîtes de nuit et bars prisés par les étudiants bordelais.",
+      "image": "https://bureaudesbureaux.com/Asset/Event 01.png",
+      "author": {
+        "@type": "Organization",
+        "name": "BDB Team"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "BDB - Le Bureau des Bureaux",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://bureaudesbureaux.com/Asset/Babylone 1024x1024.png"
+        }
+      },
+      "datePublished": "2024-04-15T08:00:00+01:00",
+      "dateModified": "2024-04-15T10:30:00+01:00",
+      "keywords": "soirées étudiantes Bordeaux, BDE Bordeaux, événements étudiants 2024, meilleures soirées Bordeaux, soirées thématiques étudiantes",
+      "articleBody": "Découvrez notre sélection des meilleures soirées étudiantes à ne pas manquer cette année à Bordeaux. Des événements organisés par les BDE les plus actifs aux soirées thématiques incontournables."
+    }
+    </script>
+
+    <script>
+        // Menu hamburger
+        const hamburger = document.querySelector('.hamburger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu quand on clique sur un lien
+        navLinksItems.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Animations au scroll
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out',
+            once: false,
+            mirror: true
+        });
+    </script>
+</body>
+</html> 

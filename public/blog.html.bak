@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog BDB - Actualités de la vie étudiante à Bordeaux</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Découvrez les dernières actualités et conseils sur la vie étudiante à Bordeaux. Événements, associations, bons plans et guides pour les étudiants bordelais.">
+    <meta name="keywords" content="blog étudiant Bordeaux, vie étudiante Bordeaux, événements étudiants, soirées étudiantes Bordeaux, associations étudiantes, bons plans étudiants">
+    <meta name="author" content="BDB Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bureaudesbureaux.com/blog">
+    <meta property="og:title" content="Blog BDB - Actualités de la vie étudiante à Bordeaux">
+    <meta property="og:description" content="Découvrez les dernières actualités et conseils sur la vie étudiante à Bordeaux. Événements, associations, bons plans et guides pour les étudiants bordelais.">
+    <meta property="og:image" content="https://bureaudesbureaux.com/Asset/og-image.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bureaudesbureaux.com/blog">
+    <meta property="twitter:title" content="Blog BDB - Actualités de la vie étudiante à Bordeaux">
+    <meta property="twitter:description" content="Découvrez les dernières actualités et conseils sur la vie étudiante à Bordeaux. Événements, associations, bons plans et guides pour les étudiants bordelais.">
+    <meta property="twitter:image" content="https://bureaudesbureaux.com/Asset/og-image.png">
+    
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://bureaudesbureaux.com/blog">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    <link rel="apple-touch-icon" href="/Asset/apple-touch-icon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .blog-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+        
+        .blog-title {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #DAFC3B;
+            padding: 40px 0 20px 0;
+        }
+        
+        .blog-description {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .blog-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+        
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .blog-post {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .blog-post:hover {
+            transform: translateY(-5px);
+        }
+        
+        .blog-post-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .blog-post-content {
+            padding: 20px;
+        }
+        
+        .blog-post-date {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 10px;
+        }
+        
+        .blog-post-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #DAFC3B;
+        }
+        
+        .blog-post-excerpt {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 15px;
+        }
+        
+        .blog-post-link {
+            display: inline-block;
+            color: #DAFC3B;
+            font-weight: 600;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .blog-post-link::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #DAFC3B;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .blog-post-link:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .blog-categories {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .blog-category {
+            padding: 8px 15px;
+            border-radius: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .blog-category:hover, .blog-category.active {
+            background-color: #DAFC3B;
+            color: black;
+        }
+        
+        @media (max-width: 768px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .blog-title {
+                font-size: 2rem;
+            }
+        }
+
+        footer {
+            padding: 30px 20px;
+            background-color: #111;
+            color: white;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .legal-links {
+            display: flex;
+            gap: 20px;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .legal-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .legal-links a:hover {
+            color: #DAFC3B;
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .blog-title {
+                font-size: 2rem;
+            }
+
+            .legal-links {
+                flex-direction: row;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="index.html" class="brand-link">
+                    <img src="Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <button class="hamburger-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="nav-links" role="navigation" aria-label="Menu principal">
+                <a href="index.html">Accueil</a>
+                <a href="index.html#fonctionnalites">Fonctionnalités</a>
+                <a href="index.html#how-it-works">Comment ça marche</a>
+                <a href="index.html#evenements">Événements</a>
+                <a href="index.html#contact">Contact</a>
+                <a href="blog.html" class="active">Blog</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="blog-container">
+        <h1 class="blog-title">BDB Blog</h1>
+        
+        <div class="blog-categories">
+            <div class="blog-category active">Tous</div>
+            <div class="blog-category">Événements</div>
+            <div class="blog-category">Associations</div>
+            <div class="blog-category">Bons plans</div>
+            <div class="blog-category">Guides</div>
+        </div>
+
+        <div class="blog-grid">
+            <article class="blog-post">
+                <img src="Asset/Event 01.png" alt="Top 10 des soirées étudiantes à Bordeaux en 2024" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">15 avril 2024</p>
+                    <h2 class="blog-post-title">Top 10 des soirées étudiantes à Bordeaux en 2024</h2>
+                    <p class="blog-post-excerpt">Découvrez notre sélection des meilleures soirées étudiantes à ne pas manquer cette année à Bordeaux. Des événements organisés par les BDE les plus actifs aux soirées thématiques incontournables.</p>
+                    <a href="articles/top-10-soirees-etudiantes-bordeaux-2024.html" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+
+            <article class="blog-post">
+                <img src="Asset/3.png" alt="Guide des associations étudiantes de Bordeaux" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">28 mars 2024</p>
+                    <h2 class="blog-post-title">Guide des associations étudiantes de Bordeaux</h2>
+                    <p class="blog-post-excerpt">Le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements.</p>
+                    <a href="articles/guide-associations-etudiantes-bordeaux.html" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+
+            <article class="blog-post">
+                <img src="Asset/2.png" alt="Les meilleurs afterworks étudiants à Bordeaux" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">10 mars 2024</p>
+                    <h2 class="blog-post-title">Les meilleurs afterworks étudiants à Bordeaux</h2>
+                    <p class="blog-post-excerpt">Notre sélection des bars et établissements proposant des afterworks spécial étudiants. Découvrez les bons plans, happy hours et ambiances pour réseauter après les cours.</p>
+                    <a href="articles/meilleurs-afterworks-etudiants-bordeaux.html" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+
+            <article class="blog-post">
+                <img src="Asset/4.png" alt="Comment organiser un événement étudiant à succès" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">25 février 2024</p>
+                    <h2 class="blog-post-title">Comment organiser un événement étudiant à succès</h2>
+                    <p class="blog-post-excerpt">Guide pratique pour les associations qui souhaitent organiser un événement étudiant réussi à Bordeaux. Planning, logistique, promotion et billetterie avec BDB.</p>
+                    <a href="articles/organiser-evenement-etudiant-succes.html" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+
+            <article class="blog-post">
+                <img src="Asset/EventPhare 01.png" alt="Interview : le BDE NOSCHOOL nous dévoile ses secrets" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">10 février 2024</p>
+                    <h2 class="blog-post-title">Interview : le BDE NOSCHOOL nous dévoile ses secrets</h2>
+                    <p class="blog-post-excerpt">Rencontre avec l'équipe du BDE NOSCHOOL, l'un des bureaux des étudiants les plus actifs de Bordeaux. Leur histoire, leurs événements phares et leurs conseils.</p>
+                    <a href="articles/interview-bde-noschool-secrets.html" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+            
+            <article class="blog-post">
+                <img src="Asset/Babylone 1024x1024.png" alt="BDB : L'application qui révolutionne la vie étudiante à Bordeaux" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">15 février 2024</p>
+                    <h2 class="blog-post-title">BDB : L'application qui révolutionne la vie étudiante à Bordeaux</h2>
+                    <p class="blog-post-excerpt">Découvrez comment BDB connecte les étudiants bordelais aux événements, associations et bons plans de la ville. Une plateforme tout-en-un pour ne rien manquer de la vie étudiante.</p>
+                    <a href="index.html#fonctionnalites" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+
+            <article class="blog-post">
+                <img src="Asset/Event 02.png" alt="Les événements sportifs étudiants à ne pas manquer" class="blog-post-image" loading="lazy">
+                <div class="blog-post-content">
+                    <p class="blog-post-date">28 janvier 2024</p>
+                    <h2 class="blog-post-title">Les événements sportifs étudiants à ne pas manquer</h2>
+                    <p class="blog-post-excerpt">Calendrier des compétitions sportives inter-écoles, tournois et challenges organisés par les associations étudiantes de Bordeaux pour ce semestre.</p>
+                    <a href="articles/evenements-sportifs-etudiants-bordeaux.html" class="blog-post-link">Lire l'article</a>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="legal-links">
+                <a href="politique-confidentialite.html" target="_blank">Politique de confidentialité</a>
+                <a href="conditions-utilisation.html" target="_blank">Conditions d'utilisation</a>
+                <a href="blog.html">Blog</a>
+            </div>
+        </div>
+        <p class="copyright">© 2024 BDB. Tous droits réservés.</p>
+    </footer>
+
+    <!-- Schema.org markup for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "headline": "Blog BDB - Actualités de la vie étudiante à Bordeaux",
+      "description": "Découvrez les dernières actualités et conseils sur la vie étudiante à Bordeaux. Événements, associations, bons plans et guides pour les étudiants bordelais.",
+      "url": "https://bureaudesbureaux.com/blog",
+      "publisher": {
+        "@type": "Organization",
+        "name": "BDB - Le Bureau des Bureaux",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://bureaudesbureaux.com/Asset/Babylone 1024x1024.png"
+        }
+      },
+      "blogPost": [
+        {
+          "@type": "BlogPosting",
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://bureaudesbureaux.com/blog/top-10-soirees-etudiantes-bordeaux-2024"
+          },
+          "headline": "Top 10 des soirées étudiantes à Bordeaux en 2024",
+          "description": "Découvrez notre sélection des meilleures soirées étudiantes à ne pas manquer cette année à Bordeaux.",
+          "image": "https://bureaudesbureaux.com/Asset/Event 01.png",
+          "datePublished": "2024-04-15T08:00:00+01:00",
+          "dateModified": "2024-04-15T10:30:00+01:00",
+          "author": {
+            "@type": "Organization",
+            "name": "BDB Team"
+          }
+        },
+        {
+          "@type": "BlogPosting",
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://bureaudesbureaux.com/blog/guide-associations-etudiantes-bordeaux"
+          },
+          "headline": "Guide des associations étudiantes de Bordeaux",
+          "description": "Le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires.",
+          "image": "https://bureaudesbureaux.com/Asset/3.png",
+          "datePublished": "2024-03-28T09:15:00+01:00",
+          "dateModified": "2024-03-28T09:15:00+01:00",
+          "author": {
+            "@type": "Organization",
+            "name": "BDB Team"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <script>
+        // Menu hamburger
+        const hamburger = document.querySelector('.hamburger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu quand on clique sur un lien
+        navLinksItems.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Filtrage par catégorie
+        const categories = document.querySelectorAll('.blog-category');
+        
+        categories.forEach(category => {
+            category.addEventListener('click', () => {
+                // Enlever la classe active de toutes les catégories
+                categories.forEach(c => c.classList.remove('active'));
+                
+                // Ajouter la classe active à la catégorie cliquée
+                category.classList.add('active');
+                
+                // Ici vous pourriez ajouter un code pour filtrer les articles
+                // selon la catégorie sélectionnée
+            });
+        });
+    </script>
+</body>
+</html> 

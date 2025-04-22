@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide des associations étudiantes de Bordeaux | BDB</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Découvrez le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements.">
+    <meta name="keywords" content="associations étudiantes Bordeaux, BDE Bordeaux, BDS, BDA, associations culturelles, vie associative étudiante, s'engager étudiant Bordeaux">
+    <meta name="author" content="BDB Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://bureaudesbureaux.com/articles/guide-associations-etudiantes-bordeaux.html">
+    <meta property="og:title" content="Guide des associations étudiantes de Bordeaux | BDB">
+    <meta property="og:description" content="Découvrez le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements.">
+    <meta property="og:image" content="https://bureaudesbureaux.com/Asset/3.png">
+    <meta property="article:published_time" content="2024-03-28T09:15:00+01:00">
+    <meta property="article:modified_time" content="2024-03-28T09:15:00+01:00">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bureaudesbureaux.com/articles/guide-associations-etudiantes-bordeaux.html">
+    <meta property="twitter:title" content="Guide des associations étudiantes de Bordeaux | BDB">
+    <meta property="twitter:description" content="Découvrez le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements.">
+    <meta property="twitter:image" content="https://bureaudesbureaux.com/Asset/3.png">
+    
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://bureaudesbureaux.com/articles/guide-associations-etudiantes-bordeaux.html">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    <link rel="apple-touch-icon" href="/Asset/apple-touch-icon.png">
+    
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #000;
+            --accent-color: #DAFC3B;
+            --text-color: #f5f5f5;
+            --bg-dark: #0a0a0a;
+            --bg-light: #1a1a1a;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        
+        .article-hero {
+            position: relative;
+            height: 80vh;
+            min-height: 600px;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('../Asset/3.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .article-hero-content {
+            max-width: 800px;
+            z-index: 1;
+        }
+        
+        .article-hero h1 {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .article-date {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out 0.2s;
+            animation-fill-mode: both;
+        }
+        
+        .article-lead {
+            font-size: 1.4rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            animation: fadeInUp 1s ease-out 0.4s;
+            animation-fill-mode: both;
+        }
+        
+        .article-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        
+        .article-section {
+            margin-bottom: 40px;
+        }
+        
+        .article-section h2 {
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .article-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+        
+        .article-section:hover h2::after {
+            width: 100px;
+        }
+        
+        .article-section h3 {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            margin: 25px 0 15px;
+        }
+        
+        .article-section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+        
+        .article-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .article-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .asso-card {
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .asso-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 0;
+            background-color: var(--accent-color);
+            transition: height 0.3s ease;
+        }
+        
+        .asso-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .asso-card:hover::before {
+            height: 100%;
+        }
+        
+        .asso-title {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin: 0 0 15px;
+        }
+        
+        .asso-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .asso-detail {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .asso-detail i {
+            margin-right: 5px;
+            color: var(--accent-color);
+        }
+        
+        .article-share {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 50px 0;
+        }
+        
+        .share-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--bg-light);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .share-button:hover {
+            background-color: var(--accent-color);
+            color: black;
+            transform: translateY(-3px);
+        }
+        
+        .article-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 50px 0;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-previous, .nav-next {
+            max-width: 45%;
+        }
+        
+        .nav-label {
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 5px;
+        }
+        
+        .nav-title {
+            color: var(--accent-color);
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-title:hover {
+            color: white;
+        }
+        
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 30px 0;
+        }
+        
+        .article-tag {
+            background-color: var(--bg-light);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .article-tag:hover {
+            background-color: var(--accent-color);
+            color: black;
+        }
+        
+        .back-to-blog {
+            display: inline-block;
+            margin-top: 30px;
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .back-to-blog:hover {
+            color: white;
+        }
+        
+        .back-to-blog i {
+            margin-right: 5px;
+        }
+        
+        footer {
+            padding: 30px 20px;
+            background-color: #111;
+            color: white;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .legal-links {
+            display: flex;
+            gap: 20px;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .legal-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .legal-links a:hover {
+            color: #DAFC3B;
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .article-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .article-lead {
+                font-size: 1.2rem;
+            }
+            
+            .article-section h2 {
+                font-size: 1.6rem;
+            }
+            
+            .asso-title {
+                font-size: 1.3rem;
+            }
+            
+            .legal-links {
+                flex-direction: row;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="../index.html" class="brand-link">
+                    <img src="../Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <button class="hamburger-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="nav-links" role="navigation" aria-label="Menu principal">
+                <a href="../index.html">Accueil</a>
+                <a href="../index.html#fonctionnalites">Fonctionnalités</a>
+                <a href="../index.html#how-it-works">Comment ça marche</a>
+                <a href="../index.html#evenements">Événements</a>
+                <a href="../index.html#contact">Contact</a>
+                <a href="../blog.html" class="active">Blog</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="article-hero">
+        <div class="article-hero-content">
+            <h1>Guide des associations étudiantes de Bordeaux</h1>
+            <p class="article-date">Publié le 28 mars 2024 | Par l'équipe BDB</p>
+            <p class="article-lead">Le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements.</p>
+        </div>
+    </section>
+
+    <main class="article-container">
+        <a href="../blog.html" class="back-to-blog"><i class="fas fa-arrow-left"></i> Retour au blog</a>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>L'écosystème associatif étudiant bordelais</h2>
+            <p>Avec plus de 95 000 étudiants répartis dans ses universités et grandes écoles, Bordeaux abrite un écosystème associatif particulièrement riche et diversifié. Plus de 200 associations étudiantes animent le campus et la ville, proposant des activités allant des soirées festives aux projets humanitaires, en passant par les compétitions sportives et les événements culturels.</p>
+            <p>Que vous soyez nouvel arrivant à Bordeaux ou étudiant cherchant à s'engager davantage dans la vie étudiante, ce guide vous présente les principales associations bordelaises, leur fonctionnement et comment les rejoindre.</p>
+            <img src="../Asset/3.png" alt="Réunion d'association étudiante à Bordeaux" class="article-image" data-aos="zoom-in">
+        </section>
+
+        <section class="article-section" data-aos="fade-up">
+            <h2>Les différents types d'associations étudiantes</h2>
+            
+            <h3>Les Bureaux Des Étudiants (BDE)</h3>
+            <p>Les BDE sont les associations centrales de chaque établissement. Ils organisent les événements majeurs de l'année (intégration, gala, week-ends), fédèrent les autres associations et représentent les étudiants auprès de l'administration. Chaque école ou composante universitaire possède généralement son propre BDE, élu annuellement.</p>
+            
+            <h3>Les Bureaux Des Sports (BDS)</h3>
+            <p>Les BDS se concentrent sur l'organisation des activités sportives : entraînements hebdomadaires, tournois inter-écoles, week-ends sportifs. Ils représentent souvent leur établissement lors des compétitions universitaires comme les Championnats de France Universitaires.</p>
+            
+            <h3>Les Bureaux Des Arts (BDA)</h3>
+            <p>Dédiés à la culture et aux arts, les BDA proposent des ateliers créatifs, des sorties culturelles, des expositions et des spectacles. Ils permettent aux étudiants de développer leurs talents artistiques ou simplement de découvrir de nouvelles formes d'expression.</p>
+            
+            <h3>Les associations professionnelles et Junior-Entreprises</h3>
+            <p>Ces structures permettent aux étudiants de mettre en pratique leurs compétences en réalisant des missions pour des clients réels. Elles organisent également des forums entreprises, des conférences et des ateliers de professionnalisation.</p>
+            
+            <h3>Les associations humanitaires et solidaires</h3>
+            <p>Engagées dans des causes sociales et environnementales, ces associations mènent des actions de sensibilisation, des collectes de fonds et des missions humanitaires en France ou à l'international.</p>
+        </section>
+
+        <section class="article-section" data-aos="fade-up">
+            <h2>Top des associations étudiantes bordelaises par établissement</h2>
+            
+            <div class="asso-card" data-aos="fade-up">
+                <h3 class="asso-title">Université de Bordeaux</h3>
+                <p>L'Université de Bordeaux, qui regroupe plus de 55 000 étudiants, compte plusieurs dizaines d'associations réparties sur ses différents campus.</p>
+                <div class="asso-details">
+                    <span class="asso-detail"><i class="fas fa-star"></i> Assolidaire (solidarité)</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> AESB (Droit)</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Etu'Récup (développement durable)</span>
+                </div>
+                <p>La Fédération Atena coordonne et soutient l'ensemble des associations de l'université, tandis que l'ACEPB fédère spécifiquement les associations du campus de Pessac.</p>
+            </div>
+            
+            <div class="asso-card" data-aos="fade-up">
+                <h3 class="asso-title">Kedge Business School</h3>
+                <p>L'école de commerce bordelaise possède un réseau associatif particulièrement actif et structuré avec plus de 25 associations.</p>
+                <div class="asso-details">
+                    <span class="asso-detail"><i class="fas fa-star"></i> BDE Kedge</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> BDS Adrenaline</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Huma Kedge (humanitaire)</span>
+                </div>
+                <p>Le BDE Kedge est réputé pour l'organisation de son gala annuel, l'un des plus prestigieux événements étudiants de Bordeaux, réunissant plus de 1500 personnes au Palais de la Bourse.</p>
+            </div>
+            
+            <div class="asso-card" data-aos="fade-up">
+                <h3 class="asso-title">Sciences Po Bordeaux</h3>
+                <p>Les associations de Sciences Po se distinguent par leur engagement dans les débats de société et les questions internationales.</p>
+                <div class="asso-details">
+                    <span class="asso-detail"><i class="fas fa-star"></i> BDE Sciences Po Bordeaux</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Diplomatia (simulations diplomatiques)</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Hestia (gastronomie)</span>
+                </div>
+                <p>La Color Party organisée par le BDE est un événement phare de la vie étudiante bordelaise, inspiré du festival Holi et réunissant des étudiants de toute la ville.</p>
+            </div>
+            
+            <div class="asso-card" data-aos="fade-up">
+                <h3 class="asso-title">ENSEIRB-MATMECA</h3>
+                <p>L'école d'ingénieurs de Bordeaux INP compte des associations techniques très innovantes aux côtés des associations classiques.</p>
+                <div class="asso-details">
+                    <span class="asso-detail"><i class="fas fa-star"></i> BDE NOSCHOOL</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Clubee (robotique)</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Net IUT (réseau)</span>
+                </div>
+                <p>Le BDE NOSCHOOL organise chaque année "La Nuit de l'Ingénieur", un événement festif aux animations décalées qui met en scène l'univers des ingénieurs.</p>
+            </div>
+            
+            <div class="asso-card" data-aos="fade-up">
+                <h3 class="asso-title">Université Bordeaux Montaigne</h3>
+                <p>Les associations de Bordeaux Montaigne sont particulièrement actives dans les domaines artistiques et culturels.</p>
+                <div class="asso-details">
+                    <span class="asso-detail"><i class="fas fa-star"></i> Radio Campus Bordeaux</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Contraste (arts visuels)</span>
+                    <span class="asso-detail"><i class="fas fa-star"></i> Les Tribuns (éloquence)</span>
+                </div>
+                <p>Radio Campus Bordeaux est l'une des plus anciennes radios associatives étudiantes de France et offre une expérience médiatique unique à ses membres.</p>
+            </div>
+        </section>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>Comment rejoindre une association étudiante ?</h2>
+            <p>La rentrée universitaire est le moment idéal pour rejoindre une association. Voici les étapes à suivre :</p>
+            
+            <h3>1. Participez aux forums des associations</h3>
+            <p>En septembre et octobre, chaque établissement organise un forum où toutes les associations se présentent. C'est l'occasion parfaite pour découvrir la diversité de l'offre associative et échanger avec les membres actuels.</p>
+            
+            <h3>2. Assistez aux événements de recrutement</h3>
+            <p>Les associations organisent des réunions d'information et des événements spécifiques pour accueillir les nouveaux membres. Surveillez les réseaux sociaux et les affichages sur votre campus.</p>
+            
+            <h3>3. Contactez directement les associations</h3>
+            <p>N'hésitez pas à contacter directement les associations qui vous intéressent via leurs réseaux sociaux. La plupart sont très réactives et accueillantes envers les nouveaux membres potentiels.</p>
+            
+            <h3>4. Utilisez l'application BDB</h3>
+            <p>Notre application BDB vous permet de découvrir et suivre toutes les associations étudiantes de Bordeaux. Vous pouvez facilement consulter leurs événements et entrer en contact avec elles.</p>
+        </section>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>Les bénéfices de l'engagement associatif</h2>
+            <p>S'engager dans une association étudiante présente de nombreux avantages :</p>
+            <ul>
+                <li><strong>Développement de compétences</strong> : gestion de projet, travail d'équipe, communication, leadership...</li>
+                <li><strong>Extension de votre réseau</strong> : rencontres avec des étudiants d'autres filières et des professionnels</li>
+                <li><strong>Valorisation de votre CV</strong> : les recruteurs apprécient particulièrement les expériences associatives</li>
+                <li><strong>Découverte de nouveaux centres d'intérêt</strong> et épanouissement personnel</li>
+                <li><strong>Impact concret</strong> sur votre environnement et la société</li>
+            </ul>
+            <p>De nombreux anciens responsables associatifs témoignent que leur expérience associative a été aussi formatrice que leurs études, voire davantage dans certains cas.</p>
+        </section>
+        
+        <section class="article-section" data-aos="fade-up">
+            <h2>Conclusion</h2>
+            <p>La vie associative est un pilier de l'expérience étudiante à Bordeaux. Que vous souhaitiez développer des compétences professionnelles, vous engager pour une cause qui vous tient à cœur, pratiquer une passion ou simplement faire des rencontres, vous trouverez forcément une association qui correspond à vos aspirations.</p>
+            <p>N'attendez pas pour vous engager ! Les années étudiantes passent vite, et l'expérience associative est une opportunité unique de les enrichir considérablement.</p>
+            <p>Pour découvrir et suivre toutes les associations étudiantes de Bordeaux, téléchargez l'application BDB et ne manquez aucun événement !</p>
+        </section>
+        
+        <div class="article-tags">
+            <span class="article-tag">Associations étudiantes</span>
+            <span class="article-tag">BDE</span>
+            <span class="article-tag">Vie étudiante</span>
+            <span class="article-tag">Bordeaux</span>
+            <span class="article-tag">Engagement étudiant</span>
+        </div>
+        
+        <div class="article-share">
+            <a href="#" class="share-button" aria-label="Partager sur Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" class="share-button" aria-label="Partager sur Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="share-button" aria-label="Partager sur Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="share-button" aria-label="Partager par email">
+                <i class="fas fa-envelope"></i>
+            </a>
+        </div>
+        
+        <div class="article-navigation">
+            <div class="nav-previous">
+                <span class="nav-label">Article précédent</span>
+                <a href="top-10-soirees-etudiantes-bordeaux-2024.html" class="nav-title">Top 10 des soirées étudiantes à Bordeaux en 2024</a>
+            </div>
+            <div class="nav-next">
+                <span class="nav-label">Article suivant</span>
+                <a href="meilleurs-afterworks-etudiants-bordeaux.html" class="nav-title">Les meilleurs afterworks étudiants à Bordeaux</a>
+            </div>
+        </div>
+        
+        <a href="../blog.html" class="back-to-blog"><i class="fas fa-arrow-left"></i> Retour au blog</a>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="legal-links">
+                <a href="../politique-confidentialite.html">Politique de confidentialité</a>
+                <a href="../conditions-utilisation.html">Conditions d'utilisation</a>
+                <a href="../blog.html">Blog</a>
+            </div>
+        </div>
+        <p class="copyright">© 2024 BDB. Tous droits réservés.</p>
+    </footer>
+
+    <!-- Schema.org markup for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://bureaudesbureaux.com/articles/guide-associations-etudiantes-bordeaux.html"
+      },
+      "headline": "Guide des associations étudiantes de Bordeaux",
+      "description": "Découvrez le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements.",
+      "image": "https://bureaudesbureaux.com/Asset/3.png",
+      "author": {
+        "@type": "Organization",
+        "name": "BDB Team"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "BDB - Le Bureau des Bureaux",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://bureaudesbureaux.com/Asset/Babylone 1024x1024.png"
+        }
+      },
+      "datePublished": "2024-03-28T09:15:00+01:00",
+      "dateModified": "2024-03-28T09:15:00+01:00",
+      "keywords": "associations étudiantes Bordeaux, BDE Bordeaux, vie associative étudiante, s'engager étudiant Bordeaux",
+      "articleBody": "Le panorama complet des associations étudiantes bordelaises : BDE, BDS, associations culturelles et humanitaires. Comment les rejoindre et participer à leurs événements."
+    }
+    </script>
+
+    <script>
+        // Menu hamburger
+        const hamburger = document.querySelector('.hamburger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        // Fermer le menu quand on clique sur un lien
+        navLinksItems.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Animations au scroll
+        AOS.init({
+            duration: 800,
+            easing: 'ease-out',
+            once: false,
+            mirror: true
+        });
+    </script>
+</body>
+</html> 

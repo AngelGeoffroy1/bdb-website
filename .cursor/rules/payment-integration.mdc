@@ -1,0 +1,51 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Intégration des Paiements BDB
+
+Le site BDB utilise Stripe pour gérer les paiements de la billetterie d'événements étudiants.
+
+## Configuration Stripe
+
+Les clés API Stripe sont configurées dans:
+- Le fichier d'environnement [.env](mdc:.env) pour le développement local
+- [netlify.toml](mdc:netlify.toml) pour le déploiement
+
+```toml
+[build.environment]
+  STRIPE_PUBLIC_KEY = "pk_test_..."
+  STRIPE_SECRET_KEY = "sk_test_..."
+```
+
+## Fonction de Paiement
+
+La création d'intention de paiement est gérée par [functions/createPaymentIntent.js](mdc:functions/createPaymentIntent.js) qui:
+1. Crée ou récupère un client Stripe
+2. Génère une clé éphémère pour l'authentification
+3. Crée l'intention de paiement avec les métadonnées d'événement
+4. Retourne les secrets nécessaires au frontend
+
+## Webhooks Stripe
+
+Les confirmations de paiement sont traitées par [functions/stripe-webhook.js](mdc:functions/stripe-webhook.js) qui:
+1. Vérifie la signature du webhook
+2. Traite les différents événements Stripe (succès, échec, etc.)
+3. Met à jour les statuts des billets en conséquence
+
+## Sécurité
+
+Points importants concernant la sécurité des paiements:
+- Validation stricte des entrées utilisateur
+- Vérification des montants côté serveur
+- Masquage des données sensibles dans les logs
+- Détection de l'environnement (test/production)
+
+## Flux de Paiement
+
+1. L'application mobile initie une demande de paiement
+2. La fonction serverless crée l'intention de paiement
+3. L'app mobile utilise Stripe SDK pour traiter le paiement
+4. Le webhook confirme la transaction et met à jour la base de données
+5. Une notification de confirmation est envoyée à l'utilisateur

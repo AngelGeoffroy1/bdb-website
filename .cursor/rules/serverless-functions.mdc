@@ -1,0 +1,49 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Fonctions Serverless BDB
+
+Le projet BDB Website utilise des fonctions serverless Netlify (Netlify Functions) pour gérer diverses fonctionnalités backend sans nécessiter un serveur dédié.
+
+## Structure des fonctions
+
+Toutes les fonctions sont stockées dans le dossier [functions/](mdc:functions) et sont déployées automatiquement par Netlify lors du build.
+
+## Fonctions principales
+
+### Email
+
+- [sendEmail.js](mdc:functions/sendEmail.js) : Gère l'envoi d'emails depuis le formulaire de contact du site
+
+### Paiements avec Stripe
+
+- [createPaymentIntent.js](mdc:functions/createPaymentIntent.js) : Crée une intention de paiement Stripe pour la billetterie
+- [stripe-webhook.js](mdc:functions/stripe-webhook.js) : Traite les webhooks Stripe pour les confirmations de paiement
+
+### Notifications Push
+
+- [send-notification.js](mdc:functions/send-notification.js) : Envoie des notifications push aux appareils iOS via Apple Push Notification service (APNs)
+- [new-event-notification.js](mdc:functions/new-event-notification.js) : Notifie les utilisateurs des nouveaux événements
+
+## Configuration des fonctions
+
+La configuration des fonctions est définie dans la section `[functions]` du fichier [netlify.toml](mdc:netlify.toml):
+
+```toml
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["node_modules/apn/**/*"]
+```
+
+## Accès aux fonctions
+
+Les fonctions sont accessibles via le préfixe `/.netlify/functions/` mais une redirection est configurée pour utiliser `/api/` comme préfixe:
+
+```toml
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+```
