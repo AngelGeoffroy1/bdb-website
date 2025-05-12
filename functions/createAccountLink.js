@@ -30,11 +30,14 @@ exports.handler = async (event) => {
             };
         }
 
+        // URL de base pour les redirections
+        const baseURL = 'https://bureaudesbureaux.com';
+        
         // Créer un nouveau lien d'onboarding
         const accountLink = await stripe.accountLinks.create({
             account: account_id,
-            refresh_url: `${process.env.APP_URL || 'https://bureaudesbureaux.com'}/stripe-connect-refresh`,
-            return_url: `${process.env.APP_URL || 'https://bureaudesbureaux.com'}/stripe-connect-return`,
+            refresh_url: `${baseURL}/?stripe_connect_refresh=true&account_id=${account_id}`,
+            return_url: `${baseURL}/?stripe_connect_return=true&account_id=${account_id}`,
             type: 'account_onboarding'
         });
 
