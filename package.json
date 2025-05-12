@@ -9,15 +9,19 @@
     "build": "mkdir -p public && cp -r Asset public/ && cp styles.css public/"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "nodemailer": "^6.10.0",
-    "stripe": "^14.17.0",
+    "@shadcn/ui": "^0.0.4",
+    "@supabase/supabase-js": "^2.49.4",
+    "apn": "^2.2.0",
     "dotenv": "^16.4.1",
-    "@supabase/supabase-js": "^2.0.0",
+    "express": "^4.18.2",
     "node-fetch": "^2.6.7",
-    "apn": "^2.2.0"
+    "nodemailer": "^6.10.0",
+    "stripe": "^14.17.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.3"
+    "autoprefixer": "^10.4.21",
+    "nodemon": "^3.0.3",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.4"
   }
-} 
+}
