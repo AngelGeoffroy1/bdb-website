@@ -87,7 +87,11 @@ exports.handler = async (event) => {
             // Log minimal des données pour éviter de surcharger les logs
             ...(stripeEvent.data.object.charges_enabled !== undefined && { charges_enabled: stripeEvent.data.object.charges_enabled }),
             ...(stripeEvent.data.object.payouts_enabled !== undefined && { payouts_enabled: stripeEvent.data.object.payouts_enabled }),
-            ...(stripeEvent.data.object.details_submitted !== undefined && { details_submitted: stripeEvent.data.object.details_submitted })
+            ...(stripeEvent.data.object.details_submitted !== undefined && { details_submitted: stripeEvent.data.object.details_submitted }),
+            ...(stripeEvent.data.object.status !== undefined && { status: stripeEvent.data.object.status }),
+            ...(stripeEvent.data.object.application_fee_amount !== undefined && { application_fee_amount: stripeEvent.data.object.application_fee_amount }),
+            ...(stripeEvent.data.object.amount !== undefined && { amount: stripeEvent.data.object.amount }),
+            ...(stripeEvent.data.object.metadata !== undefined && { metadata: stripeEvent.data.object.metadata })
         }));
     }
 
@@ -104,6 +108,35 @@ exports.handler = async (event) => {
             case 'account.application.deauthorized':
                 result = await handleAccountDeauthorized(stripeEvent.data.object);
                 break;
+                
+            // Événements de paiement
+            case 'payment_intent.succeeded':
+                result = await handlePaymentIntentSucceeded(stripeEvent.data.object);
+                break;
+            case 'payment_intent.payment_failed':
+                result = await handlePaymentIntentFailed(stripeEvent.data.object);
+                break;
+                
+            // Événements de transfert pour Connect
+            case 'transfer.created':
+                console.log('💸 Transfert créé vers un compte Connect');
+                result = { status: 'transfer_created', action: 'logged' };
+                break;
+            case 'transfer.paid':
+                console.log('💰 Transfert payé au compte Connect');
+                result = { status: 'transfer_paid', action: 'logged' };
+                break;
+                
+            // Événements de commission
+            case 'application_fee.created':
+                console.log('💵 Commission de plateforme créée');
+                result = { status: 'fee_created', action: 'logged' };
+                break;
+            case 'application_fee.paid':
+                console.log('💵 Commission de plateforme payée');
+                result = { status: 'fee_paid', action: 'logged' };
+                break;
+                
             // Ajouter des événements spécifiques au onboarding
             case 'account.external_account.created':
                 console.log('💳 Compte bancaire ajouté');
@@ -113,6 +146,7 @@ exports.handler = async (event) => {
                 console.log('💳 Compte bancaire mis à jour');
                 result = { status: 'bank_account_updated', action: 'logged' };
                 break;
+                
             // Autres événements à traiter selon les besoins
             default:
                 console.log(`ℹ️ Événement non traité: ${stripeEvent.type}`);
@@ -296,4 +330,127 @@ async function handleAccountDeauthorized(account) {
     
     console.log(`✅ Statut 'deauthorized' mis à jour pour le compte ${accountId}`);
     return { status: 'deauthorized', action: 'updated', data };
+}
+
+/**
+ * Gère un paiement réussi avec Stripe Connect
+ */
+async function handlePaymentIntentSucceeded(paymentIntent) {
+    console.log(`💰 Paiement réussi: ${paymentIntent.id}`);
+
+    // Vérifier si c'est un paiement avec Connect en vérifiant la présence de transfer_data
+    const isConnectPayment = paymentIntent.transfer_data && paymentIntent.transfer_data.destination;
+    const applicationFeeAmount = paymentIntent.application_fee_amount || 0;
+    const connectAccountId = isConnectPayment ? paymentIntent.transfer_data.destination : null;
+
+    console.log('📊 Détails du paiement:', {
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        isConnectPayment,
+        connectAccountId,
+        applicationFeeAmount,
+        status: paymentIntent.status
+    });
+
+    // Extraire les métadonnées
+    const metadata = paymentIntent.metadata || {};
+    console.log('📝 Métadonnées du paiement:', metadata);
+
+    // Si c'est un paiement avec Connect, on peut enregistrer des statistiques
+    if (isConnectPayment && connectAccountId) {
+        try {
+            // Récupérer l'ID d'association à partir des métadonnées
+            const associationId = metadata.association_id;
+            if (!associationId) {
+                console.warn('⚠️ ID d\'association manquant dans les métadonnées');
+                return { status: 'success', action: 'logged', isConnectPayment, hasAssociationId: false };
+            }
+
+            console.log(`🔄 Mise à jour des statistiques pour l'association ${associationId}`);
+
+            // Récupérer les statistiques actuelles depuis Supabase
+            const { data: statsData, error: statsError } = await supabase
+                .from('stripe_connect_stats')
+                .select('*')
+                .eq('association_id', associationId)
+                .single();
+
+            if (statsError && statsError.code !== 'PGRST116') { // PGRST116 = not found
+                console.error('❌ Erreur lors de la récupération des statistiques:', statsError);
+                throw new Error(`Erreur de récupération des statistiques: ${statsError.message}`);
+            }
+
+            // Préparer les nouvelles statistiques
+            const now = new Date().toISOString();
+            let newStats = {
+                total_payments: 1,
+                total_amount: paymentIntent.amount,
+                total_fees: applicationFeeAmount,
+                last_payment_at: now,
+                updated_at: now
+            };
+
+            // Si les stats existent déjà, on les met à jour
+            if (statsData) {
+                newStats = {
+                    total_payments: (statsData.total_payments || 0) + 1,
+                    total_amount: (statsData.total_amount || 0) + paymentIntent.amount,
+                    total_fees: (statsData.total_fees || 0) + applicationFeeAmount,
+                    last_payment_at: now,
+                    updated_at: now
+                };
+            }
+
+            // Mettre à jour ou insérer les statistiques
+            const { error: upsertError } = await supabase
+                .from('stripe_connect_stats')
+                .upsert({
+                    association_id: associationId,
+                    stripe_account_id: connectAccountId,
+                    ...newStats
+                });
+
+            if (upsertError) {
+                console.error('❌ Erreur lors de la mise à jour des statistiques:', upsertError);
+                throw new Error(`Erreur de mise à jour des statistiques: ${upsertError.message}`);
+            }
+
+            console.log('✅ Statistiques mises à jour avec succès');
+            return { 
+                status: 'success', 
+                action: 'stats_updated', 
+                isConnectPayment, 
+                hasAssociationId: true 
+            };
+        } catch (error) {
+            console.error('❌ Erreur lors du traitement des statistiques:', error.message);
+            return { status: 'error', action: 'stats_failed', error: error.message };
+        }
+    }
+
+    return { status: 'success', action: 'logged', isConnectPayment };
+}
+
+/**
+ * Gère un échec de paiement avec Stripe Connect
+ */
+async function handlePaymentIntentFailed(paymentIntent) {
+    console.log(`❌ Paiement échoué: ${paymentIntent.id}`);
+    console.log(`📊 Détails: ${paymentIntent.last_payment_error?.message || 'Pas de détails d\'erreur'}`);
+
+    // Vérifier si c'est un paiement avec Connect
+    const isConnectPayment = paymentIntent.transfer_data && paymentIntent.transfer_data.destination;
+    const connectAccountId = isConnectPayment ? paymentIntent.transfer_data.destination : null;
+
+    console.log('📝 Échec de paiement:', {
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        isConnectPayment,
+        connectAccountId,
+        status: paymentIntent.status,
+        errorCode: paymentIntent.last_payment_error?.code,
+        errorMessage: paymentIntent.last_payment_error?.message
+    });
+
+    return { status: 'failed', action: 'logged', isConnectPayment };
 } 
