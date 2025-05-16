@@ -31,24 +31,50 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         console.log('📝 Données de vente de billet reçues:', JSON.stringify(body, null, 2));
         
-        const { 
-            ticket_id, 
-            event_id, 
-            association_id, 
-            buyer_info, 
-            ticket_data 
-        } = body;
+        // Adapter pour supporter le nouveau format
+        const { deviceTokens, ticketSaleData } = body;
+        
+        // Déterminer si on utilise l'ancien ou le nouveau format
+        const isNewFormat = !!deviceTokens && !!ticketSaleData;
+        
+        // Variables selon le format utilisé
+        let event_id, ticket_data, association_id, ticket_id, buyer_info;
+        
+        if (isNewFormat) {
+            console.log('📝 Utilisation du nouveau format de données (deviceTokens + ticketSaleData)');
+            event_id = ticketSaleData.event_id;
+            ticket_data = {
+                id: ticketSaleData.ticket_id || `ticket-${Date.now()}`, // ID généré si non fourni
+                total_amount: parseFloat(ticketSaleData.amount) || 0,
+                quantity: ticketSaleData.quantity || 1,
+                ...ticketSaleData
+            };
+            
+            // Extraire le nom et prénom si disponibles
+            let firstName = "", lastName = "";
+            if (ticketSaleData.customer_name) {
+                const nameParts = ticketSaleData.customer_name.split(" ");
+                firstName = nameParts[0] || "";
+                lastName = nameParts.slice(1).join(" ") || "";
+            }
+            
+            buyer_info = {
+                firstName,
+                lastName,
+                fullName: ticketSaleData.customer_name || ""
+            };
+        } else {
+            console.log('📝 Utilisation de l\'ancien format de données');
+            // Extraction selon l'ancien format
+            ({ ticket_id, event_id, association_id, buyer_info, ticket_data } = body);
+        }
         
         // Validation des données requises avec messages détaillés
         const validationErrors = [];
         
         if (!event_id) validationErrors.push('event_id manquant');
-        if (!ticket_data) validationErrors.push('ticket_data manquant');
-        else {
-            // Vérifier les propriétés essentielles de ticket_data
-            if (!ticket_data.id) validationErrors.push('ticket_data.id manquant');
-            if (ticket_data.total_amount === undefined) validationErrors.push('ticket_data.total_amount manquant');
-            if (ticket_data.quantity === undefined) validationErrors.push('ticket_data.quantity manquant');
+        if (!deviceTokens || !Array.isArray(deviceTokens) || deviceTokens.length === 0) {
+            validationErrors.push('deviceTokens manquants ou invalides');
         }
         
         if (validationErrors.length > 0) {
@@ -59,10 +85,11 @@ exports.handler = async (event) => {
                     error: 'Données invalides ou manquantes', 
                     details: validationErrors,
                     received_data: {
+                        format: isNewFormat ? 'nouveau' : 'ancien',
                         has_event_id: !!event_id,
+                        has_device_tokens: !!deviceTokens && deviceTokens.length > 0,
                         has_ticket_data: !!ticket_data,
-                        has_association_id: !!association_id,
-                        ticket_data_keys: ticket_data ? Object.keys(ticket_data) : []
+                        body: body
                     }
                 })
             };
@@ -81,8 +108,7 @@ exports.handler = async (event) => {
             throw new Error(`Événement non trouvé: ${eventError.message}`);
         }
         
-        // Récupérer les tokens des admins de l'association pour l'envoi des notifications
-        console.log(`🔍 Récupération des administrateurs pour l'association ${association_id || eventData.association_id}...`);
+        // Récupérer l'association ID de l'événement si non fourni
         const associationId = association_id || eventData.association_id;
         
         if (!associationId) {
@@ -100,37 +126,45 @@ exports.handler = async (event) => {
             };
         }
         
-        // Récupérer les tokens des administrateurs de l'association
-        const { data: admins, error: adminsError } = await supabase
-            .from('association_administrators')
-            .select(`
-                user_id,
-                users (
-                    device_tokens
-                )
-            `)
-            .eq('association_id', associationId)
-            .eq('role', 'admin');
-            
-        if (adminsError) {
-            console.error('❌ Erreur lors de la récupération des administrateurs:', adminsError);
-            throw new Error(`Impossible de récupérer les administrateurs: ${adminsError.message}`);
-        }
+        // Si on utilise le nouveau format avec deviceTokens directs, on ne récupère pas les administrateurs
+        let adminTokens = [];
         
-        // Extraire les tokens d'appareils des administrateurs
-        console.log(`🔍 Extraction des tokens d'appareils pour ${admins.length} administrateurs...`);
-        const adminTokens = admins
-            .filter(admin => admin.users && admin.users.device_tokens)
-            .flatMap(admin => admin.users.device_tokens)
-            .filter(token => token); // Filtrer les tokens vides
+        if (isNewFormat) {
+            adminTokens = deviceTokens;
+            console.log(`📱 ${adminTokens.length} tokens d'appareils fournis directement`);
+        } else {
+            // Récupérer les tokens des administrateurs de l'association
+            const { data: admins, error: adminsError } = await supabase
+                .from('association_administrators')
+                .select(`
+                    user_id,
+                    users (
+                        device_tokens
+                    )
+                `)
+                .eq('association_id', associationId)
+                .eq('role', 'admin');
+                
+            if (adminsError) {
+                console.error('❌ Erreur lors de la récupération des administrateurs:', adminsError);
+                throw new Error(`Impossible de récupérer les administrateurs: ${adminsError.message}`);
+            }
+            
+            // Extraire les tokens d'appareils des administrateurs
+            console.log(`🔍 Extraction des tokens d'appareils pour ${admins.length} administrateurs...`);
+            adminTokens = admins
+                .filter(admin => admin.users && admin.users.device_tokens)
+                .flatMap(admin => admin.users.device_tokens)
+                .filter(token => token); // Filtrer les tokens vides
+        }
             
         if (adminTokens.length === 0) {
-            console.warn('⚠️ Aucun token d\'appareil trouvé pour les administrateurs');
+            console.warn('⚠️ Aucun token d\'appareil trouvé pour l\'envoi de notifications');
             return {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: false,
-                    message: 'Aucun administrateur avec appareil enregistré'
+                    message: 'Aucun appareil enregistré pour les notifications'
                 })
             };
         }
@@ -173,33 +207,47 @@ exports.handler = async (event) => {
         notification.badge = 1;
         notification.sound = "default";
         
-        // Format du nom de l'acheteur
-        const buyerName = buyer_info ? 
-            `${buyer_info.firstName} ${buyer_info.lastName}` : 
-            "Un utilisateur";
+        // Format du nom de l'acheteur et des détails du ticket adaptés au format
+        let buyerName, ticketQuantity, ticketPrice;
         
-        // Formatage du message
-        const ticketQuantity = ticket_data.quantity || 1;
-        const ticketPrice = formatPrice(ticket_data.total_amount || 0);
+        if (isNewFormat) {
+            buyerName = ticketSaleData.customer_name || "Un utilisateur";
+            ticketQuantity = ticketSaleData.quantity || 1;
+            ticketPrice = formatPrice(parseFloat(ticketSaleData.amount) || 0);
+        } else {
+            buyerName = buyer_info ? 
+                `${buyer_info.firstName} ${buyer_info.lastName}` : 
+                "Un utilisateur";
+            ticketQuantity = ticket_data.quantity || 1;
+            ticketPrice = formatPrice(ticket_data.total_amount || 0);
+        }
         
+        // Formatage du message de notification
         notification.alert = {
             title: `💰 Nouvelle vente`,
             body: `${buyerName} a acheté ${ticketQuantity} billet${ticketQuantity > 1 ? 's' : ''} pour "${eventData.title}" (${ticketPrice})`
         };
         
         // Ajouter des données supplémentaires
-        notification.payload = { 
+        notification.payload = isNewFormat ? { 
+            ticket: ticket_data,
+            event: eventData,
+            buyer: buyer_info,
+            type: 'ticket_sold',
+            source: 'ticket_sale_notification'
+        } : { 
             ticket: ticket_data,
             event: eventData,
             buyer: buyer_info,
             type: 'ticket_sold',
             ticket_id: ticket_id
         };
+        
         notification.topic = "com.babylone";
         
-        console.log('🔔 Envoi des notifications de vente aux administrateurs...');
+        console.log('🔔 Envoi des notifications de vente aux destinataires...', notification.alert);
         
-        // Envoyer la notification à tous les administrateurs
+        // Envoyer la notification à tous les destinataires
         const results = await Promise.all(
             adminTokens.map(token => apnProvider.send(notification, token))
         );
