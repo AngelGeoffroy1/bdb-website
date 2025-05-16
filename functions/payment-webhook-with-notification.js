@@ -109,6 +109,7 @@ async function handlePaymentSucceeded(paymentIntent) {
         // Déterminer la table à utiliser en fonction du type d'événement
         const isNightclubType = metadata.type === 'nightclub';
         const ticketsTable = isNightclubType ? 'nightclub_tickets' : 'tickets';
+        console.log(`🔍 Recherche dans la table ${ticketsTable} pour l'événement ${eventId} et l'utilisateur ${metadata.user_id}`);
         
         // Récupérer le dernier ticket créé pour cet événement (approche simplifiée)
         const { data: ticketData, error: ticketError } = await supabase
@@ -139,6 +140,14 @@ async function handlePaymentSucceeded(paymentIntent) {
         const ticket = ticketData[0];
         console.log('🎫 Ticket trouvé:', ticket.id);
         
+        // S'assurer que le ticket a toutes les propriétés nécessaires
+        const normalizedTicket = {
+            id: ticket.id,
+            quantity: ticket.quantity || 1,
+            total_amount: ticket.amount / 100 || ticket.total_amount || 0,
+            ...ticket
+        };
+        
         // Construire les informations de l'acheteur
         const buyerInfo = {
             firstName: metadata.customer_first_name || ticket.customer_first_name,
@@ -149,12 +158,14 @@ async function handlePaymentSucceeded(paymentIntent) {
         // Appeler la fonction de notification
         console.log('📱 Envoi de la notification de vente...');
         const notificationPayload = {
-            ticket_id: ticket.id,
+            ticket_id: normalizedTicket.id,
             event_id: eventId,
             association_id: eventData.association_id,
-            ticket_data: ticket,
+            ticket_data: normalizedTicket,
             buyer_info: buyerInfo
         };
+        
+        console.log('📝 Payload de notification:', JSON.stringify(notificationPayload, null, 2));
         
         // URL de la fonction de notification
         const notificationUrl = "https://bureaudesbureaux.com/.netlify/functions/ticket-sold-notification";
@@ -167,6 +178,13 @@ async function handlePaymentSucceeded(paymentIntent) {
             },
             body: JSON.stringify(notificationPayload)
         });
+        
+        // Vérifier le statut de la réponse
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ Erreur de notification (${response.status}):`, errorText);
+            throw new Error(`Erreur lors de l'envoi de la notification: ${response.status} - ${errorText}`);
+        }
         
         const notificationResult = await response.json();
         console.log('📱 Résultat de la notification:', notificationResult);

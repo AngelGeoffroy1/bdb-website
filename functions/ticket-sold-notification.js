@@ -39,11 +39,32 @@ exports.handler = async (event) => {
             ticket_data 
         } = body;
         
-        // Validation des données requises
-        if (!event_id || !ticket_data) {
+        // Validation des données requises avec messages détaillés
+        const validationErrors = [];
+        
+        if (!event_id) validationErrors.push('event_id manquant');
+        if (!ticket_data) validationErrors.push('ticket_data manquant');
+        else {
+            // Vérifier les propriétés essentielles de ticket_data
+            if (!ticket_data.id) validationErrors.push('ticket_data.id manquant');
+            if (ticket_data.total_amount === undefined) validationErrors.push('ticket_data.total_amount manquant');
+            if (ticket_data.quantity === undefined) validationErrors.push('ticket_data.quantity manquant');
+        }
+        
+        if (validationErrors.length > 0) {
+            console.error('❌ Erreurs de validation:', validationErrors);
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'Données manquantes (event_id ou ticket_data)' })
+                body: JSON.stringify({ 
+                    error: 'Données invalides ou manquantes', 
+                    details: validationErrors,
+                    received_data: {
+                        has_event_id: !!event_id,
+                        has_ticket_data: !!ticket_data,
+                        has_association_id: !!association_id,
+                        ticket_data_keys: ticket_data ? Object.keys(ticket_data) : []
+                    }
+                })
             };
         }
         
@@ -68,7 +89,14 @@ exports.handler = async (event) => {
             console.warn('⚠️ Aucun ID d\'association trouvé, impossible d\'envoyer les notifications');
             return {
                 statusCode: 400,
-                body: JSON.stringify({ error: 'ID d\'association manquant' })
+                body: JSON.stringify({ 
+                    error: 'ID d\'association manquant',
+                    event_data: {
+                        id: eventData.id,
+                        title: eventData.title,
+                        has_association_id: !!eventData.association_id
+                    }
+                })
             };
         }
         
@@ -111,6 +139,25 @@ exports.handler = async (event) => {
         
         // Initialiser le provider APN
         console.log('🔄 Initialisation du fournisseur APN...');
+        console.log('Configuration APN:');
+        console.log('APN_KEY_ID:', process.env.APN_KEY_ID);
+        console.log('APN_TEAM_ID:', process.env.APN_TEAM_ID);
+        console.log('APN_KEY_PATH existe:', !!process.env.APN_KEY_PATH);
+        
+        // Vérifier l'existence de la clé
+        try {
+            const fs = require('fs');
+            const keyExists = fs.existsSync(process.env.APN_KEY_PATH);
+            console.log(`Le fichier de clé existe: ${keyExists ? 'Oui' : 'Non'}`);
+            
+            if (!keyExists) {
+                throw new Error(`Le fichier de clé APN n'existe pas: ${process.env.APN_KEY_PATH}`);
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors de la vérification du fichier de clé:', error);
+        }
+        
+        // Créer le provider APN
         const apnProvider = new apn.Provider({
             token: {
                 key: process.env.APN_KEY_PATH,
