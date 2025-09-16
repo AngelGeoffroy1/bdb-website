@@ -42,14 +42,14 @@
         .billetterie-header {
             position: relative;
             overflow: hidden;
-            min-height: 46vh;
+            min-height: 55vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 88px 2rem 2.4rem;
+            padding: 110px 2rem 2.8rem;
             border-radius: 20px;
-            margin: 1.3rem auto 0.6rem;
+            margin: 1.35rem auto 0.6rem;
             max-width: 1200px;
             background: #050505;
         }
@@ -117,18 +117,18 @@
         .events-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0.35rem 2rem 1.2rem;
+            padding: 0.25rem 2rem 0.8rem;
         }
 
         .events-section {
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.35rem;
         }
 
         .events-section-header {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.75rem;
+            gap: 0.45rem;
         }
 
         .events-section-title {
@@ -149,20 +149,20 @@
 
         .events-carousel {
             position: relative;
-            margin-top: 0.4rem;
+            margin-top: 0.3rem;
             padding-inline: 0;
         }
 
         .events-map-section {
-            margin-top: 0.95rem;
+            margin-top: 0.6rem;
         }
 
         .events-map-header {
             display: flex;
             flex-direction: column;
-            gap: 0.6rem;
+            gap: 0.4rem;
             align-items: flex-start;
-            margin-bottom: 0.9rem;
+            margin-bottom: 0.55rem;
         }
 
         .events-map-title {
@@ -189,13 +189,13 @@
 
         #events-overview-map {
             width: 100%;
-            height: 420px;
+            height: 340px;
         }
 
         .events-map-legend {
             position: absolute;
-            top: 1.25rem;
-            right: 1.25rem;
+            top: 0.9rem;
+            right: 0.9rem;
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
@@ -707,7 +707,7 @@
             }
 
             .events-container {
-                padding: 1.05rem 1.25rem 2.1rem;
+                padding: 0.6rem 1.15rem 1.4rem;
             }
 
             .events-carousel {
@@ -729,7 +729,7 @@
             }
 
             .events-map-section {
-                margin-top: 0.7rem;
+                margin-top: 0.6rem;
             }
 
             .events-map-title {
@@ -737,7 +737,7 @@
             }
 
             #events-overview-map {
-                height: 280px;
+                height: 260px;
             }
 
             .events-map-legend {
@@ -1031,19 +1031,12 @@
 
         const mapFallbackCenter = { lat: 44.837789, lng: -0.57918 };
         const mapStyles = [
-            { elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
-            { elementType: 'labels.text.fill', stylers: [{ color: '#f6f6f6' }] },
-            { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
-            {
-                featureType: 'poi',
-                elementType: 'labels.text.fill',
-                stylers: [{ color: '#a0a0a0' }]
-            },
-            {
-                featureType: 'poi.park',
-                elementType: 'geometry',
-                stylers: [{ color: '#1b2a1b' }]
-            },
+            { elementType: 'geometry', stylers: [{ color: '#151515' }] },
+            { elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            { featureType: 'poi.park', stylers: [{ visibility: 'off' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+            { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
             {
                 featureType: 'road',
                 elementType: 'geometry',
@@ -1052,21 +1045,18 @@
             {
                 featureType: 'road',
                 elementType: 'geometry.stroke',
-                stylers: [{ color: '#121212' }]
+                stylers: [{ color: '#111111' }]
             },
             {
                 featureType: 'road.highway',
                 elementType: 'geometry',
-                stylers: [{ color: '#444444' }]
+                stylers: [{ color: '#3a3a3a' }]
             },
             {
                 featureType: 'water',
                 elementType: 'geometry',
                 stylers: [{ color: '#0c1f33' }]
-            },
-            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-            { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }
+            }
         ];
 
         const markerSvg = {
@@ -1080,7 +1070,7 @@
                     </defs>
                     <path d="M18 0C12 0 6 1.5 6 7.5V24C6 33 18 42 18 42C18 42 30 33 30 24V7.5C30 1.5 24 0 18 0Z" fill="url(#grad)" stroke="#0B0B0B" stroke-width="2"/>
                     <rect x="10" y="11" width="16" height="12" rx="3" fill="#0B0B0B" opacity="0.15"/>
-                    <rect x="11" y="12" width="14" height="10" rx="2" fill="#0B0B0B" opacity="0.2"/>
+                    <rect x="11" y="12" width="14" height="10" rx="2" fill="#0B0B0B" opacity="0.18"/>
                     <text x="18" y="22" text-anchor="middle" font-family="'Poppins', sans-serif" font-weight="600" font-size="9" fill="#0B0B0B">📅</text>
                 </svg>
             `),
