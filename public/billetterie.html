@@ -42,14 +42,14 @@
         .billetterie-header {
             position: relative;
             overflow: hidden;
-            min-height: 42vh;
+            min-height: 34vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 84px 2rem 2.8rem;
+            padding: 64px 2rem 2rem;
             border-radius: 20px;
-            margin: 1.4rem auto 0.7rem;
+            margin: 1.2rem auto 0.5rem;
             max-width: 1200px;
             background: #050505;
         }
@@ -117,11 +117,11 @@
         .events-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0.875rem 2rem 2.4rem;
+            padding: 0.5rem 2rem 1.8rem;
         }
 
         .events-section {
-            margin-bottom: 1.4rem;
+            margin-bottom: 0.9rem;
         }
 
         .events-section-header {
@@ -149,8 +149,85 @@
 
         .events-carousel {
             position: relative;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
             padding-inline: 0;
+        }
+
+        .events-map-section {
+            margin-top: 1.8rem;
+        }
+
+        .events-map-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+
+        .events-map-title {
+            font-size: 2.2rem;
+            color: var(--text-color);
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        .events-map-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 560px;
+            margin: 0;
+        }
+
+        .events-map-wrapper {
+            position: relative;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(218,252,59,0.12);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+        }
+
+        #events-overview-map {
+            width: 100%;
+            height: 420px;
+        }
+
+        .events-map-legend {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            background: rgba(5,5,5,0.8);
+            border-radius: 999px;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(218,252,59,0.15);
+            backdrop-filter: blur(8px);
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.85rem;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.upcoming {
+            background: #DAFC3B;
+            box-shadow: 0 0 6px rgba(218,252,59,0.65);
+        }
+
+        .legend-dot.past {
+            background: #8C8C94;
+            box-shadow: 0 0 6px rgba(140,140,148,0.45);
         }
 
         .events-track {
@@ -651,6 +728,24 @@
                 flex: 0 0 clamp(240px, 80vw, 300px);
             }
 
+            .events-map-section {
+                margin-top: 1.2rem;
+            }
+
+            .events-map-title {
+                font-size: 1.8rem;
+            }
+
+            #events-overview-map {
+                height: 320px;
+            }
+
+            .events-map-legend {
+                position: static;
+                margin: 0.75rem auto 0;
+                justify-content: center;
+            }
+
             .event-modal__content {
                 grid-template-columns: 1fr;
                 max-height: calc(100vh - 3rem);
@@ -779,6 +874,20 @@
                 <i class="fas fa-hourglass-end"></i>
                 <h3>Aucun événement passé</h3>
                 <p>Dès que des événements seront terminés, vous pourrez les retrouver ici.</p>
+            </div>
+        </section>
+
+        <section class="events-map-section" data-aos="fade-up">
+            <div class="events-map-header">
+                <h2 class="events-map-title">Carte des évènements</h2>
+                <p class="events-map-subtitle">Visualisez l'ensemble des évènements BDB. Cliquez sur un marqueur pour afficher tous les détails et réserver vos places.</p>
+            </div>
+            <div class="events-map-wrapper">
+                <div id="events-overview-map" role="img" aria-label="Carte des emplacements des évènements"></div>
+                <div class="events-map-legend">
+                    <span class="legend-item"><span class="legend-dot upcoming"></span>À venir</span>
+                    <span class="legend-item"><span class="legend-dot past"></span>Passés</span>
+                </div>
             </div>
         </section>
     </main>
@@ -912,6 +1021,13 @@
         let headerActiveSlide = 0;
 
         const carouselRegistry = new WeakMap();
+        const eventLocationCache = new Map();
+
+        let overviewMap = null;
+        let overviewMarkers = [];
+        let overviewBounds = null;
+        let overviewInfoWindow = null;
+        let pendingOverviewData = null;
 
         const mapFallbackCenter = { lat: 44.837789, lng: -0.57918 };
         const mapStyles = [
@@ -992,6 +1108,149 @@
                 headerActiveSlide = nextSlideIndex;
                 nextImageIndex = (nextImageIndex + 1) % headerCarouselImages.length;
             }, 6000);
+        }
+
+        function initialiseOverviewMapIfNeeded() {
+            if (overviewMap || !mapsReady || typeof google === 'undefined') {
+                return;
+            }
+
+            const overviewElement = document.getElementById('events-overview-map');
+            if (!overviewElement) {
+                return;
+            }
+
+            overviewMap = new google.maps.Map(overviewElement, {
+                center: mapFallbackCenter,
+                zoom: 12,
+                styles: mapStyles,
+                mapTypeControl: false,
+                streetViewControl: false,
+                zoomControl: true,
+                fullscreenControl: true,
+                clickableIcons: false
+            });
+
+            overviewBounds = new google.maps.LatLngBounds();
+            overviewInfoWindow = new google.maps.InfoWindow({
+                content: ''
+            });
+        }
+
+        function clearOverviewMarkers() {
+            overviewMarkers.forEach(marker => marker.setMap(null));
+            overviewMarkers = [];
+            if (typeof google !== 'undefined' && google.maps && typeof google.maps.LatLngBounds === 'function') {
+                overviewBounds = new google.maps.LatLngBounds();
+            } else {
+                overviewBounds = null;
+            }
+        }
+
+        function geocodeEventLocation(event) {
+            if (!event || !geocoder) {
+                return Promise.resolve(null);
+            }
+
+            const cacheKey = String(event.id || `${event.name}-${event.date}`);
+            if (eventLocationCache.has(cacheKey)) {
+                return Promise.resolve(eventLocationCache.get(cacheKey));
+            }
+
+            const address = event.address || event.location;
+            if (!address) {
+                eventLocationCache.set(cacheKey, null);
+                return Promise.resolve(null);
+            }
+
+            return new Promise(resolve => {
+                geocoder.geocode({ address }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const position = results[0].geometry.location;
+                        const coords = {
+                            lat: position.lat(),
+                            lng: position.lng()
+                        };
+                        eventLocationCache.set(cacheKey, coords);
+                        resolve(coords);
+                    } else {
+                        console.warn('Geocode non concluante:', status, address);
+                        eventLocationCache.set(cacheKey, null);
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        function renderOverviewMap(upcomingEvents = [], pastEvents = []) {
+            if (!mapsReady) {
+                pendingOverviewData = { upcomingEvents, pastEvents };
+                return;
+            }
+
+            initialiseOverviewMapIfNeeded();
+
+            if (!overviewMap || !geocoder) {
+                pendingOverviewData = { upcomingEvents, pastEvents };
+                return;
+            }
+
+            clearOverviewMarkers();
+
+            const eventsToRender = [
+                ...upcomingEvents.map(event => ({ event, isPast: false })),
+                ...pastEvents.map(event => ({ event, isPast: true }))
+            ];
+
+            if (!eventsToRender.length) {
+                overviewMap.setCenter(mapFallbackCenter);
+                overviewMap.setZoom(12);
+                return;
+            }
+
+            const markerPromises = eventsToRender.map(({ event, isPast }) =>
+                geocodeEventLocation(event).then(position => {
+                    if (!position) {
+                        return;
+                    }
+
+                    const marker = new google.maps.Marker({
+                        map: overviewMap,
+                        position,
+                        title: event.name,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 8,
+                            fillColor: isPast ? '#8C8C94' : '#DAFC3B',
+                            fillOpacity: 1,
+                            strokeColor: '#050505',
+                            strokeWeight: 2
+                        }
+                    });
+
+                    marker.addListener('click', () => {
+                        if (overviewInfoWindow) {
+                            overviewInfoWindow.setContent(`<strong>${event.name}</strong>`);
+                            overviewInfoWindow.open(overviewMap, marker);
+                        }
+                        openEventModal(event);
+                    });
+
+                    overviewMarkers.push(marker);
+                    if (overviewBounds) {
+                        overviewBounds.extend(position);
+                    }
+                })
+            );
+
+            Promise.all(markerPromises).then(() => {
+                if (overviewMarkers.length && overviewBounds) {
+                    overviewMap.fitBounds(overviewBounds, { padding: 60 });
+                } else {
+                    overviewMap.setCenter(mapFallbackCenter);
+                    overviewMap.setZoom(12);
+                }
+            });
         }
 
         function initCarousel(carouselElement) {
@@ -1305,17 +1564,10 @@
                 return;
             }
 
-            const address = event.address || event.location;
-            if (!address) {
-                mapInstance.setCenter(mapFallbackCenter);
-                mapInstance.setZoom(12);
-                return;
-            }
-
-            geocoder.geocode({ address }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    const position = results[0].geometry.location;
-                    mapInstance.setCenter(position);
+            geocodeEventLocation(event).then(position => {
+                if (position) {
+                    const latLng = new google.maps.LatLng(position.lat, position.lng);
+                    mapInstance.setCenter(latLng);
                     mapInstance.setZoom(14);
 
                     if (mapMarker) {
@@ -1324,11 +1576,10 @@
 
                     mapMarker = new google.maps.Marker({
                         map: mapInstance,
-                        position,
+                        position: latLng,
                         title: event.name
                     });
                 } else {
-                    console.warn('Geocode non concluante:', status);
                     mapInstance.setCenter(mapFallbackCenter);
                     mapInstance.setZoom(12);
                 }
@@ -1338,9 +1589,14 @@
         window.initEventMap = function initEventMap() {
             mapsReady = true;
             initialiseMapIfNeeded();
+            initialiseOverviewMapIfNeeded();
             if (pendingMapEvent) {
                 renderEventMap(pendingMapEvent);
                 pendingMapEvent = null;
+            }
+            if (pendingOverviewData) {
+                renderOverviewMap(pendingOverviewData.upcomingEvents, pendingOverviewData.pastEvents);
+                pendingOverviewData = null;
             }
         };
 
@@ -1389,6 +1645,7 @@
                     noPastEvents.style.display = 'block';
                 }
                 refreshCarousels();
+                renderOverviewMap([], []);
             } finally {
                 if (loadingSpinner && loadingSpinner.parentNode) {
                     loadingSpinner.parentNode.removeChild(loadingSpinner);
@@ -1413,6 +1670,7 @@
                 if (noEvents) noEvents.style.display = 'block';
                 if (noPastEvents) noPastEvents.style.display = 'block';
                 refreshCarousels();
+                renderOverviewMap([], []);
                 return;
             }
 
@@ -1461,6 +1719,8 @@
             attachEventInteractions(pastEventsGrid);
 
             refreshCarousels();
+
+            renderOverviewMap(upcomingEvents, pastEvents);
 
             if (window.AOS && typeof window.AOS.refreshHard === 'function') {
                 window.AOS.refreshHard();
