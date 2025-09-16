@@ -76,14 +76,13 @@ exports.handler = async (event) => {
                 id,
                 name,
                 price,
-                platform_fee_percentage,
+                platform_fee,
                 association_id,
                 associations (
                     name
                 )
             `)
             .eq('id', event_id)
-            .eq('is_active', true)
             .single();
 
         if (eventError || !eventData) {
@@ -104,7 +103,7 @@ exports.handler = async (event) => {
 
         // Calculer les montants
         const baseAmount = eventData.price * quantity;
-        const feePercentage = eventData.platform_fee_percentage || 5;
+        const feePercentage = eventData.platform_fee || 5;
         const feeAmount = (baseAmount * feePercentage) / 100;
         const totalAmount = baseAmount + feeAmount;
 
