@@ -21,115 +21,213 @@
     <!-- Styles spécifiques au paiement -->
     <style>
         .payment-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 120px auto 60px;
             padding: 0 2rem;
         }
 
         .payment-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         .payment-header h1 {
             font-size: 2.5rem;
             color: var(--accent-color);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
         }
 
         .payment-header p {
             color: rgba(255, 255, 255, 0.8);
             font-size: 1.1rem;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out 0.4s forwards;
         }
 
-        .payment-grid {
+        /* Grande card unifiée */
+        .payment-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            border: 1px solid rgba(218,252,59,0.15);
+            overflow: hidden;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            backdrop-filter: blur(10px);
+        }
+
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            opacity: 0.6;
+        }
+
+        .payment-card-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 2rem;
+            min-height: 600px;
         }
 
+        /* Section résumé événement */
         .event-summary {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 2rem;
-            border: 1px solid rgba(218,252,59,0.1);
+            padding: 2.5rem;
+            background: linear-gradient(135deg, rgba(218,252,59,0.03) 0%, rgba(218,252,59,0.01) 100%);
+            border-right: 1px solid rgba(218,252,59,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-summary::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(218,252,59,0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .event-summary h3 {
             color: var(--accent-color);
             margin-bottom: 1.5rem;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
         }
 
         .event-image {
             width: 100%;
-            height: 150px;
+            height: 180px;
             background-size: cover;
             background-position: center;
-            border-radius: 10px;
-            margin-bottom: 1rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .event-image:hover {
+            transform: scale(1.02);
+        }
+
+        .event-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(218,252,59,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .event-image:hover::after {
+            opacity: 1;
         }
 
         .event-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-color);
+            position: relative;
+            z-index: 1;
         }
 
         .event-details {
             color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         .event-detail {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
+            gap: 0.7rem;
+            margin-bottom: 0.7rem;
+            padding: 0.3rem 0;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .event-detail:hover {
+            transform: translateX(5px);
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .event-detail i {
+            color: var(--accent-color);
+            width: 16px;
+            text-align: center;
         }
 
         .event-price {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: var(--accent-color);
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 0 10px rgba(218,252,59,0.3);
         }
 
+        /* Section formulaire */
         .payment-form {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 2rem;
-            border: 1px solid rgba(218,252,59,0.1);
+            padding: 2.5rem;
+            position: relative;
         }
 
         .payment-form h3 {
             color: var(--accent-color);
             margin-bottom: 1.5rem;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+            font-weight: 600;
         }
 
         .form-group {
             margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
         }
+
+        .form-group:nth-child(1) { animation-delay: 0.8s; }
+        .form-group:nth-child(2) { animation-delay: 0.9s; }
+        .form-group:nth-child(3) { animation-delay: 1.0s; }
+        .form-group:nth-child(4) { animation-delay: 1.1s; }
 
         .form-group label {
             display: block;
             color: rgba(255, 255, 255, 0.8);
             margin-bottom: 0.5rem;
             font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+
+        .form-group:focus-within label {
+            color: var(--accent-color);
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 1rem;
+            padding: 1.1rem 1.2rem;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(218,252,59,0.2);
-            border-radius: 10px;
+            border-radius: 12px;
             color: var(--text-color);
             font-size: 1rem;
-            transition: var(--transition);
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .form-group input:focus,
@@ -137,6 +235,14 @@
             outline: none;
             border-color: var(--accent-color);
             background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(218,252,59,0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group input:hover,
+        .form-group select:hover {
+            border-color: rgba(218,252,59,0.4);
+            background: rgba(255, 255, 255, 0.07);
         }
 
         .form-row {
@@ -150,95 +256,193 @@
             align-items: center;
             gap: 1rem;
             margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(218,252,59,0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(218,252,59,0.1);
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out 0.7s forwards;
+        }
+
+        .quantity-selector label {
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-bottom: 0;
         }
 
         .quantity-btn {
-            width: 40px;
-            height: 40px;
-            border: 1px solid var(--accent-color);
+            width: 44px;
+            height: 44px;
+            border: 2px solid var(--accent-color);
             background: transparent;
             color: var(--accent-color);
             border-radius: 50%;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: var(--transition);
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quantity-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: var(--accent-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .quantity-btn:hover::before {
+            width: 100%;
+            height: 100%;
         }
 
         .quantity-btn:hover {
-            background: var(--accent-color);
             color: var(--background-color);
+            transform: scale(1.1);
+        }
+
+        .quantity-btn span {
+            position: relative;
+            z-index: 1;
         }
 
         .quantity-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .quantity-btn:disabled::before {
+            display: none;
         }
 
         .quantity-input {
-            width: 60px;
+            width: 70px;
             text-align: center;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(218,252,59,0.3);
+            border-radius: 12px;
         }
 
         .price-breakdown {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(218,252,59,0.02) 100%);
+            border-radius: 16px;
+            padding: 1.8rem;
             margin-bottom: 1.5rem;
+            border: 1px solid rgba(218,252,59,0.1);
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out 1.2s forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-breakdown::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            opacity: 0.5;
         }
 
         .price-line {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+            padding: 0.3rem 0;
+            transition: transform 0.2s ease;
+        }
+
+        .price-line:hover {
+            transform: translateX(3px);
         }
 
         .price-line.total {
-            border-top: 1px solid rgba(218,252,59,0.2);
-            padding-top: 0.5rem;
-            margin-top: 0.5rem;
+            border-top: 1px solid rgba(218,252,59,0.3);
+            padding-top: 1rem;
+            margin-top: 0.8rem;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(218,252,59,0.2);
         }
 
         .pay-button {
             width: 100%;
-            padding: 1.2rem;
+            padding: 1.4rem 2rem;
             background: transparent;
             border: 2px solid var(--accent-color);
-            border-radius: 30px;
+            border-radius: 16px;
             color: var(--text-color);
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.4s ease;
             position: relative;
             overflow: hidden;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out 1.3s forwards;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .pay-button::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
+            left: -100%;
             width: 100%;
             height: 100%;
-            background: var(--accent-color);
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.3s ease-out;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            transition: left 0.6s ease;
             z-index: 0;
         }
 
+        .pay-button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s ease-out;
+            z-index: 1;
+        }
+
         .pay-button:hover::before {
+            left: 100%;
+        }
+
+        .pay-button:hover::after {
             transform: scaleX(1);
             transform-origin: left;
         }
 
+        .pay-button:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(218,252,59,0.3);
+            transform: translateY(-3px);
+        }
+
         .pay-button span {
             position: relative;
-            z-index: 1;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .pay-button:hover span {
@@ -248,6 +452,12 @@
         .pay-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+        }
+
+        .pay-button:disabled::before,
+        .pay-button:disabled::after {
+            display: none;
         }
 
         .loading-spinner {
@@ -264,6 +474,36 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Animations personnalisées */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
         }
 
         .error-message {
@@ -331,9 +571,24 @@
         }
 
         @media (max-width: 768px) {
-            .payment-grid {
+            .payment-container {
+                margin: 100px auto 40px;
+                padding: 0 1rem;
+            }
+
+            .payment-card-content {
                 grid-template-columns: 1fr;
-                gap: 2rem;
+                min-height: auto;
+            }
+
+            .event-summary {
+                border-right: none;
+                border-bottom: 1px solid rgba(218,252,59,0.1);
+                padding: 2rem;
+            }
+
+            .payment-form {
+                padding: 2rem;
             }
             
             .form-row {
@@ -342,6 +597,16 @@
             
             .payment-header h1 {
                 font-size: 2rem;
+            }
+
+            .quantity-selector {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .quantity-input {
+                width: 100px;
             }
         }
     </style>
@@ -382,55 +647,64 @@
         <div class="error-message" id="error-message"></div>
         <div class="success-message" id="success-message"></div>
 
-        <div class="payment-grid">
-            <!-- Résumé de l'événement -->
-            <div class="event-summary">
-                <h3>Résumé de votre commande</h3>
-                <div id="event-summary-content">
-                    <!-- Contenu généré dynamiquement -->
-                </div>
-            </div>
-
-            <!-- Formulaire de paiement -->
-            <div class="payment-form">
-                <h3>Informations de paiement</h3>
-                <form id="payment-form">
-                    <div class="quantity-selector">
-                        <label>Quantité :</label>
-                        <button type="button" class="quantity-btn" id="decrease-qty">-</button>
-                        <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="10" readonly>
-                        <button type="button" class="quantity-btn" id="increase-qty">+</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="firstName">Prénom *</label>
-                        <input type="text" id="firstName" name="firstName" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="lastName">Nom *</label>
-                        <input type="text" id="lastName" name="lastName" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="phone">Téléphone</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-
-                    <div class="price-breakdown" id="price-breakdown">
+        <!-- Grande card unifiée -->
+        <div class="payment-card">
+            <div class="payment-card-content">
+                <!-- Résumé de l'événement -->
+                <div class="event-summary">
+                    <h3>Résumé de votre commande</h3>
+                    <div id="event-summary-content">
                         <!-- Contenu généré dynamiquement -->
                     </div>
+                </div>
 
-                    <button type="submit" class="pay-button" id="pay-button">
-                        <div class="loading-spinner" id="loading-spinner"></div>
-                        <span id="pay-button-text">Payer maintenant</span>
-                    </button>
-                </form>
+                <!-- Formulaire de paiement -->
+                <div class="payment-form">
+                    <h3>Informations de paiement</h3>
+                    <form id="payment-form">
+                        <div class="quantity-selector">
+                            <label>Quantité :</label>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <button type="button" class="quantity-btn" id="decrease-qty">
+                                    <span>-</span>
+                                </button>
+                                <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="10" readonly>
+                                <button type="button" class="quantity-btn" id="increase-qty">
+                                    <span>+</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="firstName">Prénom *</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastName">Nom *</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Téléphone</label>
+                            <input type="tel" id="phone" name="phone">
+                        </div>
+
+                        <div class="price-breakdown" id="price-breakdown">
+                            <!-- Contenu généré dynamiquement -->
+                        </div>
+
+                        <button type="submit" class="pay-button" id="pay-button">
+                            <div class="loading-spinner" id="loading-spinner"></div>
+                            <span id="pay-button-text">Payer maintenant</span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </main>
@@ -701,10 +975,49 @@
             }
         }, { passive: true });
 
+        // Ajouter des microanimations aux éléments
+        function addMicroAnimations() {
+            // Animation des champs de formulaire au focus
+            const inputs = document.querySelectorAll('.form-group input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.parentElement.style.transform = 'translateY(-2px)';
+                });
+                
+                input.addEventListener('blur', () => {
+                    input.parentElement.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Animation du sélecteur de quantité
+            const quantityBtns = document.querySelectorAll('.quantity-btn');
+            quantityBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.style.animation = 'pulse 0.3s ease';
+                    setTimeout(() => {
+                        btn.style.animation = '';
+                    }, 300);
+                });
+            });
+
+            // Animation du bouton de paiement au survol
+            const payButton = document.getElementById('pay-button');
+            if (payButton) {
+                payButton.addEventListener('mouseenter', () => {
+                    payButton.style.animation = 'pulse 2s infinite';
+                });
+                
+                payButton.addEventListener('mouseleave', () => {
+                    payButton.style.animation = '';
+                });
+            }
+        }
+
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
             initStripe();
             loadEventData();
+            addMicroAnimations();
         });
     </script>
 </body>
