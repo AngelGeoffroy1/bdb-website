@@ -81,67 +81,31 @@
             padding: 4rem 2rem;
         }
 
-        .events-section-title {
-            font-size: 2.5rem;
-            color: var(--accent-color);
-            text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-            display: inline-block;
-            width: 100%;
+        .events-section {
+            margin-bottom: 4rem;
         }
 
-        .events-section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent-color), transparent);
-            border-radius: 2px;
+        .events-section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+
+        .events-section-subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 520px;
+            margin: 0 auto 2rem;
         }
 
         .events-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
-            margin-bottom: 4rem;
-        }
-
-        .past-events-section {
-            margin-top: 6rem;
-            padding-top: 4rem;
-            border-top: 1px solid rgba(218,252,59,0.2);
-        }
-
-        .past-events-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
             margin-top: 3rem;
-            opacity: 0.6;
-            filter: grayscale(20%);
-        }
-
-        .past-events-grid .event-card {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .past-events-grid .event-card::before {
-            content: 'TERMINÉ';
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(244, 67, 54, 0.9);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 2;
         }
 
         .event-card {
@@ -150,211 +114,29 @@
             overflow: hidden;
             transition: var(--transition);
             border: 1px solid rgba(218,252,59,0.1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .event-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            z-index: -1;
         }
 
         .event-card:hover {
             transform: translateY(-10px);
             border-color: var(--accent-color);
             box-shadow: 0 10px 30px rgba(218,252,59,0.2);
-            cursor: pointer;
         }
 
-        /* Styles pour la popup modale */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.active {
+        .event-card:hover::after {
             opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            background: var(--background-color);
-            border-radius: 20px;
-            max-width: 900px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            transform: scale(0.8);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            position: relative;
-            height: 300px;
-            overflow: hidden;
-            border-radius: 20px 20px 0 0;
-        }
-
-        .modal-header img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 10;
-        }
-
-        .modal-close:hover {
-            background: rgba(244, 67, 54, 0.9);
-            transform: rotate(90deg);
-        }
-
-        .modal-body {
-            padding: 2rem;
-        }
-
-        .modal-title {
-            font-size: 2rem;
-            color: var(--accent-color);
-            margin-bottom: 1rem;
-        }
-
-        .modal-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-color);
-        }
-
-        .meta-item i {
-            color: var(--accent-color);
-            width: 20px;
-        }
-
-        .modal-description {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-
-        .modal-map {
-            height: 300px;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(218,252,59,0.2);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-modal {
-            padding: 1rem 2rem;
-            border: 2px solid var(--accent-color);
-            border-radius: 30px;
-            background: transparent;
-            color: var(--accent-color);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-weight: 600;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-modal::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--accent-color);
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.3s ease;
-            z-index: -1;
-        }
-
-        .btn-modal:hover::before {
-            transform: scaleX(1);
-            transform-origin: left;
-        }
-
-        .btn-modal:hover {
-            color: var(--background-color);
-        }
-
-        .btn-modal.secondary {
-            border-color: rgba(255, 255, 255, 0.3);
-            color: var(--text-color);
-        }
-
-        .btn-modal.secondary::before {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-modal.secondary:hover {
-            border-color: var(--accent-color);
-        }
-
-        @media (max-width: 768px) {
-            .modal-content {
-                width: 95%;
-                margin: 1rem;
-            }
-            
-            .modal-body {
-                padding: 1.5rem;
-            }
-            
-            .modal-title {
-                font-size: 1.5rem;
-            }
-            
-            .modal-header {
-                height: 200px;
-            }
-            
-            .modal-map {
-                height: 200px;
-            }
         }
 
         .event-image {
@@ -453,6 +235,246 @@
             color: var(--background-color);
         }
 
+        .event-card.past {
+            opacity: 0.55;
+            filter: grayscale(20%);
+            transform: none;
+        }
+
+        .event-card.past:hover {
+            opacity: 0.75;
+            transform: translateY(-6px);
+        }
+
+        .event-card.past .event-price {
+            background: rgba(218, 252, 59, 0.65);
+        }
+
+        .past-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .modal-open {
+            overflow: hidden;
+        }
+
+        .event-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+            z-index: 1200;
+        }
+
+        .event-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .event-modal__content {
+            background: rgba(12, 12, 12, 0.9);
+            border: 1px solid rgba(218,252,59,0.15);
+            border-radius: 24px;
+            width: min(960px, calc(100% - 2rem));
+            max-height: calc(100vh - 4rem);
+            overflow: hidden;
+            box-shadow: 0 40px 120px rgba(0,0,0,0.45);
+            transform: translateY(40px) scale(0.96);
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+        }
+
+        .event-modal.active .event-modal__content {
+            transform: translateY(0) scale(1);
+        }
+
+        .event-modal__image {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-modal__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .event-modal__body {
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .event-modal__header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .event-modal__title {
+            font-size: 2rem;
+            color: var(--accent-color);
+        }
+
+        .event-modal__info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .event-modal__info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .event-modal__description {
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        #event-map {
+            width: 100%;
+            height: 240px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(218,252,59,0.1);
+        }
+
+        .event-modal__actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .event-modal__buy {
+            flex: 1;
+            padding: 1rem 1.25rem;
+            border-radius: 999px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--accent-color), rgba(218,252,59,0.8));
+            color: #050505;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .event-modal__buy:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(218,252,59,0.25);
+        }
+
+        .event-modal__close {
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: none;
+            background: rgba(0,0,0,0.6);
+            color: rgba(255,255,255,0.85);
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: background 0.3s ease, transform 0.3s ease;
+            z-index: 2;
+        }
+
+        .event-modal__close:hover {
+            background: rgba(218,252,59,0.85);
+            color: #050505;
+            transform: rotate(90deg);
+        }
+
+        .event-modal__meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .event-modal__meta strong {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .event-modal__meta span {
+            font-size: 1.05rem;
+            color: rgba(255,255,255,0.85);
+        }
+
+        .event-modal__status {
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.75);
+            align-self: flex-start;
+        }
+
+        .event-modal__body strong.event-modal__meta-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .event-modal__body #event-map {
+            margin-top: 0.75rem;
+        }
+
+        .event-modal__status.past {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255,255,255,0.55);
+        }
+
+        @keyframes modalPulse {
+            0% { transform: scale(0.96); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .event-modal.active .event-modal__image img {
+            animation: modalPulse 0.45s ease both;
+        }
+
         .loading-spinner {
             display: none;
             width: 20px;
@@ -490,9 +512,22 @@
                 font-size: 1.1rem;
             }
             
+            .events-section-title {
+                font-size: 2rem;
+            }
+
             .events-grid {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
+            }
+
+            .event-modal__content {
+                grid-template-columns: 1fr;
+                max-height: calc(100vh - 3rem);
+            }
+
+            .event-modal__image {
+                height: 260px;
             }
         }
 
@@ -567,59 +602,65 @@
 
     <main class="events-container">
         <!-- Événements à venir -->
-        <section id="future-events" data-aos="fade-up">
-            <h2 class="events-section-title">Événements à venir</h2>
-            <div id="future-events-grid" class="events-grid">
+        <section id="events" class="events-section" data-aos="fade-up">
+            <h2 class="events-section-title">Évènements à venir</h2>
+            <p class="events-section-subtitle">Ne manquez pas les prochaines soirées et expériences étudiantes sélectionnées par BDB.</p>
+            <div id="events-grid" class="events-grid">
                 <div class="loading-spinner" id="loading-spinner"></div>
             </div>
-            <div id="no-future-events" class="no-events" style="display: none;">
+            <div id="no-events" class="no-events" style="display: none;">
                 <i class="fas fa-calendar-times"></i>
-                <h3>Aucun événement à venir</h3>
-                <p>Il n'y a pas d'événements prévus pour le moment.</p>
+                <h3>Aucun événement trouvé</h3>
+                <p>Il n'y a pas d'événements disponibles pour le moment.</p>
             </div>
         </section>
 
         <!-- Événements passés -->
-        <section class="past-events-section" id="past-events" data-aos="fade-up">
-            <h2 class="events-section-title">Événements passés</h2>
-            <div id="past-events-grid" class="past-events-grid">
-                <!-- Les événements passés seront chargés ici -->
-            </div>
+        <section id="past-events" class="events-section" data-aos="fade-up">
+            <h2 class="events-section-title">Évènements passés</h2>
+            <p class="events-section-subtitle">Revivez les moments forts et découvrez l'ambiance des dernières éditions.</p>
+            <div id="past-events-grid" class="events-grid"></div>
             <div id="no-past-events" class="no-events" style="display: none;">
-                <i class="fas fa-history"></i>
+                <i class="fas fa-hourglass-end"></i>
                 <h3>Aucun événement passé</h3>
-                <p>Aucun événement n'a encore eu lieu.</p>
+                <p>Dès que des événements seront terminés, vous pourrez les retrouver ici.</p>
             </div>
         </section>
     </main>
 
-    <!-- Popup modale pour les détails d'événement -->
-    <div id="event-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <img id="modal-event-image" src="" alt="">
-                <button class="modal-close" id="modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
+    <div id="event-modal" class="event-modal" aria-hidden="true">
+        <div class="event-modal__content" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+            <button class="event-modal__close" type="button" aria-label="Fermer la fenêtre">&times;</button>
+            <div class="event-modal__image">
+                <img id="event-modal-image" src="" alt="Illustration de l'événement">
             </div>
-            <div class="modal-body">
-                <h2 id="modal-event-title" class="modal-title"></h2>
-                <div id="modal-event-meta" class="modal-meta">
-                    <!-- Les métadonnées seront insérées ici -->
+            <div class="event-modal__body">
+                <div class="event-modal__header">
+                    <span id="event-modal-status" class="event-modal__status" hidden></span>
+                    <h3 id="event-modal-title" class="event-modal__title"></h3>
+                    <div class="event-modal__info">
+                        <span><i class="fas fa-calendar-day"></i><span id="event-modal-date"></span></span>
+                        <span><i class="fas fa-clock"></i><span id="event-modal-time"></span></span>
+                        <span><i class="fas fa-map-marker-alt"></i><span id="event-modal-location"></span></span>
+                    </div>
                 </div>
-                <p id="modal-event-description" class="modal-description"></p>
-                <div id="modal-event-map" class="modal-map">
-                    <!-- La carte sera insérée ici -->
+                <div class="event-modal__description" id="event-modal-description"></div>
+                <div class="event-modal__meta">
+                    <div>
+                        <strong>Organisé par</strong>
+                        <span id="event-modal-association"></span>
+                    </div>
+                    <div>
+                        <strong>Tarif</strong>
+                        <span id="event-modal-price"></span>
+                    </div>
                 </div>
-                <div class="modal-actions">
-                    <a id="modal-buy-ticket" href="#" class="btn-modal">
-                        <i class="fas fa-ticket-alt"></i>
-                        Acheter un ticket
-                    </a>
-                    <button class="btn-modal secondary" id="modal-close-btn">
-                        <i class="fas fa-times"></i>
-                        Fermer
-                    </button>
+                <div>
+                    <strong class="event-modal__meta-label">Localisation</strong>
+                    <div id="event-map"></div>
+                </div>
+                <div class="event-modal__actions">
+                    <button id="event-modal-buy" class="event-modal__buy" type="button">Acheter un ticket</button>
                 </div>
             </div>
         </div>
@@ -676,243 +717,482 @@
         }, { passive: true });
 
         // Variables globales
-        let futureEvents = [];
-        let pastEvents = [];
-        let currentEvent = null;
+        let allEvents = [];
+        let activeEvent = null;
+        let mapsReady = false;
+        let mapInstance = null;
+        let mapMarker = null;
+        let geocoder = null;
+        let pendingMapEvent = null;
+
+        const modalElement = document.getElementById('event-modal');
+        const modalCloseButton = modalElement.querySelector('.event-modal__close');
+        const modalImage = document.getElementById('event-modal-image');
+        const modalTitle = document.getElementById('event-modal-title');
+        const modalDate = document.getElementById('event-modal-date');
+        const modalTime = document.getElementById('event-modal-time');
+        const modalLocation = document.getElementById('event-modal-location');
+        const modalDescription = document.getElementById('event-modal-description');
+        const modalAssociation = document.getElementById('event-modal-association');
+        const modalPrice = document.getElementById('event-modal-price');
+        const modalStatus = document.getElementById('event-modal-status');
+        const modalBuyButton = document.getElementById('event-modal-buy');
+        const modalDateWrapper = modalDate.parentElement;
+        const modalTimeWrapper = modalTime.parentElement;
+        const modalLocationWrapper = modalLocation.parentElement;
+
+        const mapFallbackCenter = { lat: 44.837789, lng: -0.57918 };
+        const mapStyles = [
+            { elementType: 'geometry', stylers: [{ color: '#1f1f1f' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#f6f6f6' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
+            {
+                featureType: 'poi',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#a0a0a0' }]
+            },
+            {
+                featureType: 'poi.park',
+                elementType: 'geometry',
+                stylers: [{ color: '#1b2a1b' }]
+            },
+            {
+                featureType: 'road',
+                elementType: 'geometry',
+                stylers: [{ color: '#2a2a2a' }]
+            },
+            {
+                featureType: 'road',
+                elementType: 'geometry.stroke',
+                stylers: [{ color: '#121212' }]
+            },
+            {
+                featureType: 'road.highway',
+                elementType: 'geometry',
+                stylers: [{ color: '#444444' }]
+            },
+            {
+                featureType: 'water',
+                elementType: 'geometry',
+                stylers: [{ color: '#0c1f33' }]
+            }
+        ];
 
         // Fonction pour afficher les notifications
         function showNotification(message, type) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = `notification ${type}`;
-            
+
             notification.offsetHeight;
             notification.classList.add('show');
-            
+
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 5000);
         }
 
+        function parseEventDate(dateString) {
+            if (!dateString) {
+                return null;
+            }
+            const date = new Date(dateString);
+            return Number.isNaN(date.getTime()) ? null : date;
+        }
+
+        function formatEventDate(date) {
+            if (!(date instanceof Date)) {
+                return '';
+            }
+            return date.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatEventTime(date) {
+            if (!(date instanceof Date)) {
+                return '';
+            }
+            return date.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatEventPriceBadge(value) {
+            const price = Number(value);
+            if (!Number.isFinite(price) || price <= 0) {
+                return 'Gratuit';
+            }
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR',
+                maximumFractionDigits: price % 1 === 0 ? 0 : 2
+            }).format(price);
+        }
+
+        function formatEventPrice(value) {
+            const price = Number(value);
+            if (!Number.isFinite(price) || price <= 0) {
+                return 'Gratuit';
+            }
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(price);
+        }
+
+        function createEventCard(event, isPast = false) {
+            const eventDate = parseEventDate(event.date);
+            const formattedDate = eventDate ? formatEventDate(eventDate) : 'Date à venir';
+            const formattedTime = eventDate ? formatEventTime(eventDate) : '';
+            const description = event.description || 'Un événement à ne pas manquer !';
+            const priceBadge = formatEventPriceBadge(event.price);
+            const imageUrl = event.image_url || 'Asset/EventPhare 01.png';
+
+            return `
+                <article class="event-card${isPast ? ' past' : ''}" data-event-id="${event.id}" tabindex="0" data-aos="fade-up">
+                    <div class="event-image" style="background-image: url('${imageUrl}')">
+                        <div class="event-price">${priceBadge}</div>
+                    </div>
+                    <div class="event-content">
+                        ${isPast ? '<div class="past-badge"><i class="fas fa-check-circle"></i>Évènement terminé</div>' : ''}
+                        <h3 class="event-title">${event.name}</h3>
+                        <div class="event-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            ${formattedDate}${formattedTime ? ` · ${formattedTime}` : ''}
+                        </div>
+                        <div class="event-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${event.address || event.location || 'Lieu annoncé bientôt'}
+                        </div>
+                        <p class="event-description">${description}</p>
+                        ${!isPast ? `
+                            <button class="buy-ticket-btn" type="button" data-event-id="${event.id}">
+                                <span>Acheter un ticket</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </article>
+            `;
+        }
+
+        function attachEventInteractions(container) {
+            if (!container) {
+                return;
+            }
+
+            container.querySelectorAll('.event-card').forEach(card => {
+                const eventId = card.dataset.eventId;
+                card.addEventListener('click', (evt) => {
+                    if (evt.target.closest('.buy-ticket-btn')) {
+                        return;
+                    }
+                    openEventModalById(eventId);
+                });
+
+                card.addEventListener('keydown', (evt) => {
+                    if (evt.key === 'Enter' || evt.key === ' ') {
+                        evt.preventDefault();
+                        openEventModalById(eventId);
+                    }
+                });
+            });
+
+            container.querySelectorAll('.buy-ticket-btn').forEach(button => {
+                button.addEventListener('click', (evt) => {
+                    evt.stopPropagation();
+                    const eventId = button.dataset.eventId;
+                    buyTicket(eventId);
+                });
+            });
+        }
+
+        function openEventModalById(eventId) {
+            const event = allEvents.find(item => String(item.id) === String(eventId));
+            if (!event) {
+                showNotification('Événement introuvable', 'error');
+                return;
+            }
+            openEventModal(event);
+        }
+
+        function openEventModal(event) {
+            const eventDate = parseEventDate(event.date);
+            const isPast = eventDate ? eventDate < new Date() : false;
+
+            activeEvent = event;
+
+            modalImage.src = event.image_url || 'Asset/EventPhare 01.png';
+            modalImage.alt = `Illustration de l'événement ${event.name}`;
+            modalTitle.textContent = event.name;
+            modalDate.textContent = eventDate ? formatEventDate(eventDate) : 'Date à confirmer';
+            modalTime.textContent = eventDate ? formatEventTime(eventDate) : '';
+            modalLocation.textContent = event.address || event.location || 'Lieu communiqué prochainement';
+            modalDescription.textContent = event.description || 'Un événement à ne pas manquer !';
+            modalAssociation.textContent = event.association_name || 'Association BDB';
+            modalPrice.textContent = formatEventPrice(event.price);
+
+            if (modalDateWrapper) {
+                modalDateWrapper.style.display = modalDate.textContent ? 'inline-flex' : 'none';
+            }
+            if (modalTimeWrapper) {
+                modalTimeWrapper.style.display = modalTime.textContent ? 'inline-flex' : 'none';
+            }
+            if (modalLocationWrapper) {
+                modalLocationWrapper.style.display = modalLocation.textContent ? 'inline-flex' : 'none';
+            }
+
+            if (isPast) {
+                modalStatus.textContent = 'Évènement passé';
+                modalStatus.classList.add('past');
+                modalStatus.hidden = false;
+                modalBuyButton.style.display = 'none';
+            } else {
+                modalStatus.textContent = 'Évènement à venir';
+                modalStatus.classList.remove('past');
+                modalStatus.hidden = false;
+                modalBuyButton.style.display = 'inline-flex';
+            }
+
+            modalElement.classList.add('active');
+            document.body.classList.add('modal-open');
+
+            setTimeout(() => {
+                if (mapInstance) {
+                    google.maps.event.trigger(mapInstance, 'resize');
+                }
+                renderEventMap(event);
+            }, 200);
+        }
+
+        function closeEventModal() {
+            modalElement.classList.remove('active');
+            document.body.classList.remove('modal-open');
+            activeEvent = null;
+        }
+
+        modalCloseButton.addEventListener('click', closeEventModal);
+        modalElement.addEventListener('click', (evt) => {
+            if (evt.target === modalElement) {
+                closeEventModal();
+            }
+        });
+
+        document.addEventListener('keydown', (evt) => {
+            if (evt.key === 'Escape' && modalElement.classList.contains('active')) {
+                closeEventModal();
+            }
+        });
+
+        modalBuyButton.addEventListener('click', () => {
+            if (activeEvent) {
+                buyTicket(activeEvent.id);
+            }
+        });
+
+        function initialiseMapIfNeeded() {
+            if (mapInstance) {
+                return;
+            }
+            const mapElement = document.getElementById('event-map');
+            if (!mapElement || !mapsReady || typeof google === 'undefined') {
+                return;
+            }
+
+            geocoder = new google.maps.Geocoder();
+            mapInstance = new google.maps.Map(mapElement, {
+                center: mapFallbackCenter,
+                zoom: 12,
+                disableDefaultUI: true,
+                styles: mapStyles
+            });
+        }
+
+        function renderEventMap(event) {
+            if (!event || !mapsReady) {
+                pendingMapEvent = event;
+                return;
+            }
+
+            initialiseMapIfNeeded();
+
+            if (!mapInstance || !geocoder) {
+                pendingMapEvent = event;
+                return;
+            }
+
+            const address = event.address || event.location;
+            if (!address) {
+                mapInstance.setCenter(mapFallbackCenter);
+                mapInstance.setZoom(12);
+                return;
+            }
+
+            geocoder.geocode({ address }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const position = results[0].geometry.location;
+                    mapInstance.setCenter(position);
+                    mapInstance.setZoom(14);
+
+                    if (mapMarker) {
+                        mapMarker.setMap(null);
+                    }
+
+                    mapMarker = new google.maps.Marker({
+                        map: mapInstance,
+                        position,
+                        title: event.name
+                    });
+                } else {
+                    console.warn('Geocode non concluante:', status);
+                    mapInstance.setCenter(mapFallbackCenter);
+                    mapInstance.setZoom(12);
+                }
+            });
+        }
+
+        window.initEventMap = function initEventMap() {
+            mapsReady = true;
+            initialiseMapIfNeeded();
+            if (pendingMapEvent) {
+                renderEventMap(pendingMapEvent);
+                pendingMapEvent = null;
+            }
+        };
+
         // Fonction pour charger les événements
         async function loadEvents() {
-            const loadingSpinner = document.getElementById('loading-spinner');
-            const futureEventsGrid = document.getElementById('future-events-grid');
+            const eventsGrid = document.getElementById('events-grid');
             const pastEventsGrid = document.getElementById('past-events-grid');
-            const noFutureEvents = document.getElementById('no-future-events');
+            const noEvents = document.getElementById('no-events');
             const noPastEvents = document.getElementById('no-past-events');
 
+            let loadingSpinner = null;
+            if (eventsGrid) {
+                eventsGrid.innerHTML = '';
+                loadingSpinner = document.createElement('div');
+                loadingSpinner.className = 'loading-spinner';
+                eventsGrid.appendChild(loadingSpinner);
+            }
+
             try {
-                loadingSpinner.style.display = 'block';
-                
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'block';
+                }
+
                 const response = await fetch('/.netlify/functions/getEvents');
                 const data = await response.json();
 
                 if (response.ok) {
-                    futureEvents = data.futureEvents || [];
-                    pastEvents = data.pastEvents || [];
-                    
-                    displayEvents(futureEvents, 'future');
-                    displayEvents(pastEvents, 'past');
-                    
-                    // Afficher les messages "aucun événement" si nécessaire
-                    if (futureEvents.length === 0) {
-                        noFutureEvents.style.display = 'block';
-                        futureEventsGrid.innerHTML = '';
-                    }
-                    
-                    if (pastEvents.length === 0) {
-                        noPastEvents.style.display = 'block';
-                        pastEventsGrid.innerHTML = '';
-                    }
+                    allEvents = data.events || [];
+                    displayEvents(allEvents);
                 } else {
                     throw new Error(data.error || 'Erreur lors du chargement des événements');
                 }
             } catch (error) {
                 console.error('Erreur:', error);
                 showNotification('Erreur lors du chargement des événements', 'error');
-                noFutureEvents.style.display = 'block';
-                noPastEvents.style.display = 'block';
-                futureEventsGrid.innerHTML = '';
-                pastEventsGrid.innerHTML = '';
+                if (eventsGrid) {
+                    eventsGrid.innerHTML = '';
+                }
+                if (pastEventsGrid) {
+                    pastEventsGrid.innerHTML = '';
+                }
+                if (noEvents) {
+                    noEvents.style.display = 'block';
+                }
+                if (noPastEvents) {
+                    noPastEvents.style.display = 'block';
+                }
             } finally {
-                loadingSpinner.style.display = 'none';
+                if (loadingSpinner && loadingSpinner.parentNode) {
+                    loadingSpinner.parentNode.removeChild(loadingSpinner);
+                }
             }
         }
 
         // Fonction pour afficher les événements
-        function displayEvents(events = [], type) {
-            const eventsGrid = document.getElementById(`${type}-events-grid`);
-            const noEvents = document.getElementById(`no-${type}-events`);
+        function displayEvents(events = []) {
+            const eventsGrid = document.getElementById('events-grid');
+            const pastEventsGrid = document.getElementById('past-events-grid');
+            const noEvents = document.getElementById('no-events');
+            const noPastEvents = document.getElementById('no-past-events');
 
-            if (events.length === 0) {
-                noEvents.style.display = 'block';
+            if (!eventsGrid || !pastEventsGrid) {
+                return;
+            }
+
+            if (!Array.isArray(events) || events.length === 0) {
                 eventsGrid.innerHTML = '';
+                pastEventsGrid.innerHTML = '';
+                if (noEvents) noEvents.style.display = 'block';
+                if (noPastEvents) noPastEvents.style.display = 'block';
                 return;
             }
 
-            noEvents.style.display = 'none';
-            
-            eventsGrid.innerHTML = events.map(event => `
-                <div class="event-card" data-aos="fade-up" onclick="openEventModal('${event.id}', '${type}')">
-                    <div class="event-image" style="background-image: url('${event.image_url || 'Asset/EventPhare 01.png'}')">
-                        <div class="event-price">${event.price}€</div>
-                    </div>
-                    <div class="event-content">
-                        <h3 class="event-title">${event.name}</h3>
-                        <div class="event-date">
-                            <i class="fas fa-calendar-alt"></i>
-                            ${new Date(event.date).toLocaleDateString('fr-FR', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                        </div>
-                        <div class="event-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            ${event.location}
-                        </div>
-                        <p class="event-description">${event.description || 'Un événement à ne pas manquer !'}</p>
-                        <button class="buy-ticket-btn" onclick="event.stopPropagation(); buyTicket('${event.id}')">
-                            <span>Acheter un ticket</span>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
+            const now = new Date();
+            const upcomingEvents = [];
+            const pastEvents = [];
 
-        // Fonction pour ouvrir la popup modale
-        function openEventModal(eventId, type) {
-            const events = type === 'future' ? futureEvents : pastEvents;
-            const event = events.find(e => e.id === eventId);
-            
-            if (!event) {
-                showNotification('Événement introuvable', 'error');
-                return;
+            events.forEach(event => {
+                const eventDate = parseEventDate(event.date);
+                if (eventDate && eventDate < now) {
+                    pastEvents.push(event);
+                } else {
+                    upcomingEvents.push(event);
+                }
+            });
+
+            upcomingEvents.sort((a, b) => {
+                const dateA = parseEventDate(a.date) || new Date();
+                const dateB = parseEventDate(b.date) || new Date();
+                return dateA - dateB;
+            });
+
+            pastEvents.sort((a, b) => {
+                const dateA = parseEventDate(a.date) || new Date(0);
+                const dateB = parseEventDate(b.date) || new Date(0);
+                return dateB - dateA;
+            });
+
+            eventsGrid.innerHTML = upcomingEvents.map(event => createEventCard(event, false)).join('');
+            pastEventsGrid.innerHTML = pastEvents.map(event => createEventCard(event, true)).join('');
+
+            if (noEvents) {
+                noEvents.style.display = upcomingEvents.length ? 'none' : 'block';
             }
 
-            currentEvent = event;
-            
-            // Remplir le contenu de la popup
-            document.getElementById('modal-event-image').src = event.image_url || 'Asset/EventPhare 01.png';
-            document.getElementById('modal-event-image').alt = event.name;
-            document.getElementById('modal-event-title').textContent = event.name;
-            document.getElementById('modal-event-description').textContent = event.description || 'Un événement à ne pas manquer !';
-            
-            // Métadonnées
-            const metaContainer = document.getElementById('modal-event-meta');
-            metaContainer.innerHTML = `
-                <div class="meta-item">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>${new Date(event.date).toLocaleDateString('fr-FR', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>${event.location}</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-euro-sign"></i>
-                    <span>${event.price}€</span>
-                </div>
-                <div class="meta-item">
-                    <i class="fas fa-users"></i>
-                    <span>${event.association_name}</span>
-                </div>
-                ${event.available_tickets !== null ? `
-                <div class="meta-item">
-                    <i class="fas fa-ticket-alt"></i>
-                    <span>${event.available_tickets} places disponibles</span>
-                </div>
-                ` : ''}
-            `;
-            
-            // Lien d'achat de ticket (seulement pour les événements futurs)
-            const buyTicketBtn = document.getElementById('modal-buy-ticket');
-            if (type === 'future') {
-                buyTicketBtn.style.display = 'inline-flex';
-                buyTicketBtn.href = `paiement.html?id=${event.id}`;
-            } else {
-                buyTicketBtn.style.display = 'none';
+            if (noPastEvents) {
+                noPastEvents.style.display = pastEvents.length ? 'none' : 'block';
             }
-            
-            // Initialiser la carte (utiliser l'adresse si disponible, sinon le lieu)
-            initMap(event.address || event.location);
-            
-            // Afficher la popup
-            document.getElementById('event-modal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
 
-        // Fonction pour fermer la popup
-        function closeEventModal() {
-            document.getElementById('event-modal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-            currentEvent = null;
-        }
+            attachEventInteractions(eventsGrid);
+            attachEventInteractions(pastEventsGrid);
 
-        // Fonction pour initialiser la carte
-        function initMap(address) {
-            const mapContainer = document.getElementById('modal-event-map');
-            
-            // Créer un iframe avec Google Maps
-            mapContainer.innerHTML = `
-                <iframe
-                    width="100%"
-                    height="100%"
-                    style="border:0"
-                    loading="lazy"
-                    allowfullscreen
-                    referrerpolicy="no-referrer-when-downgrade"
-                    src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgE6lalqXJY&q=${encodeURIComponent(address)}">
-                </iframe>
-            `;
+            if (window.AOS && typeof window.AOS.refreshHard === 'function') {
+                window.AOS.refreshHard();
+            }
         }
 
         // Fonction pour acheter un ticket
         function buyTicket(eventId) {
-            const event = [...futureEvents, ...pastEvents].find(e => e.id === eventId);
+            const event = allEvents.find(e => String(e.id) === String(eventId));
             if (!event) {
                 showNotification('Événement introuvable', 'error');
                 return;
             }
 
-            // Rediriger vers la page de paiement avec l'ID de l'événement
             window.location.href = `paiement.html?id=${eventId}`;
         }
 
-        // Event listeners pour la popup
+        // Charger les événements au chargement de la page
         document.addEventListener('DOMContentLoaded', () => {
-            // Boutons de fermeture de la popup
-            document.getElementById('modal-close').addEventListener('click', closeEventModal);
-            document.getElementById('modal-close-btn').addEventListener('click', closeEventModal);
-            
-            // Fermer la popup en cliquant sur l'overlay
-            document.getElementById('event-modal').addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) {
-                    closeEventModal();
-                }
-            });
-            
-            // Fermer la popup avec la touche Escape
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    closeEventModal();
-                }
-            });
-            
             loadEvents();
-            
-            // Initialiser AOS
+
             AOS.init({
                 duration: 800,
                 easing: 'ease-in-out',
@@ -920,6 +1200,6 @@
             });
         });
     </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCOrw2XWhogK99BWNSZ1brDXqGuFOAW8c&callback=initEventMap"></script>
 </body>
 </html>
-
