@@ -41,14 +41,14 @@
     <style>
         .billetterie-header {
             background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 100%), url('Asset/Background.jpg') no-repeat center center/cover;
-            min-height: 48vh;
+            min-height: 60vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 100px 2rem 3rem;
+            padding: 120px 2rem 4rem;
             border-radius: 20px;
-            margin: 1.5rem auto 0.5rem;
+            margin: 2rem auto 1rem;
             max-width: 1200px;
         }
 
@@ -76,11 +76,11 @@
         .events-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0.5rem 2rem 2.5rem;
+            padding: 1.25rem 2rem 4rem;
         }
 
         .events-section {
-            margin-bottom: 2.5rem;
+            margin-bottom: 4rem;
         }
 
         .events-section-header {
@@ -108,7 +108,7 @@
 
         .events-carousel {
             position: relative;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
             padding-inline: 0;
         }
 
@@ -122,8 +122,6 @@
             scroll-snap-type: x mandatory;
             mask-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1) 4%, rgba(0,0,0,1) 96%, rgba(0,0,0,0));
             -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1) 4%, rgba(0,0,0,1) 96%, rgba(0,0,0,0));
-            user-select: none;
-            cursor: grab;
         }
 
         .events-track::-webkit-scrollbar {
@@ -133,15 +131,6 @@
         .events-track::-webkit-scrollbar-thumb {
             background: rgba(255,255,255,0.15);
             border-radius: 999px;
-        }
-
-        .events-track::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .events-track.dragging {
-            cursor: grabbing;
-            scroll-behavior: auto;
         }
 
         .carousel-button {
@@ -236,9 +225,6 @@
 
         .event-content {
             padding: 1.25rem;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
         }
 
         .event-title {
@@ -268,7 +254,6 @@
             margin-bottom: 1.5rem;
             line-height: 1.5;
             font-size: 0.9rem;
-            flex-grow: 1;
         }
 
         .buy-ticket-btn {
@@ -609,7 +594,7 @@
             }
 
             .events-container {
-                padding: 1rem 1.25rem 2.5rem;
+                padding: 1.5rem 1.25rem 3rem;
             }
 
             .events-carousel {
@@ -703,7 +688,7 @@
             <p>Achetez vos tickets d'événements étudiants directement en ligne</p>
             <div class="cta-buttons">
                 <a href="#events" class="cta-button" aria-label="Voir les événements disponibles">
-                    <span>Prochains évènements</span>
+                    <span>Voir les événements</span>
                 </a>
             </div>
         </div>
@@ -930,9 +915,6 @@
 
             const prevButton = carouselElement.querySelector('.carousel-button.prev');
             const nextButton = carouselElement.querySelector('.carousel-button.next');
-            let isDragging = false;
-            let dragStartX = 0;
-            let lastScrollLeft = 0;
 
             const updateButtons = () => {
                 const maxScrollLeft = Math.max(track.scrollWidth - track.clientWidth - 2, 0);
@@ -963,55 +945,6 @@
                 const onScroll = () => requestAnimationFrame(updateButtons);
                 track.addEventListener('scroll', onScroll, { passive: true });
                 window.addEventListener('resize', onScroll);
-
-                const startDrag = (clientX) => {
-                    isDragging = true;
-                    dragStartX = clientX;
-                    lastScrollLeft = track.scrollLeft;
-                    track.classList.add('dragging');
-                };
-
-                const moveDrag = (clientX) => {
-                    if (!isDragging) return;
-                    const delta = clientX - dragStartX;
-                    track.scrollLeft = lastScrollLeft - delta;
-                };
-
-                const endDrag = () => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    track.classList.remove('dragging');
-                };
-
-                track.addEventListener('mousedown', (event) => {
-                    if (event.button !== 0) return;
-                    startDrag(event.clientX);
-                });
-
-                track.addEventListener('mousemove', (event) => {
-                    if (!isDragging) return;
-                    event.preventDefault();
-                    moveDrag(event.clientX);
-                });
-
-                document.addEventListener('mouseup', endDrag);
-
-                track.addEventListener('mouseleave', endDrag);
-
-                track.addEventListener('touchstart', (event) => {
-                    const touch = event.touches[0];
-                    if (!touch) return;
-                    startDrag(touch.clientX);
-                }, { passive: true });
-
-                track.addEventListener('touchmove', (event) => {
-                    const touch = event.touches[0];
-                    if (!touch) return;
-                    moveDrag(touch.clientX);
-                }, { passive: true });
-
-                track.addEventListener('touchend', endDrag, { passive: true });
-                track.addEventListener('touchcancel', endDrag, { passive: true });
 
                 carouselRegistry.set(carouselElement, {
                     update: updateButtons
