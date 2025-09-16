@@ -67,19 +67,16 @@ exports.handler = async (event) => {
                 location,
                 price,
                 image_url,
-                category,
-                platform_fee_percentage,
+                platform_fee,
                 association_id,
-                max_capacity,
-                current_bookings,
                 associations (
                     id,
                     name,
-                    logo_url
+                    profile_image_url,
+                    cover_image_url
                 )
             `)
             .eq('id', eventId)
-            .eq('is_active', true)
             .single();
 
         if (eventError) {
@@ -129,7 +126,7 @@ exports.handler = async (event) => {
         }
 
         // Vérifier la capacité si applicable
-        if (eventData.max_capacity && eventData.current_bookings >= eventData.max_capacity) {
+        if (eventData.available_tickets !== null && eventData.available_tickets <= 0) {
             console.log('❌ L\'événement est complet');
             return {
                 statusCode: 400,
@@ -153,14 +150,11 @@ exports.handler = async (event) => {
             location: eventData.location,
             price: eventData.price,
             image_url: eventData.image_url,
-            category: eventData.category || 'soiree',
-            platform_fee_percentage: eventData.platform_fee_percentage || 5,
+            platform_fee_percentage: eventData.platform_fee || 5,
             association_id: eventData.association_id,
             association_name: eventData.associations?.name || 'Association',
-            association_logo: eventData.associations?.logo_url,
-            max_capacity: eventData.max_capacity,
-            current_bookings: eventData.current_bookings || 0,
-            available_spots: eventData.max_capacity ? eventData.max_capacity - (eventData.current_bookings || 0) : null
+            association_logo: eventData.associations?.profile_image_url || eventData.associations?.cover_image_url,
+            available_tickets: eventData.available_tickets
         };
 
         return {

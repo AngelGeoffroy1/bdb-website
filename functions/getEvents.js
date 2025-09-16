@@ -49,16 +49,15 @@ exports.handler = async (event) => {
                 location,
                 price,
                 image_url,
-                category,
-                platform_fee_percentage,
+                platform_fee,
                 association_id,
                 associations (
                     id,
                     name,
-                    logo_url
+                    profile_image_url,
+                    cover_image_url
                 )
             `)
-            .eq('is_active', true)
             .gte('date', new Date().toISOString()) // Seulement les événements futurs
             .order('date', { ascending: true });
 
@@ -89,11 +88,10 @@ exports.handler = async (event) => {
             location: event.location,
             price: event.price,
             image_url: event.image_url,
-            category: event.category || 'soiree',
-            platform_fee_percentage: event.platform_fee_percentage || 5,
+            platform_fee_percentage: event.platform_fee || 5,
             association_id: event.association_id,
             association_name: event.associations?.name || 'Association',
-            association_logo: event.associations?.logo_url
+            association_logo: event.associations?.profile_image_url || event.associations?.cover_image_url
         }));
 
         return {
