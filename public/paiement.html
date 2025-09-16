@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement - BDB Billetterie</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Finalisez votre achat de ticket d'événement étudiant avec BDB. Paiement sécurisé par Stripe.">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <!-- Styles spécifiques au paiement -->
+    <style>
+        .payment-container {
+            max-width: 800px;
+            margin: 120px auto 60px;
+            padding: 0 2rem;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .payment-header h1 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .payment-header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .event-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(218,252,59,0.1);
+        }
+
+        .event-summary h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .event-image {
+            width: 100%;
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .event-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-details {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+
+        .event-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .payment-form {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(218,252,59,0.1);
+        }
+
+        .payment-form h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(218,252,59,0.2);
+            border-radius: 10px;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent-color);
+            background: transparent;
+            color: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+
+        .quantity-btn:hover {
+            background: var(--accent-color);
+            color: var(--background-color);
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .price-breakdown {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .price-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-line.total {
+            border-top: 1px solid rgba(218,252,59,0.2);
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 1.2rem;
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pay-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease-out;
+            z-index: 0;
+        }
+
+        .pay-button:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .pay-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pay-button:hover span {
+            color: var(--background-color);
+        }
+
+        .pay-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid var(--text-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #ff6b6b;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #4CAF50;
+            display: none;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-color);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .back-button:hover {
+            color: var(--text-color);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            background-color: #4CAF50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .notification.error {
+            background-color: #f44336;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .payment-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="index.html" class="brand-link">
+                    <img src="Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <button class="hamburger-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="nav-links" role="navigation" aria-label="Menu principal">
+                <a href="index.html">Accueil</a>
+                <a href="billetterie.html">Billetterie</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="payment-container">
+        <a href="billetterie.html" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Retour aux événements
+        </a>
+
+        <div class="payment-header">
+            <h1>Finaliser votre achat</h1>
+            <p>Remplissez vos informations pour recevoir votre ticket</p>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
+
+        <div class="payment-grid">
+            <!-- Résumé de l'événement -->
+            <div class="event-summary">
+                <h3>Résumé de votre commande</h3>
+                <div id="event-summary-content">
+                    <!-- Contenu généré dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Formulaire de paiement -->
+            <div class="payment-form">
+                <h3>Informations de paiement</h3>
+                <form id="payment-form">
+                    <div class="quantity-selector">
+                        <label>Quantité :</label>
+                        <button type="button" class="quantity-btn" id="decrease-qty">-</button>
+                        <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="10" readonly>
+                        <button type="button" class="quantity-btn" id="increase-qty">+</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="firstName">Prénom *</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Nom *</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Téléphone</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="price-breakdown" id="price-breakdown">
+                        <!-- Contenu généré dynamiquement -->
+                    </div>
+
+                    <button type="submit" class="pay-button" id="pay-button">
+                        <div class="loading-spinner" id="loading-spinner"></div>
+                        <span id="pay-button-text">Payer maintenant</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="legal-links">
+                <a href="politique-confidentialite.html" target="_blank">Politique de confidentialité</a>
+                <a href="conditions-utilisation.html" target="_blank">Conditions d'utilisation</a>
+            </div>
+        </div>
+        <p class="copyright">© 2024 BDB. Tous droits réservés.</p>
+    </footer>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Variables globales
+        let eventData = null;
+        let quantity = 1;
+        let stripe = null;
+        let elements = null;
+
+        // Initialiser Stripe
+        function initStripe() {
+            stripe = Stripe('pk_live_51HLuKAAqjNmyAK5H83YcEqRZO4110oYLbUEQ0oDdfq7ptRQh48imbJ34aXhcxzyySLaSffMYGE1MRnSAvRH62AWO0023V6P7bR');
+        }
+
+        // Fonction pour afficher les notifications
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            
+            notification.offsetHeight;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Fonction pour afficher les erreurs
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Fonction pour charger les données de l'événement
+        async function loadEventData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('id');
+
+            if (!eventId) {
+                showError('ID d\'événement manquant');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/.netlify/functions/getEvent?id=${eventId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    eventData = data.event;
+                    displayEventSummary();
+                    updatePriceBreakdown();
+                } else {
+                    throw new Error(data.error || 'Erreur lors du chargement de l\'événement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Erreur lors du chargement de l\'événement');
+            }
+        }
+
+        // Fonction pour afficher le résumé de l'événement
+        function displayEventSummary() {
+            if (!eventData) return;
+
+            const summaryContent = document.getElementById('event-summary-content');
+            summaryContent.innerHTML = `
+                <div class="event-image" style="background-image: url('${eventData.image_url || 'Asset/EventPhare 01.png'}')"></div>
+                <h4 class="event-title">${eventData.name}</h4>
+                <div class="event-details">
+                    <div class="event-detail">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${new Date(eventData.date).toLocaleDateString('fr-FR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${eventData.location}</span>
+                    </div>
+                    <div class="event-detail">
+                        <i class="fas fa-users"></i>
+                        <span>${eventData.association_name || 'Association'}</span>
+                    </div>
+                </div>
+                <div class="event-price">${eventData.price}€</div>
+            `;
+        }
+
+        // Fonction pour mettre à jour le détail des prix
+        function updatePriceBreakdown() {
+            if (!eventData) return;
+
+            const basePrice = eventData.price * quantity;
+            const feePercentage = eventData.platform_fee_percentage || 5;
+            const feeAmount = (basePrice * feePercentage) / 100;
+            const totalAmount = basePrice + feeAmount;
+
+            const priceBreakdown = document.getElementById('price-breakdown');
+            priceBreakdown.innerHTML = `
+                <div class="price-line">
+                    <span>Prix du ticket (${quantity}x ${eventData.price}€)</span>
+                    <span>${basePrice.toFixed(2)}€</span>
+                </div>
+                <div class="price-line">
+                    <span>Frais de service (${feePercentage}%)</span>
+                    <span>${feeAmount.toFixed(2)}€</span>
+                </div>
+                <div class="price-line total">
+                    <span>Total</span>
+                    <span>${totalAmount.toFixed(2)}€</span>
+                </div>
+            `;
+
+            // Mettre à jour le bouton de paiement
+            const payButton = document.getElementById('pay-button');
+            payButton.innerHTML = `
+                <div class="loading-spinner" id="loading-spinner"></div>
+                <span id="pay-button-text">Payer ${totalAmount.toFixed(2)}€</span>
+            `;
+        }
+
+        // Gestion des boutons de quantité
+        document.getElementById('decrease-qty').addEventListener('click', () => {
+            if (quantity > 1) {
+                quantity--;
+                document.getElementById('quantity').value = quantity;
+                updatePriceBreakdown();
+            }
+        });
+
+        document.getElementById('increase-qty').addEventListener('click', () => {
+            if (quantity < 10) {
+                quantity++;
+                document.getElementById('quantity').value = quantity;
+                updatePriceBreakdown();
+            }
+        });
+
+        // Gestion du formulaire de paiement
+        document.getElementById('payment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!eventData) {
+                showError('Données de l\'événement manquantes');
+                return;
+            }
+
+            const formData = new FormData(e.target);
+            const customerInfo = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                email: formData.get('email'),
+                phone: formData.get('phone') || ''
+            };
+
+            // Validation
+            if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email) {
+                showError('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            // Afficher le loading
+            const payButton = document.getElementById('pay-button');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const payButtonText = document.getElementById('pay-button-text');
+
+            payButton.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            payButtonText.textContent = 'Traitement...';
+
+            try {
+                // Créer l'intention de paiement
+                const response = await fetch('/.netlify/functions/createWebPaymentIntent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        event_id: eventData.id,
+                        quantity: quantity,
+                        customerInfo: customerInfo,
+                        association_id: eventData.association_id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Rediriger vers Stripe Checkout
+                    const { error } = await stripe.redirectToCheckout({
+                        sessionId: data.sessionId
+                    });
+
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+                } else {
+                    throw new Error(data.error || 'Erreur lors de la création du paiement');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError(error.message || 'Erreur lors du traitement du paiement');
+            } finally {
+                // Réinitialiser le bouton
+                payButton.disabled = false;
+                loadingSpinner.style.display = 'none';
+                payButtonText.textContent = 'Payer maintenant';
+            }
+        });
+
+        // Menu hamburger
+        const hamburger = document.querySelector('.hamburger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        navLinksItems.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Navigation scroll behavior
+        let lastScrollTop = 0;
+        const nav = document.querySelector('nav');
+        const scrollThreshold = 50;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (Math.abs(currentScroll - lastScrollTop) > scrollThreshold) {
+                if (currentScroll > lastScrollTop && currentScroll > 100) {
+                    nav.classList.add('nav-hidden');
+                } else if (currentScroll < lastScrollTop) {
+                    nav.classList.remove('nav-hidden');
+                }
+                lastScrollTop = currentScroll;
+            }
+        }, { passive: true });
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            initStripe();
+            loadEventData();
+        });
+    </script>
+</body>
+</html>

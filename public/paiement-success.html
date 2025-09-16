@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement réussi - BDB Billetterie</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Votre paiement a été traité avec succès. Votre ticket vous a été envoyé par email.">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Styles spécifiques à la page de succès -->
+    <style>
+        .success-container {
+            max-width: 600px;
+            margin: 120px auto 60px;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            animation: successPulse 2s ease-in-out;
+        }
+
+        .success-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        @keyframes successPulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-title {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .ticket-details {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(218,252,59,0.1);
+            text-align: left;
+        }
+
+        .ticket-details h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(218,252,59,0.1);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 1rem 2rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease-out;
+            z-index: 0;
+        }
+
+        .action-btn:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .action-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .action-btn:hover span {
+            color: var(--background-color);
+        }
+
+        .action-btn.secondary {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .action-btn.secondary:hover {
+            border-color: var(--accent-color);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid var(--text-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #ff6b6b;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .success-title {
+                font-size: 2rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="index.html" class="brand-link">
+                    <img src="Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <button class="hamburger-menu" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="nav-links" role="navigation" aria-label="Menu principal">
+                <a href="index.html">Accueil</a>
+                <a href="billetterie.html">Billetterie</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="success-container">
+        <div class="error-message" id="error-message"></div>
+        <div class="loading-spinner" id="loading-spinner"></div>
+
+        <div id="success-content" style="display: none;">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            
+            <h1 class="success-title">Paiement réussi !</h1>
+            <p class="success-message">
+                Votre paiement a été traité avec succès. Votre ticket vous a été envoyé par email et vous pouvez le retrouver ci-dessous.
+            </p>
+
+            <div class="ticket-details" id="ticket-details">
+                <!-- Contenu généré dynamiquement -->
+            </div>
+
+            <div class="actions">
+                <a href="billetterie.html" class="action-btn secondary">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Voir d'autres événements</span>
+                </a>
+                <a href="index.html" class="action-btn">
+                    <i class="fas fa-home"></i>
+                    <span>Retour à l'accueil</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="legal-links">
+                <a href="politique-confidentialite.html" target="_blank">Politique de confidentialité</a>
+                <a href="conditions-utilisation.html" target="_blank">Conditions d'utilisation</a>
+            </div>
+        </div>
+        <p class="copyright">© 2024 BDB. Tous droits réservés.</p>
+    </footer>
+
+    <script>
+        // Variables globales
+        let sessionData = null;
+
+        // Fonction pour afficher les erreurs
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Fonction pour récupérer les données de la session
+        async function loadSessionData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+
+            if (!sessionId) {
+                showError('ID de session manquant');
+                return;
+            }
+
+            try {
+                const loadingSpinner = document.getElementById('loading-spinner');
+                loadingSpinner.style.display = 'block';
+
+                const response = await fetch(`/.netlify/functions/getSessionData?session_id=${sessionId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    sessionData = data.session;
+                    displaySuccessContent();
+                } else {
+                    throw new Error(data.error || 'Erreur lors du chargement des données de la session');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Erreur lors du chargement des données du paiement');
+            } finally {
+                const loadingSpinner = document.getElementById('loading-spinner');
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Fonction pour afficher le contenu de succès
+        function displaySuccessContent() {
+            if (!sessionData) return;
+
+            const successContent = document.getElementById('success-content');
+            const ticketDetails = document.getElementById('ticket-details');
+
+            // Afficher les détails du ticket
+            ticketDetails.innerHTML = `
+                <h3>Détails de votre ticket</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Événement :</span>
+                    <span class="detail-value">${sessionData.metadata?.event_name || 'Événement'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Quantité :</span>
+                    <span class="detail-value">${sessionData.metadata?.quantity || '1'} ticket(s)</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Nom :</span>
+                    <span class="detail-value">${sessionData.metadata?.customer_name || 'Client'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email :</span>
+                    <span class="detail-value">${sessionData.customer_details?.email || sessionData.metadata?.customer_email || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Montant payé :</span>
+                    <span class="detail-value">${(sessionData.amount_total / 100).toFixed(2)}€</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">ID de transaction :</span>
+                    <span class="detail-value">${sessionData.id}</span>
+                </div>
+            `;
+
+            successContent.style.display = 'block';
+        }
+
+        // Menu hamburger
+        const hamburger = document.querySelector('.hamburger-menu');
+        const navLinks = document.querySelector('.nav-links');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        navLinksItems.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Navigation scroll behavior
+        let lastScrollTop = 0;
+        const nav = document.querySelector('nav');
+        const scrollThreshold = 50;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (Math.abs(currentScroll - lastScrollTop) > scrollThreshold) {
+                if (currentScroll > lastScrollTop && currentScroll > 100) {
+                    nav.classList.add('nav-hidden');
+                } else if (currentScroll < lastScrollTop) {
+                    nav.classList.remove('nav-hidden');
+                }
+                lastScrollTop = currentScroll;
+            }
+        }, { passive: true });
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSessionData();
+        });
+    </script>
+</body>
+</html>
