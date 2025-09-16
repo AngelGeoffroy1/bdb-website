@@ -41,14 +41,14 @@
     <style>
         .billetterie-header {
             background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 100%), url('Asset/Background.jpg') no-repeat center center/cover;
-            min-height: 60vh;
+            min-height: 42vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 120px 2rem 4rem;
+            padding: 84px 2rem 2.8rem;
             border-radius: 20px;
-            margin: 2rem auto 1rem;
+            margin: 1.4rem auto 0.7rem;
             max-width: 1200px;
         }
 
@@ -76,11 +76,11 @@
         .events-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 1.25rem 2rem 4rem;
+            padding: 0.875rem 2rem 2.8rem;
         }
 
         .events-section {
-            margin-bottom: 4rem;
+            margin-bottom: 2.8rem;
         }
 
         .events-section-header {
@@ -108,7 +108,7 @@
 
         .events-carousel {
             position: relative;
-            margin-top: 2rem;
+            margin-top: 1.4rem;
             padding-inline: 0;
         }
 
@@ -122,6 +122,8 @@
             scroll-snap-type: x mandatory;
             mask-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1) 4%, rgba(0,0,0,1) 96%, rgba(0,0,0,0));
             -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1) 4%, rgba(0,0,0,1) 96%, rgba(0,0,0,0));
+            user-select: none;
+            cursor: grab;
         }
 
         .events-track::-webkit-scrollbar {
@@ -131,6 +133,15 @@
         .events-track::-webkit-scrollbar-thumb {
             background: rgba(255,255,255,0.15);
             border-radius: 999px;
+        }
+
+        .events-track::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .events-track.dragging {
+            cursor: grabbing;
+            scroll-behavior: auto;
         }
 
         .carousel-button {
@@ -560,7 +571,7 @@
 
         .events-track .loading-spinner {
             display: block;
-            margin: 1.5rem auto;
+            margin: 1.05rem auto;
         }
 
         @keyframes spin {
@@ -570,7 +581,7 @@
 
         .no-events {
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 2.8rem 2rem;
             color: rgba(255, 255, 255, 0.6);
         }
 
@@ -594,7 +605,7 @@
             }
 
             .events-container {
-                padding: 1.5rem 1.25rem 3rem;
+                padding: 1.05rem 1.25rem 2.1rem;
             }
 
             .events-carousel {
@@ -688,7 +699,7 @@
             <p>Achetez vos tickets d'événements étudiants directement en ligne</p>
             <div class="cta-buttons">
                 <a href="#events" class="cta-button" aria-label="Voir les événements disponibles">
-                    <span>Voir les événements</span>
+                    <span>Prochains évènements</span>
                 </a>
             </div>
         </div>
@@ -915,6 +926,9 @@
 
             const prevButton = carouselElement.querySelector('.carousel-button.prev');
             const nextButton = carouselElement.querySelector('.carousel-button.next');
+            let isDragging = false;
+            let dragStartX = 0;
+            let lastScrollLeft = 0;
 
             const updateButtons = () => {
                 const maxScrollLeft = Math.max(track.scrollWidth - track.clientWidth - 2, 0);
@@ -934,6 +948,27 @@
                 });
             };
 
+            const startDrag = (clientX) => {
+                isDragging = true;
+                dragStartX = clientX;
+                lastScrollLeft = track.scrollLeft;
+                track.classList.add('dragging');
+            };
+
+            const moveDrag = (clientX) => {
+                if (!isDragging) return;
+                const delta = clientX - dragStartX;
+                track.scrollLeft = lastScrollLeft - delta;
+                requestAnimationFrame(updateButtons);
+            };
+
+            const endDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                track.classList.remove('dragging');
+                requestAnimationFrame(updateButtons);
+            };
+
             if (!carouselRegistry.has(carouselElement)) {
                 if (prevButton) {
                     prevButton.addEventListener('click', () => scrollByAmount(-1));
@@ -945,6 +980,48 @@
                 const onScroll = () => requestAnimationFrame(updateButtons);
                 track.addEventListener('scroll', onScroll, { passive: true });
                 window.addEventListener('resize', onScroll);
+
+                track.addEventListener('mousedown', (event) => {
+                    if (event.button !== 0) return;
+                    startDrag(event.clientX);
+                });
+
+                track.addEventListener('mousemove', (event) => {
+                    if (!isDragging) return;
+                    event.preventDefault();
+                    moveDrag(event.clientX);
+                });
+
+                document.addEventListener('mouseup', endDrag);
+                track.addEventListener('mouseleave', endDrag);
+
+                track.addEventListener('touchstart', (event) => {
+                    const touch = event.touches[0];
+                    if (!touch) return;
+                    startDrag(touch.clientX);
+                }, { passive: true });
+
+                track.addEventListener('touchmove', (event) => {
+                    const touch = event.touches[0];
+                    if (!touch) return;
+                    moveDrag(touch.clientX);
+                }, { passive: true });
+
+                track.addEventListener('touchend', endDrag, { passive: true });
+                track.addEventListener('touchcancel', endDrag, { passive: true });
+
+                track.addEventListener('wheel', (event) => {
+                    if (!event.deltaX && !event.deltaY) {
+                        return;
+                    }
+                    event.preventDefault();
+                    const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+                    track.scrollBy({
+                        left: delta,
+                        behavior: 'smooth'
+                    });
+                    requestAnimationFrame(updateButtons);
+                }, { passive: false });
 
                 carouselRegistry.set(carouselElement, {
                     update: updateButtons
