@@ -38,7 +38,7 @@ exports.handler = async (event) => {
     try {
         console.log('🔄 Récupération des événements depuis Supabase...');
 
-        // Récupérer les événements actifs avec les informations de l'association
+        // Récupérer tous les événements avec les informations de l'association
         const { data: events, error: eventsError } = await supabase
             .from('events')
             .select(`
@@ -47,10 +47,12 @@ exports.handler = async (event) => {
                 description,
                 date,
                 location,
+                address,
                 price,
                 image_url,
                 platform_fee,
                 association_id,
+                available_tickets,
                 associations (
                     id,
                     name,
@@ -58,8 +60,7 @@ exports.handler = async (event) => {
                     cover_image_url
                 )
             `)
-            .gte('date', new Date().toISOString()) // Seulement les événements futurs
-            .order('date', { ascending: true });
+            .order('date', { ascending: false }); // Plus récents en premier
 
         if (eventsError) {
             console.error('❌ Erreur lors de la récupération des événements:', eventsError);
@@ -79,20 +80,39 @@ exports.handler = async (event) => {
 
         console.log(`✅ ${events.length} événements récupérés`);
 
-        // Transformer les données pour le frontend
-        const formattedEvents = events.map(event => ({
-            id: event.id,
-            name: event.name,
-            description: event.description,
-            date: event.date,
-            location: event.location,
-            price: event.price,
-            image_url: event.image_url,
-            platform_fee_percentage: event.platform_fee || 5,
-            association_id: event.association_id,
-            association_name: event.associations?.name || 'Association',
-            association_logo: event.associations?.profile_image_url || event.associations?.cover_image_url
-        }));
+        // Séparer les événements futurs et passés
+        const now = new Date();
+        const futureEvents = [];
+        const pastEvents = [];
+
+        events.forEach(event => {
+            const eventDate = new Date(event.date);
+            const formattedEvent = {
+                id: event.id,
+                name: event.name,
+                description: event.description,
+                date: event.date,
+                location: event.location,
+                address: event.address,
+                price: event.price,
+                image_url: event.image_url,
+                platform_fee_percentage: event.platform_fee || 5,
+                association_id: event.association_id,
+                association_name: event.associations?.name || 'Association',
+                association_logo: event.associations?.profile_image_url || event.associations?.cover_image_url,
+                available_tickets: event.available_tickets
+            };
+
+            if (eventDate > now) {
+                futureEvents.push(formattedEvent);
+            } else {
+                pastEvents.push(formattedEvent);
+            }
+        });
+
+        // Trier les événements futurs par date croissante et les passés par date décroissante
+        futureEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+        pastEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         return {
             statusCode: 200,
@@ -104,8 +124,11 @@ exports.handler = async (event) => {
             },
             body: JSON.stringify({
                 success: true,
-                events: formattedEvents,
-                count: formattedEvents.length
+                futureEvents: futureEvents,
+                pastEvents: pastEvents,
+                futureCount: futureEvents.length,
+                pastCount: pastEvents.length,
+                totalCount: events.length
             })
         };
 

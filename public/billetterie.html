@@ -81,11 +81,67 @@
             padding: 4rem 2rem;
         }
 
+        .events-section-title {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .events-section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-color), transparent);
+            border-radius: 2px;
+        }
+
         .events-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .past-events-section {
+            margin-top: 6rem;
+            padding-top: 4rem;
+            border-top: 1px solid rgba(218,252,59,0.2);
+        }
+
+        .past-events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
             margin-top: 3rem;
+            opacity: 0.6;
+            filter: grayscale(20%);
+        }
+
+        .past-events-grid .event-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .past-events-grid .event-card::before {
+            content: 'TERMINÉ';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 2;
         }
 
         .event-card {
@@ -100,6 +156,205 @@
             transform: translateY(-10px);
             border-color: var(--accent-color);
             box-shadow: 0 10px 30px rgba(218,252,59,0.2);
+            cursor: pointer;
+        }
+
+        /* Styles pour la popup modale */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--background-color);
+            border-radius: 20px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: rgba(244, 67, 54, 0.9);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .modal-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .meta-item i {
+            color: var(--accent-color);
+            width: 20px;
+        }
+
+        .modal-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .modal-map {
+            height: 300px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(218,252,59,0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-modal {
+            padding: 1rem 2rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px;
+            background: transparent;
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-modal:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .btn-modal:hover {
+            color: var(--background-color);
+        }
+
+        .btn-modal.secondary {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: var(--text-color);
+        }
+
+        .btn-modal.secondary::before {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-modal.secondary:hover {
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
+            }
+            
+            .modal-body {
+                padding: 1.5rem;
+            }
+            
+            .modal-title {
+                font-size: 1.5rem;
+            }
+            
+            .modal-header {
+                height: 200px;
+            }
+            
+            .modal-map {
+                height: 200px;
+            }
         }
 
         .event-image {
@@ -311,18 +566,64 @@
     </header>
 
     <main class="events-container">
-        <!-- Liste des événements -->
-        <div id="events" data-aos="fade-up">
-            <div id="events-grid" class="events-grid">
+        <!-- Événements à venir -->
+        <section id="future-events" data-aos="fade-up">
+            <h2 class="events-section-title">Événements à venir</h2>
+            <div id="future-events-grid" class="events-grid">
                 <div class="loading-spinner" id="loading-spinner"></div>
             </div>
-            <div id="no-events" class="no-events" style="display: none;">
+            <div id="no-future-events" class="no-events" style="display: none;">
                 <i class="fas fa-calendar-times"></i>
-                <h3>Aucun événement trouvé</h3>
-                <p>Il n'y a pas d'événements disponibles pour le moment.</p>
+                <h3>Aucun événement à venir</h3>
+                <p>Il n'y a pas d'événements prévus pour le moment.</p>
+            </div>
+        </section>
+
+        <!-- Événements passés -->
+        <section class="past-events-section" id="past-events" data-aos="fade-up">
+            <h2 class="events-section-title">Événements passés</h2>
+            <div id="past-events-grid" class="past-events-grid">
+                <!-- Les événements passés seront chargés ici -->
+            </div>
+            <div id="no-past-events" class="no-events" style="display: none;">
+                <i class="fas fa-history"></i>
+                <h3>Aucun événement passé</h3>
+                <p>Aucun événement n'a encore eu lieu.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Popup modale pour les détails d'événement -->
+    <div id="event-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img id="modal-event-image" src="" alt="">
+                <button class="modal-close" id="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h2 id="modal-event-title" class="modal-title"></h2>
+                <div id="modal-event-meta" class="modal-meta">
+                    <!-- Les métadonnées seront insérées ici -->
+                </div>
+                <p id="modal-event-description" class="modal-description"></p>
+                <div id="modal-event-map" class="modal-map">
+                    <!-- La carte sera insérée ici -->
+                </div>
+                <div class="modal-actions">
+                    <a id="modal-buy-ticket" href="#" class="btn-modal">
+                        <i class="fas fa-ticket-alt"></i>
+                        Acheter un ticket
+                    </a>
+                    <button class="btn-modal secondary" id="modal-close-btn">
+                        <i class="fas fa-times"></i>
+                        Fermer
+                    </button>
+                </div>
             </div>
         </div>
-    </main>
+    </div>
 
     <footer>
         <div class="footer-content">
@@ -375,7 +676,9 @@
         }, { passive: true });
 
         // Variables globales
-        let allEvents = [];
+        let futureEvents = [];
+        let pastEvents = [];
+        let currentEvent = null;
 
         // Fonction pour afficher les notifications
         function showNotification(message, type) {
@@ -394,8 +697,10 @@
         // Fonction pour charger les événements
         async function loadEvents() {
             const loadingSpinner = document.getElementById('loading-spinner');
-            const eventsGrid = document.getElementById('events-grid');
-            const noEvents = document.getElementById('no-events');
+            const futureEventsGrid = document.getElementById('future-events-grid');
+            const pastEventsGrid = document.getElementById('past-events-grid');
+            const noFutureEvents = document.getElementById('no-future-events');
+            const noPastEvents = document.getElementById('no-past-events');
 
             try {
                 loadingSpinner.style.display = 'block';
@@ -404,12 +709,21 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    allEvents = data.events || [];
-                    displayEvents(allEvents);
+                    futureEvents = data.futureEvents || [];
+                    pastEvents = data.pastEvents || [];
                     
-                    if (allEvents.length === 0) {
-                        noEvents.style.display = 'block';
-                        eventsGrid.innerHTML = '';
+                    displayEvents(futureEvents, 'future');
+                    displayEvents(pastEvents, 'past');
+                    
+                    // Afficher les messages "aucun événement" si nécessaire
+                    if (futureEvents.length === 0) {
+                        noFutureEvents.style.display = 'block';
+                        futureEventsGrid.innerHTML = '';
+                    }
+                    
+                    if (pastEvents.length === 0) {
+                        noPastEvents.style.display = 'block';
+                        pastEventsGrid.innerHTML = '';
                     }
                 } else {
                     throw new Error(data.error || 'Erreur lors du chargement des événements');
@@ -417,17 +731,19 @@
             } catch (error) {
                 console.error('Erreur:', error);
                 showNotification('Erreur lors du chargement des événements', 'error');
-                noEvents.style.display = 'block';
-                eventsGrid.innerHTML = '';
+                noFutureEvents.style.display = 'block';
+                noPastEvents.style.display = 'block';
+                futureEventsGrid.innerHTML = '';
+                pastEventsGrid.innerHTML = '';
             } finally {
                 loadingSpinner.style.display = 'none';
             }
         }
 
         // Fonction pour afficher les événements
-        function displayEvents(events = []) {
-            const eventsGrid = document.getElementById('events-grid');
-            const noEvents = document.getElementById('no-events');
+        function displayEvents(events = [], type) {
+            const eventsGrid = document.getElementById(`${type}-events-grid`);
+            const noEvents = document.getElementById(`no-${type}-events`);
 
             if (events.length === 0) {
                 noEvents.style.display = 'block';
@@ -438,7 +754,7 @@
             noEvents.style.display = 'none';
             
             eventsGrid.innerHTML = events.map(event => `
-                <div class="event-card" data-aos="fade-up">
+                <div class="event-card" data-aos="fade-up" onclick="openEventModal('${event.id}', '${type}')">
                     <div class="event-image" style="background-image: url('${event.image_url || 'Asset/EventPhare 01.png'}')">
                         <div class="event-price">${event.price}€</div>
                     </div>
@@ -460,7 +776,7 @@
                             ${event.location}
                         </div>
                         <p class="event-description">${event.description || 'Un événement à ne pas manquer !'}</p>
-                        <button class="buy-ticket-btn" onclick="buyTicket('${event.id}')">
+                        <button class="buy-ticket-btn" onclick="event.stopPropagation(); buyTicket('${event.id}')">
                             <span>Acheter un ticket</span>
                         </button>
                     </div>
@@ -468,9 +784,103 @@
             `).join('');
         }
 
+        // Fonction pour ouvrir la popup modale
+        function openEventModal(eventId, type) {
+            const events = type === 'future' ? futureEvents : pastEvents;
+            const event = events.find(e => e.id === eventId);
+            
+            if (!event) {
+                showNotification('Événement introuvable', 'error');
+                return;
+            }
+
+            currentEvent = event;
+            
+            // Remplir le contenu de la popup
+            document.getElementById('modal-event-image').src = event.image_url || 'Asset/EventPhare 01.png';
+            document.getElementById('modal-event-image').alt = event.name;
+            document.getElementById('modal-event-title').textContent = event.name;
+            document.getElementById('modal-event-description').textContent = event.description || 'Un événement à ne pas manquer !';
+            
+            // Métadonnées
+            const metaContainer = document.getElementById('modal-event-meta');
+            metaContainer.innerHTML = `
+                <div class="meta-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>${new Date(event.date).toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${event.location}</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-euro-sign"></i>
+                    <span>${event.price}€</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-users"></i>
+                    <span>${event.association_name}</span>
+                </div>
+                ${event.available_tickets !== null ? `
+                <div class="meta-item">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>${event.available_tickets} places disponibles</span>
+                </div>
+                ` : ''}
+            `;
+            
+            // Lien d'achat de ticket (seulement pour les événements futurs)
+            const buyTicketBtn = document.getElementById('modal-buy-ticket');
+            if (type === 'future') {
+                buyTicketBtn.style.display = 'inline-flex';
+                buyTicketBtn.href = `paiement.html?id=${event.id}`;
+            } else {
+                buyTicketBtn.style.display = 'none';
+            }
+            
+            // Initialiser la carte (utiliser l'adresse si disponible, sinon le lieu)
+            initMap(event.address || event.location);
+            
+            // Afficher la popup
+            document.getElementById('event-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Fonction pour fermer la popup
+        function closeEventModal() {
+            document.getElementById('event-modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            currentEvent = null;
+        }
+
+        // Fonction pour initialiser la carte
+        function initMap(address) {
+            const mapContainer = document.getElementById('modal-event-map');
+            
+            // Créer un iframe avec Google Maps
+            mapContainer.innerHTML = `
+                <iframe
+                    width="100%"
+                    height="100%"
+                    style="border:0"
+                    loading="lazy"
+                    allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dOWWgE6lalqXJY&q=${encodeURIComponent(address)}">
+                </iframe>
+            `;
+        }
+
         // Fonction pour acheter un ticket
         function buyTicket(eventId) {
-            const event = allEvents.find(e => e.id === eventId);
+            const event = [...futureEvents, ...pastEvents].find(e => e.id === eventId);
             if (!event) {
                 showNotification('Événement introuvable', 'error');
                 return;
@@ -480,8 +890,26 @@
             window.location.href = `paiement.html?id=${eventId}`;
         }
 
-        // Charger les événements au chargement de la page
+        // Event listeners pour la popup
         document.addEventListener('DOMContentLoaded', () => {
+            // Boutons de fermeture de la popup
+            document.getElementById('modal-close').addEventListener('click', closeEventModal);
+            document.getElementById('modal-close-btn').addEventListener('click', closeEventModal);
+            
+            // Fermer la popup en cliquant sur l'overlay
+            document.getElementById('event-modal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeEventModal();
+                }
+            });
+            
+            // Fermer la popup avec la touche Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeEventModal();
+                }
+            });
+            
             loadEvents();
             
             // Initialiser AOS
@@ -494,3 +922,4 @@
     </script>
 </body>
 </html>
+
