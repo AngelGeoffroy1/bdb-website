@@ -48,10 +48,8 @@
             text-align: center;
             padding: 120px 2rem 4rem;
             border-radius: 20px;
-            margin: 2rem;
+            margin: 2rem auto 1rem;
             max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .billetterie-header h1 {
@@ -78,34 +76,97 @@
         .events-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 4rem 2rem;
+            padding: 1.25rem 2rem 4rem;
         }
 
         .events-section {
             margin-bottom: 4rem;
         }
 
+        .events-section-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
         .events-section-title {
             font-size: 2.5rem;
             font-weight: 700;
             color: var(--text-color);
-            text-align: center;
-            margin-bottom: 1rem;
+            text-align: left;
+            margin: 0;
             letter-spacing: -0.03em;
         }
 
         .events-section-subtitle {
-            text-align: center;
+            text-align: left;
             color: rgba(255, 255, 255, 0.7);
             max-width: 520px;
-            margin: 0 auto 2rem;
+            margin: 0;
         }
 
-        .events-grid {
+        .events-carousel {
+            position: relative;
+            margin-top: 2rem;
+            padding-inline: 0;
+        }
+
+        .events-track {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            padding-bottom: 1.5rem;
+            scroll-snap-type: x mandatory;
+            mask-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1) 4%, rgba(0,0,0,1) 96%, rgba(0,0,0,0));
+            -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,1) 4%, rgba(0,0,0,1) 96%, rgba(0,0,0,0));
+        }
+
+        .events-track::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .events-track::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 999px;
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.6);
+            color: rgba(255,255,255,0.85);
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+            place-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
+            z-index: 2;
+        }
+
+        .carousel-button:hover {
+            transform: translateY(-50%) scale(1.05);
+            background: rgba(218,252,59,0.85);
+            color: #050505;
+        }
+
+        .carousel-button:disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .carousel-button.prev {
+            left: -0.75rem;
+        }
+
+        .carousel-button.next {
+            right: -0.75rem;
         }
 
         .event-card {
@@ -116,6 +177,9 @@
             border: 1px solid rgba(218,252,59,0.1);
             cursor: pointer;
             position: relative;
+            min-height: 100%;
+            flex: 0 0 clamp(260px, 28vw, 320px);
+            scroll-snap-align: start;
         }
 
         .event-card::after {
@@ -141,7 +205,7 @@
 
         .event-image {
             width: 100%;
-            height: 200px;
+            height: 180px;
             background-size: cover;
             background-position: center;
             position: relative;
@@ -160,12 +224,12 @@
         }
 
         .event-content {
-            padding: 1.5rem;
+            padding: 1.25rem;
         }
 
         .event-title {
             color: var(--accent-color);
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             margin-bottom: 0.5rem;
             font-weight: 600;
         }
@@ -344,13 +408,21 @@
             color: rgba(255,255,255,0.75);
         }
 
-        .event-modal__info span {
+        .event-modal__info-item {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             padding: 0.4rem 0.9rem;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.06);
+        }
+
+        .event-modal__info-item i {
+            font-size: 0.95rem;
+        }
+
+        .event-modal__info-value {
+            display: inline-block;
         }
 
         .event-modal__description {
@@ -486,6 +558,11 @@
             margin: 0 auto;
         }
 
+        .events-track .loading-spinner {
+            display: block;
+            margin: 1.5rem auto;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -516,9 +593,26 @@
                 font-size: 2rem;
             }
 
-            .events-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
+            .events-container {
+                padding: 1.5rem 1.25rem 3rem;
+            }
+
+            .events-carousel {
+                padding-inline: 0;
+            }
+
+            .events-track {
+                gap: 1rem;
+                mask-image: none;
+                overflow-x: auto;
+            }
+
+            .carousel-button {
+                display: none;
+            }
+
+            .event-card {
+                flex: 0 0 clamp(240px, 80vw, 300px);
             }
 
             .event-modal__content {
@@ -603,10 +697,20 @@
     <main class="events-container">
         <!-- Événements à venir -->
         <section id="events" class="events-section" data-aos="fade-up">
-            <h2 class="events-section-title">Évènements à venir</h2>
-            <p class="events-section-subtitle">Ne manquez pas les prochaines soirées et expériences étudiantes sélectionnées par BDB.</p>
-            <div id="events-grid" class="events-grid">
-                <div class="loading-spinner" id="loading-spinner"></div>
+            <div class="events-section-header">
+                <h2 class="events-section-title">Évènements à venir</h2>
+                <p class="events-section-subtitle">Ne manquez pas les prochaines soirées et expériences étudiantes sélectionnées par BDB.</p>
+            </div>
+            <div class="events-carousel" data-carousel="upcoming">
+                <button class="carousel-button prev" type="button" aria-label="Faire défiler les événements précédents">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div id="events-grid" class="events-track" role="list">
+                    <div class="loading-spinner" id="loading-spinner"></div>
+                </div>
+                <button class="carousel-button next" type="button" aria-label="Faire défiler les événements suivants">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
             <div id="no-events" class="no-events" style="display: none;">
                 <i class="fas fa-calendar-times"></i>
@@ -617,9 +721,19 @@
 
         <!-- Événements passés -->
         <section id="past-events" class="events-section" data-aos="fade-up">
-            <h2 class="events-section-title">Évènements passés</h2>
-            <p class="events-section-subtitle">Revivez les moments forts et découvrez l'ambiance des dernières éditions.</p>
-            <div id="past-events-grid" class="events-grid"></div>
+            <div class="events-section-header">
+                <h2 class="events-section-title">Évènements passés</h2>
+                <p class="events-section-subtitle">Revivez les moments forts et découvrez l'ambiance des dernières éditions.</p>
+            </div>
+            <div class="events-carousel" data-carousel="past">
+                <button class="carousel-button prev" type="button" aria-label="Faire défiler les événements passés précédents">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div id="past-events-grid" class="events-track" role="list"></div>
+                <button class="carousel-button next" type="button" aria-label="Faire défiler les événements passés suivants">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
             <div id="no-past-events" class="no-events" style="display: none;">
                 <i class="fas fa-hourglass-end"></i>
                 <h3>Aucun événement passé</h3>
@@ -639,9 +753,18 @@
                     <span id="event-modal-status" class="event-modal__status" hidden></span>
                     <h3 id="event-modal-title" class="event-modal__title"></h3>
                     <div class="event-modal__info">
-                        <span><i class="fas fa-calendar-day"></i><span id="event-modal-date"></span></span>
-                        <span><i class="fas fa-clock"></i><span id="event-modal-time"></span></span>
-                        <span><i class="fas fa-map-marker-alt"></i><span id="event-modal-location"></span></span>
+                        <div id="event-modal-date" class="event-modal__info-item">
+                            <i class="fas fa-calendar-day"></i>
+                            <span class="event-modal__info-value"></span>
+                        </div>
+                        <div id="event-modal-time" class="event-modal__info-item">
+                            <i class="fas fa-clock"></i>
+                            <span class="event-modal__info-value"></span>
+                        </div>
+                        <div id="event-modal-location" class="event-modal__info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="event-modal__info-value"></span>
+                        </div>
                     </div>
                 </div>
                 <div class="event-modal__description" id="event-modal-description"></div>
@@ -729,17 +852,19 @@
         const modalCloseButton = modalElement.querySelector('.event-modal__close');
         const modalImage = document.getElementById('event-modal-image');
         const modalTitle = document.getElementById('event-modal-title');
-        const modalDate = document.getElementById('event-modal-date');
-        const modalTime = document.getElementById('event-modal-time');
-        const modalLocation = document.getElementById('event-modal-location');
         const modalDescription = document.getElementById('event-modal-description');
         const modalAssociation = document.getElementById('event-modal-association');
         const modalPrice = document.getElementById('event-modal-price');
         const modalStatus = document.getElementById('event-modal-status');
         const modalBuyButton = document.getElementById('event-modal-buy');
-        const modalDateWrapper = modalDate.parentElement;
-        const modalTimeWrapper = modalTime.parentElement;
-        const modalLocationWrapper = modalLocation.parentElement;
+        const modalDateWrapper = document.getElementById('event-modal-date');
+        const modalTimeWrapper = document.getElementById('event-modal-time');
+        const modalLocationWrapper = document.getElementById('event-modal-location');
+        const modalDateValue = modalDateWrapper ? modalDateWrapper.querySelector('.event-modal__info-value') : null;
+        const modalTimeValue = modalTimeWrapper ? modalTimeWrapper.querySelector('.event-modal__info-value') : null;
+        const modalLocationValue = modalLocationWrapper ? modalLocationWrapper.querySelector('.event-modal__info-value') : null;
+
+        const carouselRegistry = new WeakMap();
 
         const mapFallbackCenter = { lat: 44.837789, lng: -0.57918 };
         const mapStyles = [
@@ -777,6 +902,61 @@
                 stylers: [{ color: '#0c1f33' }]
             }
         ];
+
+        function initCarousel(carouselElement) {
+            if (!carouselElement) {
+                return;
+            }
+
+            const track = carouselElement.querySelector('.events-track');
+            if (!track) {
+                return;
+            }
+
+            const prevButton = carouselElement.querySelector('.carousel-button.prev');
+            const nextButton = carouselElement.querySelector('.carousel-button.next');
+
+            const updateButtons = () => {
+                const maxScrollLeft = Math.max(track.scrollWidth - track.clientWidth - 2, 0);
+                if (prevButton) {
+                    prevButton.disabled = track.scrollLeft <= 0;
+                }
+                if (nextButton) {
+                    nextButton.disabled = track.scrollLeft >= maxScrollLeft;
+                }
+            };
+
+            const scrollByAmount = (direction) => {
+                const offset = track.clientWidth * 0.8;
+                track.scrollBy({
+                    left: direction * offset,
+                    behavior: 'smooth'
+                });
+            };
+
+            if (!carouselRegistry.has(carouselElement)) {
+                if (prevButton) {
+                    prevButton.addEventListener('click', () => scrollByAmount(-1));
+                }
+                if (nextButton) {
+                    nextButton.addEventListener('click', () => scrollByAmount(1));
+                }
+
+                const onScroll = () => requestAnimationFrame(updateButtons);
+                track.addEventListener('scroll', onScroll, { passive: true });
+                window.addEventListener('resize', onScroll);
+
+                carouselRegistry.set(carouselElement, {
+                    update: updateButtons
+                });
+            }
+
+            requestAnimationFrame(updateButtons);
+        }
+
+        function refreshCarousels() {
+            document.querySelectorAll('.events-carousel').forEach(initCarousel);
+        }
 
         // Fonction pour afficher les notifications
         function showNotification(message, type) {
@@ -854,7 +1034,7 @@
             const imageUrl = event.image_url || 'Asset/EventPhare 01.png';
 
             return `
-                <article class="event-card${isPast ? ' past' : ''}" data-event-id="${event.id}" tabindex="0" data-aos="fade-up">
+                <article class="event-card${isPast ? ' past' : ''}" data-event-id="${event.id}" tabindex="0" data-aos="fade-up" role="listitem">
                     <div class="event-image" style="background-image: url('${imageUrl}')">
                         <div class="event-price">${priceBadge}</div>
                     </div>
@@ -929,21 +1109,30 @@
             modalImage.src = event.image_url || 'Asset/EventPhare 01.png';
             modalImage.alt = `Illustration de l'événement ${event.name}`;
             modalTitle.textContent = event.name;
-            modalDate.textContent = eventDate ? formatEventDate(eventDate) : 'Date à confirmer';
-            modalTime.textContent = eventDate ? formatEventTime(eventDate) : '';
-            modalLocation.textContent = event.address || event.location || 'Lieu communiqué prochainement';
+            if (modalDateValue) {
+                modalDateValue.textContent = eventDate ? formatEventDate(eventDate) : 'Date à confirmer';
+            }
+            if (modalTimeValue) {
+                modalTimeValue.textContent = eventDate ? formatEventTime(eventDate) : '';
+            }
+            if (modalLocationValue) {
+                modalLocationValue.textContent = event.address || event.location || 'Lieu communiqué prochainement';
+            }
             modalDescription.textContent = event.description || 'Un événement à ne pas manquer !';
             modalAssociation.textContent = event.association_name || 'Association BDB';
             modalPrice.textContent = formatEventPrice(event.price);
 
             if (modalDateWrapper) {
-                modalDateWrapper.style.display = modalDate.textContent ? 'inline-flex' : 'none';
+                const hasDateValue = modalDateValue && modalDateValue.textContent;
+                modalDateWrapper.style.display = hasDateValue ? 'inline-flex' : 'none';
             }
             if (modalTimeWrapper) {
-                modalTimeWrapper.style.display = modalTime.textContent ? 'inline-flex' : 'none';
+                const hasTimeValue = modalTimeValue && modalTimeValue.textContent;
+                modalTimeWrapper.style.display = hasTimeValue ? 'inline-flex' : 'none';
             }
             if (modalLocationWrapper) {
-                modalLocationWrapper.style.display = modalLocation.textContent ? 'inline-flex' : 'none';
+                const hasLocationValue = modalLocationValue && modalLocationValue.textContent;
+                modalLocationWrapper.style.display = hasLocationValue ? 'inline-flex' : 'none';
             }
 
             if (isPast) {
@@ -1108,6 +1297,7 @@
                 if (noPastEvents) {
                     noPastEvents.style.display = 'block';
                 }
+                refreshCarousels();
             } finally {
                 if (loadingSpinner && loadingSpinner.parentNode) {
                     loadingSpinner.parentNode.removeChild(loadingSpinner);
@@ -1131,6 +1321,7 @@
                 pastEventsGrid.innerHTML = '';
                 if (noEvents) noEvents.style.display = 'block';
                 if (noPastEvents) noPastEvents.style.display = 'block';
+                refreshCarousels();
                 return;
             }
 
@@ -1173,6 +1364,8 @@
             attachEventInteractions(eventsGrid);
             attachEventInteractions(pastEventsGrid);
 
+            refreshCarousels();
+
             if (window.AOS && typeof window.AOS.refreshHard === 'function') {
                 window.AOS.refreshHard();
             }
@@ -1192,6 +1385,7 @@
         // Charger les événements au chargement de la page
         document.addEventListener('DOMContentLoaded', () => {
             loadEvents();
+            refreshCarousels();
 
             AOS.init({
                 duration: 800,
