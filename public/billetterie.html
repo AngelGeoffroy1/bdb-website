@@ -42,14 +42,14 @@
         .billetterie-header {
             position: relative;
             overflow: hidden;
-            min-height: 34vh;
+            min-height: 46vh;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 64px 2rem 2rem;
+            padding: 88px 2rem 2.4rem;
             border-radius: 20px;
-            margin: 1.2rem auto 0.5rem;
+            margin: 1.3rem auto 0.6rem;
             max-width: 1200px;
             background: #050505;
         }
@@ -117,11 +117,11 @@
         .events-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0.5rem 2rem 1.8rem;
+            padding: 0.35rem 2rem 1.2rem;
         }
 
         .events-section {
-            margin-bottom: 0.9rem;
+            margin-bottom: 0.45rem;
         }
 
         .events-section-header {
@@ -149,20 +149,20 @@
 
         .events-carousel {
             position: relative;
-            margin-top: 0.75rem;
+            margin-top: 0.4rem;
             padding-inline: 0;
         }
 
         .events-map-section {
-            margin-top: 1.8rem;
+            margin-top: 0.95rem;
         }
 
         .events-map-header {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.6rem;
             align-items: flex-start;
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.9rem;
         }
 
         .events-map-title {
@@ -729,7 +729,7 @@
             }
 
             .events-map-section {
-                margin-top: 1.2rem;
+                margin-top: 0.7rem;
             }
 
             .events-map-title {
@@ -737,7 +737,7 @@
             }
 
             #events-overview-map {
-                height: 320px;
+                height: 280px;
             }
 
             .events-map-legend {
@@ -1063,8 +1063,48 @@
                 featureType: 'water',
                 elementType: 'geometry',
                 stylers: [{ color: '#0c1f33' }]
-            }
+            },
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+            { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }
         ];
+
+        const markerSvg = {
+            upcoming: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="36" height="42" viewBox="0 0 36 42" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#DAFC3B" />
+                            <stop offset="100%" stop-color="#BDE032" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M18 0C12 0 6 1.5 6 7.5V24C6 33 18 42 18 42C18 42 30 33 30 24V7.5C30 1.5 24 0 18 0Z" fill="url(#grad)" stroke="#0B0B0B" stroke-width="2"/>
+                    <rect x="10" y="11" width="16" height="12" rx="3" fill="#0B0B0B" opacity="0.15"/>
+                    <rect x="11" y="12" width="14" height="10" rx="2" fill="#0B0B0B" opacity="0.2"/>
+                    <text x="18" y="22" text-anchor="middle" font-family="'Poppins', sans-serif" font-weight="600" font-size="9" fill="#0B0B0B">📅</text>
+                </svg>
+            `),
+            past: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                <svg width="36" height="42" viewBox="0 0 36 42" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 0C12 0 6 1.5 6 7.5V24C6 33 18 42 18 42C18 42 30 33 30 24V7.5C30 1.5 24 0 18 0Z" fill="#8C8C94" stroke="#0B0B0B" stroke-width="2"/>
+                    <rect x="10" y="11" width="16" height="12" rx="3" fill="#0B0B0B" opacity="0.18"/>
+                    <rect x="11" y="12" width="14" height="10" rx="2" fill="#0B0B0B" opacity="0.25"/>
+                    <text x="18" y="22" text-anchor="middle" font-family="'Poppins', sans-serif" font-weight="600" font-size="9" fill="#0B0B0B">📅</text>
+                </svg>
+            `)
+        };
+
+        function buildMarkerIcon(type = 'upcoming') {
+            if (typeof google === 'undefined' || !google.maps) {
+                return undefined;
+            }
+
+            return {
+                url: markerSvg[type] || markerSvg.upcoming,
+                scaledSize: new google.maps.Size(36, 42),
+                anchor: new google.maps.Point(18, 42)
+            };
+        }
 
         function startHeaderCarousel(images = []) {
             if (!headerSlides.length) {
@@ -1218,14 +1258,7 @@
                         map: overviewMap,
                         position,
                         title: event.name,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 8,
-                            fillColor: isPast ? '#8C8C94' : '#DAFC3B',
-                            fillOpacity: 1,
-                            strokeColor: '#050505',
-                            strokeWeight: 2
-                        }
+                        icon: buildMarkerIcon(isPast ? 'past' : 'upcoming')
                     });
 
                     marker.addListener('click', () => {
@@ -1574,10 +1607,16 @@
                         mapMarker.setMap(null);
                     }
 
+                    const isPast = (() => {
+                        const eventDate = parseEventDate(event.date);
+                        return eventDate ? eventDate < new Date() : false;
+                    })();
+
                     mapMarker = new google.maps.Marker({
                         map: mapInstance,
                         position: latLng,
-                        title: event.name
+                        title: event.name,
+                        icon: buildMarkerIcon(isPast ? 'past' : 'upcoming')
                     });
                 } else {
                     mapInstance.setCenter(mapFallbackCenter);
