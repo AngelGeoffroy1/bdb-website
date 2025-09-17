@@ -142,206 +142,216 @@
             padding: 2rem;
         }
 
-        .tickets-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
         .section-title {
             font-size: 1.8rem;
             font-weight: bold;
             color: var(--accent-color);
-            margin: 0;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .search-container {
-            flex: 1;
-            max-width: 300px;
-        }
-
-        .search-input-wrapper {
+        .tickets-carousel {
             position: relative;
+        }
+
+        .tickets-track {
             display: flex;
-            align-items: center;
-        }
-
-        .search-input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 0.75rem 1rem 0.75rem 2.5rem;
-            color: var(--text-color);
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 3px rgba(218, 252, 59, 0.1);
-        }
-
-        .search-input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 0.75rem;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-        }
-
-        .clear-search {
-            position: absolute;
-            right: 0.75rem;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.6);
-            cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 50%;
-            transition: var(--transition);
-        }
-
-        .clear-search:hover {
-            color: var(--accent-color);
-            background: rgba(218, 252, 59, 0.1);
-        }
-
-        .tickets-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding: 0.25rem 0.5rem 0.5rem;
+            margin: 0 -0.5rem;
+        }
+
+        .tickets-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tickets-track {
+            scrollbar-width: none;
+        }
+
+        .tickets-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(218, 252, 59, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 2;
+        }
+
+        .tickets-nav:hover {
+            background: rgba(218, 252, 59, 0.25);
+            color: #000;
+            border-color: rgba(218, 252, 59, 0.5);
+        }
+
+        .tickets-nav.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .tickets-nav.hidden {
+            display: none;
+        }
+
+        .tickets-nav.prev {
+            left: -0.75rem;
+        }
+
+        .tickets-nav.next {
+            right: -0.75rem;
         }
 
         .ticket-card {
+            flex: 0 0 clamp(260px, 30vw, 320px);
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
             overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
             transition: var(--transition);
-            position: relative;
         }
 
         .ticket-card:hover {
-            border-color: rgba(218, 252, 59, 0.3);
-            transform: translateY(-2px);
+            border-color: rgba(218, 252, 59, 0.35);
+            transform: translateY(-3px);
+            box-shadow: 0 18px 35px rgba(0, 0, 0, 0.35);
         }
 
         .ticket-image {
-            width: 100%;
-            height: 120px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            background-size: cover;
-            background-position: center;
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: linear-gradient(135deg, rgba(60,60,60,0.6), rgba(10,10,10,0.9));
         }
 
-        .ticket-image-placeholder {
-            color: rgba(255, 255, 255, 0.3);
-            font-size: 2rem;
+        .ticket-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
-        .ticket-status-overlay {
+        .ticket-status {
             position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
+            top: 14px;
+            left: 14px;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.35);
         }
 
-        .ticket-status-overlay.valid {
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
+        .ticket-status.valid {
+            background: rgba(76, 175, 80, 0.22);
+            color: #4CAF50;
+            border-color: rgba(76, 175, 80, 0.45);
         }
 
-        .ticket-status-overlay.used {
-            background: rgba(158, 158, 158, 0.9);
-            color: white;
+        .ticket-status.used {
+            background: rgba(158, 158, 158, 0.22);
+            color: #c7c7c7;
+            border-color: rgba(158, 158, 158, 0.4);
         }
 
-        .ticket-content {
-            padding: 1rem;
-        }
-
-        .ticket-header {
-            margin-bottom: 0.75rem;
+        .ticket-body {
+            padding: 1.25rem 1.35rem 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            height: 100%;
         }
 
         .ticket-event-name {
-            font-size: 1rem;
-            font-weight: bold;
+            font-size: 1.15rem;
+            font-weight: 700;
             color: var(--text-color);
-            margin-bottom: 0.25rem;
-            line-height: 1.3;
+            margin-bottom: 0.2rem;
         }
 
         .ticket-event-date {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
-        }
-
-        .ticket-event-location {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-        }
-
-        .ticket-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            padding: 0.5rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .ticket-price {
             font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--accent-color);
         }
 
-        .ticket-date {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
+        .ticket-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.85rem;
         }
 
-        .ticket-qr {
-            text-align: center;
-            padding-top: 0.75rem;
+        .ticket-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 0.75rem;
         }
 
-        .ticket-qr img {
-            width: 60px;
-            height: 60px;
-            border-radius: 6px;
+        .ticket-detail-label {
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .ticket-detail-value {
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .ticket-footer {
+            margin-top: auto;
+            padding-top: 1.1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .ticket-qr-image {
+            width: 76px;
+            height: 76px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .ticket-code-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
 
         .ticket-code {
             color: var(--accent-color);
-            font-family: monospace;
-            font-size: 0.7rem;
-            margin-top: 0.5rem;
+            font-family: 'Fira Code', 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.95rem;
             word-break: break-all;
-            line-height: 1.2;
         }
 
         .empty-state {
@@ -418,70 +428,27 @@
                 padding: 1.5rem;
             }
 
-            .tickets-header {
-                flex-direction: column;
-                align-items: stretch;
+            .tickets-track {
+                margin: 0;
+                padding: 0.25rem 0 0.75rem;
                 gap: 1rem;
             }
 
-            .search-container {
-                max-width: none;
+            .ticket-card {
+                flex: 0 0 clamp(240px, 80vw, 300px);
             }
 
-            .tickets-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 1rem;
+            .tickets-nav {
+                display: none;
             }
 
-            .ticket-image {
-                height: 100px;
-            }
-
-            .ticket-content {
-                padding: 0.75rem;
-            }
-
-            .ticket-event-name {
-                font-size: 0.9rem;
-            }
-
-            .ticket-qr img {
-                width: 50px;
-                height: 50px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .account-container {
-                padding: 0.5rem;
-            }
-
-            .profile-card,
-            .tickets-section {
-                padding: 1rem;
-            }
-
-            .tickets-grid {
+            .ticket-info-grid {
                 grid-template-columns: 1fr;
-                gap: 1rem;
             }
 
-            .ticket-image {
-                height: 90px;
-            }
-
-            .ticket-content {
-                padding: 0.75rem;
-            }
-
-            .ticket-event-name {
-                font-size: 0.85rem;
-            }
-
-            .ticket-details {
+            .ticket-footer {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.25rem;
             }
         }
     </style>
@@ -552,30 +519,26 @@
 
             <!-- Tickets -->
             <div class="tickets-section" data-aos="fade-left">
-                <div class="tickets-header">
-                    <h2 class="section-title">
-                        <i class="fas fa-ticket-alt"></i>
-                        Mes Tickets
-                    </h2>
-                    
-                    <div class="search-container" id="search-container" style="display: none;">
-                        <div class="search-input-wrapper">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="ticket-search" class="search-input" placeholder="Rechercher un ticket...">
-                            <button type="button" id="clear-search" class="clear-search" style="display: none;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <h2 class="section-title">
+                    <i class="fas fa-ticket-alt"></i>
+                    Mes Tickets
+                </h2>
 
                 <div id="tickets-loading" class="loading">
                     <div class="spinner"></div>
                     <span>Chargement de vos tickets...</span>
                 </div>
 
-                <div id="tickets-container" style="display: none;">
-                    <!-- Tickets will be loaded here -->
+                <div id="tickets-container" class="tickets-carousel" style="display: none;">
+                    <button class="tickets-nav prev" type="button" aria-label="Ticket précédent">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="tickets-track" id="tickets-track">
+                        <!-- Tickets will be loaded here -->
+                    </div>
+                    <button class="tickets-nav next" type="button" aria-label="Ticket suivant">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
 
                 <div id="tickets-empty" class="empty-state" style="display: none;">
@@ -585,15 +548,6 @@
                     <a href="billetterie.html" class="primary-button">
                         Voir les événements
                     </a>
-                </div>
-
-                <div id="no-search-results" class="empty-state" style="display: none;">
-                    <i class="fas fa-search"></i>
-                    <h3>Aucun résultat trouvé</h3>
-                    <p>Essayez avec d'autres mots-clés.</p>
-                    <button type="button" class="primary-button" onclick="clearSearch()">
-                        Effacer la recherche
-                    </button>
                 </div>
             </div>
         </div>
@@ -689,105 +643,161 @@
             }
         }
 
+        const TICKET_COVER_FALLBACK = 'Asset/1.png';
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            const div = document.createElement('div');
+            div.textContent = String(value);
+            return div.innerHTML;
+        }
+
+        function formatEventDate(dateString) {
+            if (!dateString) {
+                return '';
+            }
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) {
+                return '';
+            }
+
+            const options = {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'long'
+            };
+
+            let formatted = date.toLocaleDateString('fr-FR', options);
+            if (dateString.includes('T')) {
+                const time = date.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                formatted += ` · ${time}`;
+            }
+
+            return formatted;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) {
+                return '-';
+            }
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) {
+                return '-';
+            }
+            return date.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function formatCurrency(value) {
+            if (value === null || value === undefined) {
+                return '-';
+            }
+            const numericValue = Number(value);
+            if (Number.isNaN(numericValue)) {
+                return escapeHtml(value);
+            }
+            return numericValue.toLocaleString('fr-FR', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 0
+            });
+        }
+
+        function getCarouselScrollAmount(track) {
+            const firstCard = track.querySelector('.ticket-card');
+            if (!firstCard) {
+                return track.clientWidth;
+            }
+            const styles = getComputedStyle(track);
+            const gap = parseFloat(styles.gap || styles.columnGap || '0');
+            return firstCard.offsetWidth + gap;
+        }
+
+        function updateCarouselNav(track, prevButton, nextButton) {
+            if (!track || !prevButton || !nextButton) {
+                return;
+            }
+
+            const maxScrollLeft = Math.max(track.scrollWidth - track.clientWidth - 1, 0);
+            const hideNav = maxScrollLeft <= 0;
+
+            prevButton.classList.toggle('hidden', hideNav);
+            nextButton.classList.toggle('hidden', hideNav);
+
+            const isAtStart = track.scrollLeft <= 0;
+            const isAtEnd = track.scrollLeft >= maxScrollLeft;
+
+            prevButton.classList.toggle('disabled', isAtStart);
+            nextButton.classList.toggle('disabled', isAtEnd);
+
+            prevButton.setAttribute('aria-disabled', isAtStart);
+            nextButton.setAttribute('aria-disabled', isAtEnd);
+        }
+
         function displayTickets(tickets) {
             const container = document.getElementById('tickets-container');
+            const track = document.getElementById('tickets-track');
             const emptyState = document.getElementById('tickets-empty');
-            const searchContainer = document.getElementById('search-container');
+            const prevButton = container?.querySelector('.tickets-nav.prev');
+            const nextButton = container?.querySelector('.tickets-nav.next');
 
             if (!tickets || tickets.length === 0) {
+                if (container) {
+                    container.style.display = 'none';
+                }
                 emptyState.style.display = 'block';
-                searchContainer.style.display = 'none';
                 return;
             }
 
-            // Stocker tous les tickets pour la recherche
-            window.allTickets = tickets;
+            emptyState.style.display = 'none';
 
-            container.innerHTML = '';
-            tickets.forEach(ticket => {
-                const ticketCard = createTicketCard(ticket);
-                container.appendChild(ticketCard);
-            });
-
-            container.style.display = 'block';
-            searchContainer.style.display = 'flex';
-
-            // Ajouter les event listeners pour la recherche
-            setupSearchFunctionality();
-        }
-
-        function setupSearchFunctionality() {
-            const searchInput = document.getElementById('ticket-search');
-            const clearButton = document.getElementById('clear-search');
-
-            searchInput.addEventListener('input', filterTickets);
-            clearButton.addEventListener('click', clearSearch);
-        }
-
-        function filterTickets() {
-            const searchTerm = document.getElementById('ticket-search').value.toLowerCase().trim();
-            const clearButton = document.getElementById('clear-search');
-            const container = document.getElementById('tickets-container');
-            const noResults = document.getElementById('no-search-results');
-
-            // Afficher/masquer le bouton clear
-            clearButton.style.display = searchTerm ? 'block' : 'none';
-
-            if (!searchTerm) {
-                // Afficher tous les tickets
-                displayAllTickets();
-                return;
-            }
-
-            // Filtrer les tickets
-            const filteredTickets = window.allTickets.filter(ticket => {
-                const eventName = (ticket.event_name || '').toLowerCase();
-                const location = (ticket.event_location || '').toLowerCase();
-                const ticketCode = (ticket.ticket_code || '').toLowerCase();
-                const date = ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR').toLowerCase() : '';
-
-                return eventName.includes(searchTerm) ||
-                       location.includes(searchTerm) ||
-                       ticketCode.includes(searchTerm) ||
-                       date.includes(searchTerm);
-            });
-
-            // Afficher les résultats
-            if (filteredTickets.length === 0) {
-                container.style.display = 'none';
-                noResults.style.display = 'block';
-            } else {
-                container.innerHTML = '';
-                filteredTickets.forEach(ticket => {
+            if (track) {
+                track.innerHTML = '';
+                tickets.forEach(ticket => {
                     const ticketCard = createTicketCard(ticket);
-                    container.appendChild(ticketCard);
+                    track.appendChild(ticketCard);
                 });
-                container.style.display = 'block';
-                noResults.style.display = 'none';
+
+                // Reset position before displaying to avoid residual scroll when re-opening
+                track.scrollLeft = 0;
             }
-        }
 
-        function displayAllTickets() {
-            const container = document.getElementById('tickets-container');
-            const noResults = document.getElementById('no-search-results');
+            if (container) {
+                container.style.display = 'block';
+            }
 
-            container.innerHTML = '';
-            window.allTickets.forEach(ticket => {
-                const ticketCard = createTicketCard(ticket);
-                container.appendChild(ticketCard);
-            });
+            if (prevButton && nextButton && track) {
+                const scrollAmount = () => getCarouselScrollAmount(track);
 
-            container.style.display = 'block';
-            noResults.style.display = 'none';
-        }
+                prevButton.onclick = () => {
+                    track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+                };
 
-        function clearSearch() {
-            const searchInput = document.getElementById('ticket-search');
-            const clearButton = document.getElementById('clear-search');
+                nextButton.onclick = () => {
+                    track.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+                };
 
-            searchInput.value = '';
-            clearButton.style.display = 'none';
-            displayAllTickets();
+                if (!track.dataset.scrollListener) {
+                    track.addEventListener('scroll', () => updateCarouselNav(track, prevButton, nextButton), { passive: true });
+                    track.dataset.scrollListener = 'true';
+                }
+
+                if (!container.dataset.resizeListener) {
+                    window.addEventListener('resize', () => updateCarouselNav(track, prevButton, nextButton));
+                    container.dataset.resizeListener = 'true';
+                }
+
+                // Ensure nav state is correct after layout pass
+                requestAnimationFrame(() => updateCarouselNav(track, prevButton, nextButton));
+            }
         }
 
         function createTicketCard(ticket) {
@@ -797,33 +807,49 @@
             const statusClass = ticket.is_used ? 'used' : 'valid';
             const statusText = ticket.is_used ? 'Utilisé' : 'Valide';
 
-            // Créer l'image de couverture ou placeholder
-            const imageElement = ticket.event_image ? 
-                `<div class="ticket-image" style="background-image: url('${ticket.event_image}');"></div>` :
-                `<div class="ticket-image">
-                    <i class="fas fa-image ticket-image-placeholder"></i>
-                </div>`;
+            const eventName = ticket.event_name || 'Événement';
+            const eventDate = formatEventDate(ticket.event_date);
+            const ticketCode = ticket.ticket_code || '-';
+            const pricePaid = formatCurrency(ticket.price_paid);
+            const purchaseDate = formatDate(ticket.created_at);
+            const location = ticket.event_location || '-';
+            const coverUrl = ticket.event_image || TICKET_COVER_FALLBACK;
 
             card.innerHTML = `
-                ${imageElement}
-                <div class="ticket-status-overlay ${statusClass}">${statusText}</div>
-                
-                <div class="ticket-content">
-                    <div class="ticket-header">
-                        <div class="ticket-event-name">${ticket.event_name || 'Événement'}</div>
-                        <div class="ticket-event-date">${ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR') : ''}</div>
-                        ${ticket.event_location ? `<div class="ticket-event-location">${ticket.event_location}</div>` : ''}
+                <div class="ticket-image">
+                    <img src="${coverUrl}" alt="Couverture de ${escapeHtml(eventName)}">
+                    <span class="ticket-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="ticket-body">
+                    <div>
+                        <div class="ticket-event-name">${escapeHtml(eventName)}</div>
+                        <div class="ticket-event-date">${escapeHtml(eventDate)}</div>
                     </div>
-
-                    <div class="ticket-details">
-                        <div class="ticket-price">${ticket.price_paid ? ticket.price_paid + '€' : 'Gratuit'}</div>
-                        <div class="ticket-date">${ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : ''}</div>
+                    <div class="ticket-info-grid">
+                        <div class="ticket-info-item">
+                            <span class="ticket-detail-label">Code du ticket</span>
+                            <span class="ticket-detail-value">${escapeHtml(ticketCode)}</span>
+                        </div>
+                        <div class="ticket-info-item">
+                            <span class="ticket-detail-label">Prix payé</span>
+                            <span class="ticket-detail-value">${escapeHtml(pricePaid)}</span>
+                        </div>
+                        <div class="ticket-info-item">
+                            <span class="ticket-detail-label">Date d'achat</span>
+                            <span class="ticket-detail-value">${escapeHtml(purchaseDate)}</span>
+                        </div>
+                        <div class="ticket-info-item">
+                            <span class="ticket-detail-label">Lieu</span>
+                            <span class="ticket-detail-value">${escapeHtml(location)}</span>
+                        </div>
                     </div>
-
                     ${ticket.ticket_code ? `
-                        <div class="ticket-qr">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code">
-                            <div class="ticket-code">${ticket.ticket_code}</div>
+                        <div class="ticket-footer">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code du ticket" class="ticket-qr-image">
+                            <div class="ticket-code-wrapper">
+                                <span class="ticket-detail-label">À présenter à l'entrée</span>
+                                <span class="ticket-code">${escapeHtml(ticket.ticket_code)}</span>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
