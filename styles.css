@@ -101,6 +101,40 @@ nav.nav-hidden {
     width: 100%;
 }
 
+/* Account link */
+.account-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(218, 252, 59, 0.1);
+    border: 1px solid rgba(218, 252, 59, 0.3);
+    transition: var(--transition);
+    margin-left: 1rem !important;
+}
+
+.account-link:hover {
+    background: rgba(218, 252, 59, 0.2);
+    border-color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+.account-link::after {
+    display: none !important;
+}
+
+.account-link i {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+}
+
+.account-link.active {
+    background: rgba(218, 252, 59, 0.2);
+    border-color: var(--accent-color);
+}
+
 /* Header */
 header {
     min-height: 100vh;

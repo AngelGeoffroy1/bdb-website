@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - BDB</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Connectez-vous à votre compte BDB pour accéder à vos tickets et gérer votre profil étudiant.">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(218, 252, 59, 0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(218, 252, 59, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .password-input-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            color: var(--accent-color);
+        }
+
+        .auth-button {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #b8e63e 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(218, 252, 59, 0.3);
+        }
+
+        .auth-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-switch-text {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+        }
+
+        .auth-switch-button {
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .auth-switch-button:hover {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #f44336;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 1rem;
+            }
+
+            .auth-card {
+                padding: 2rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="index.html" class="brand-link">
+                    <img src="Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="billetterie.html">Billetterie</a>
+                <a href="connexion.html" class="account-link" title="Mon compte">
+                    <i class="fas fa-user"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card" data-aos="fade-up">
+            <div class="auth-header">
+                <h1 class="auth-title" id="auth-title">Connexion</h1>
+                <p class="auth-subtitle" id="auth-subtitle">Connectez-vous à votre compte BDB</p>
+            </div>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
+
+            <form id="auth-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="votre.email@exemple.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Mot de passe</label>
+                    <div class="password-input-container">
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Votre mot de passe" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="password-toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Champs supplémentaires pour l'inscription -->
+                <div id="signup-fields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName" class="form-label">Prénom</label>
+                            <input type="text" id="firstName" name="firstName" class="form-input" placeholder="Votre prénom">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName" class="form-label">Nom</label>
+                            <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Votre nom">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Téléphone</label>
+                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="06 12 34 56 78">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateOfBirth" class="form-label">Date de naissance</label>
+                        <input type="date" id="dateOfBirth" name="dateOfBirth" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="school" class="form-label">École/Université</label>
+                        <input type="text" id="school" name="school" class="form-input" placeholder="Votre école">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studyYear" class="form-label">Année d'étude</label>
+                            <select id="studyYear" name="studyYear" class="form-input">
+                                <option value="">Sélectionnez</option>
+                                <option value="1">1ère année</option>
+                                <option value="2">2ème année</option>
+                                <option value="3">3ème année</option>
+                                <option value="4">4ème année</option>
+                                <option value="5">5ème année</option>
+                                <option value="master">Master</option>
+                                <option value="doctorat">Doctorat</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="city" class="form-label">Ville</label>
+                            <input type="text" id="city" name="city" class="form-input" placeholder="Bordeaux">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
+                        <div class="password-input-container">
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="Confirmez votre mot de passe">
+                            <button type="button" class="password-toggle" onclick="toggleConfirmPassword()">
+                                <i class="fas fa-eye" id="confirm-password-toggle-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-button" id="auth-button">
+                    <span id="button-text">Se connecter</span>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <span>Connexion en cours...</span>
+                    </div>
+                </button>
+            </form>
+
+            <div class="auth-switch">
+                <p class="auth-switch-text">Vous n'avez pas encore de compte ?</p>
+                <button type="button" class="auth-switch-button" id="switch-button" onclick="switchMode()">
+                    Créer un compte
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSignup = false;
+
+        // Initialisation AOS
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        function toggleConfirmPassword() {
+            const passwordInput = document.getElementById('confirmPassword');
+            const toggleIcon = document.getElementById('confirm-password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        function switchMode() {
+            isSignup = !isSignup;
+            const title = document.getElementById('auth-title');
+            const subtitle = document.getElementById('auth-subtitle');
+            const buttonText = document.getElementById('button-text');
+            const switchButton = document.getElementById('switch-button');
+            const signupFields = document.getElementById('signup-fields');
+            const emailField = document.getElementById('email');
+            const passwordField = document.getElementById('password');
+            const confirmPasswordField = document.getElementById('confirmPassword');
+
+            if (isSignup) {
+                title.textContent = 'Inscription';
+                subtitle.textContent = 'Créez votre compte BDB';
+                buttonText.textContent = 'S\'inscrire';
+                switchButton.textContent = 'Se connecter';
+                signupFields.style.display = 'block';
+                confirmPasswordField.required = true;
+                
+                // Ajouter les champs requis pour l'inscription
+                document.getElementById('firstName').required = true;
+                document.getElementById('lastName').required = true;
+                document.getElementById('dateOfBirth').required = true;
+                document.getElementById('school').required = true;
+                document.getElementById('studyYear').required = true;
+                document.getElementById('city').required = true;
+            } else {
+                title.textContent = 'Connexion';
+                subtitle.textContent = 'Connectez-vous à votre compte BDB';
+                buttonText.textContent = 'Se connecter';
+                switchButton.textContent = 'Créer un compte';
+                signupFields.style.display = 'none';
+                confirmPasswordField.required = false;
+                
+                // Retirer les champs requis pour la connexion
+                document.getElementById('firstName').required = false;
+                document.getElementById('lastName').required = false;
+                document.getElementById('dateOfBirth').required = false;
+                document.getElementById('school').required = false;
+                document.getElementById('studyYear').required = false;
+                document.getElementById('city').required = false;
+            }
+
+            // Vider les champs
+            document.getElementById('auth-form').reset();
+            hideMessages();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function showLoading() {
+            document.getElementById('button-text').style.display = 'none';
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('auth-button').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('button-text').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('auth-button').disabled = false;
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideMessages();
+            showLoading();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                if (isSignup) {
+                    // Vérifier que les mots de passe correspondent
+                    if (data.password !== data.confirmPassword) {
+                        showError('Les mots de passe ne correspondent pas.');
+                        hideLoading();
+                        return;
+                    }
+
+                    // Vérifier la force du mot de passe
+                    if (data.password.length < 8) {
+                        showError('Le mot de passe doit contenir au moins 8 caractères.');
+                        hideLoading();
+                        return;
+                    }
+
+                    // Appel à l'API d'inscription
+                    const response = await fetch('/api/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showSuccess('Compte créé avec succès ! Redirection...');
+                        setTimeout(() => {
+                            window.location.href = 'account.html';
+                        }, 2000);
+                    } else {
+                        showError(result.error || 'Erreur lors de la création du compte.');
+                    }
+                } else {
+                    // Appel à l'API de connexion
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: data.email,
+                            password: data.password
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showSuccess('Connexion réussie ! Redirection...');
+                        // Stocker le token d'authentification
+                        localStorage.setItem('auth_token', result.token);
+                        localStorage.setItem('user_data', JSON.stringify(result.user));
+                        setTimeout(() => {
+                            window.location.href = 'account.html';
+                        }, 2000);
+                    } else {
+                        showError(result.error || 'Email ou mot de passe incorrect.');
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Une erreur est survenue. Veuillez réessayer.');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Vérifier si l'utilisateur est déjà connecté
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                // Vérifier la validité du token
+                fetch('/api/verify-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        // Token valide, rediriger vers account
+                        window.location.href = 'account.html';
+                    } else {
+                        // Token invalide, le supprimer
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('user_data');
+                    }
+                })
+                .catch(() => {
+                    // Erreur de vérification, supprimer le token
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_data');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

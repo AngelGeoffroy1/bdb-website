@@ -3,474 +3,575 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon compte - BDB</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Mon Compte - BDB</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Gérez votre compte BDB, consultez vos tickets et informations personnelles.">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    
     <style>
-        :root {
-            --primary-color: #DAFC3B;
-            --secondary-color: #B8E026;
-            --text-color: #ffffff;
-            --bg-color: #050505;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --border-color: rgba(218, 252, 59, 0.2);
-            --transition: all 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
+        .account-container {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header */
-        header {
-            background: rgba(0, 0, 0, 0.9);
-            border-bottom: 1px solid rgba(218, 252, 59, 0.1);
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 80px;
-        }
-
-        .logo {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary-color);
-            background: rgba(218, 252, 59, 0.1);
-        }
-
-        .account-btn {
-            background: var(--primary-color);
-            border: none;
-            color: var(--bg-color);
-            font-size: 1rem;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-        }
-
-        .account-btn:hover {
-            background: var(--secondary-color);
-        }
-
-        /* Main Content */
-        main {
-            flex: 1;
-            padding: 120px 2rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
+            padding: 2rem;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
         }
 
         .account-header {
             text-align: center;
             margin-bottom: 3rem;
+            padding-top: 2rem;
         }
 
-        .account-header h1 {
-            font-size: 3rem;
-            color: var(--primary-color);
+        .account-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
             margin-bottom: 0.5rem;
         }
 
-        .account-header p {
+        .account-subtitle {
             color: rgba(255, 255, 255, 0.7);
             font-size: 1.1rem;
         }
 
-        .account-grid {
+        .account-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: 1fr 2fr;
             gap: 2rem;
-            margin-bottom: 3rem;
         }
 
-        .account-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
+        .profile-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(218, 252, 59, 0.2);
             border-radius: 20px;
             padding: 2rem;
-            transition: var(--transition);
+            height: fit-content;
         }
 
-        .account-card:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-5px);
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
         }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--primary-color);
-            border-radius: 12px;
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #b8e63e 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--bg-color);
-            font-size: 1.5rem;
+            margin: 0 auto 1rem;
+            font-size: 2.5rem;
+            color: #000;
+            font-weight: bold;
         }
 
-        .card-title {
+        .profile-name {
             font-size: 1.5rem;
-            font-weight: 600;
+            font-weight: bold;
             color: var(--text-color);
-            margin: 0;
-        }
-
-        .card-content {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.6;
-        }
-
-        .ticket-list {
-            margin-top: 1rem;
-        }
-
-        .ticket-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
             margin-bottom: 0.5rem;
         }
 
-        .ticket-info h4 {
-            margin: 0;
-            color: var(--text-color);
+        .profile-email {
+            color: rgba(255, 255, 255, 0.7);
             font-size: 1rem;
         }
 
-        .ticket-info p {
-            margin: 0.25rem 0 0 0;
-            color: rgba(255, 255, 255, 0.6);
+        .profile-info {
+            margin-top: 2rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .logout-button {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .logout-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(244, 67, 54, 0.3);
+        }
+
+        .tickets-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(218, 252, 59, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tickets-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .ticket-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .ticket-card:hover {
+            border-color: rgba(218, 252, 59, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .ticket-event-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .ticket-event-date {
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.9rem;
         }
 
         .ticket-status {
             padding: 0.25rem 0.75rem;
-            border-radius: 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .ticket-status.valid {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .ticket-status.used {
+            background: rgba(158, 158, 158, 0.2);
+            color: #9E9E9E;
+            border: 1px solid rgba(158, 158, 158, 0.3);
+        }
+
+        .ticket-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .ticket-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .ticket-detail-label {
+            color: rgba(255, 255, 255, 0.6);
             font-size: 0.8rem;
             font-weight: 500;
         }
 
-        .status-used {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
+        .ticket-detail-value {
+            color: var(--text-color);
+            font-weight: 600;
         }
 
-        .status-valid {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
+        .ticket-qr {
+            text-align: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
+        .ticket-qr img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
         }
 
-        .action-btn {
+        .ticket-code {
+            color: var(--accent-color);
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            word-break: break-all;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
-            color: var(--text-color);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            border-color: var(--primary-color);
-            background: rgba(218, 252, 59, 0.05);
-        }
-
-        .action-icon {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-        }
-
-        .action-content h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--text-color);
-        }
-
-        .action-content p {
-            margin: 0.25rem 0 0 0;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-        }
-
-        .logout-btn {
-            background: rgba(244, 67, 54, 0.1);
-            border: 1px solid rgba(244, 67, 54, 0.3);
-            color: #f44336;
-            margin-top: 2rem;
-            padding: 1rem;
-            border-radius: 10px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            font-weight: 500;
-            transition: var(--transition);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            padding: 2rem;
         }
 
-        .logout-btn:hover {
-            background: rgba(244, 67, 54, 0.2);
-            border-color: #f44336;
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        /* Mobile Responsive */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile responsive */
         @media (max-width: 768px) {
-            .nav-container {
-                padding: 0 1rem;
+            .account-container {
+                padding: 1rem;
             }
 
-            .nav-links {
-                display: none;
-            }
-
-            main {
-                padding: 100px 1rem 2rem;
-            }
-
-            .account-header h1 {
-                font-size: 2.5rem;
-            }
-
-            .account-grid {
+            .account-content {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
             }
 
-            .quick-actions {
+            .account-title {
+                font-size: 2rem;
+            }
+
+            .profile-card,
+            .tickets-section {
+                padding: 1.5rem;
+            }
+
+            .ticket-details {
                 grid-template-columns: 1fr;
+            }
+
+            .ticket-header {
+                flex-direction: column;
+                gap: 0.5rem;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav class="nav-container">
-            <a href="index.html" class="logo">🎫 BDB</a>
+    <nav>
+        <div class="nav-content">
+            <div>
+                <a href="index.html" class="brand-link">
+                    <img src="Asset/Babylone 1024x1024.png" alt="BDB Logo" class="logo">
+                    <span class="brand-name">BDB</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Accueil</a>
+                <a href="billetterie.html">Billetterie</a>
+                <a href="account.html" class="account-link active" title="Mon compte">
+                    <i class="fas fa-user"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
 
-            <ul class="nav-links">
-                <li><a href="index.html">Accueil</a></li>
-                <li><a href="billetterie.html">Billetterie</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-
-            <button class="account-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> Déconnexion
-            </button>
-        </nav>
-    </header>
-
-    <main>
-        <div class="account-header">
-            <h1>Mon compte</h1>
-            <p>Gérez vos tickets et vos informations personnelles</p>
+    <div class="account-container">
+        <div class="account-header" data-aos="fade-up">
+            <h1 class="account-title">Mon Compte</h1>
+            <p class="account-subtitle">Gérez vos informations et consultez vos tickets</p>
         </div>
 
-        <div class="account-grid">
-            <!-- Informations personnelles -->
-            <div class="account-card">
-                <div class="card-header">
-                    <div class="card-icon">
+        <div class="account-content">
+            <!-- Profil utilisateur -->
+            <div class="profile-card" data-aos="fade-right">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">
                         <i class="fas fa-user"></i>
                     </div>
-                    <h2 class="card-title">Informations personnelles</h2>
+                    <div class="profile-name" id="profile-name">Chargement...</div>
+                    <div class="profile-email" id="profile-email">Chargement...</div>
                 </div>
-                <div class="card-content">
-                    <p><strong>Nom :</strong> Utilisateur Test</p>
-                    <p><strong>Email :</strong> user@bdbapp.fr</p>
-                    <p><strong>École :</strong> Bordeaux</p>
-                    <p><strong>Membre depuis :</strong> Aujourd'hui</p>
+
+                <div class="profile-info">
+                    <div class="info-item">
+                        <span class="info-label">Téléphone</span>
+                        <span class="info-value" id="profile-phone">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Date de naissance</span>
+                        <span class="info-value" id="profile-birthdate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">École</span>
+                        <span class="info-value" id="profile-school">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Année d'étude</span>
+                        <span class="info-value" id="profile-year">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ville</span>
+                        <span class="info-value" id="profile-city">-</span>
+                    </div>
                 </div>
+
+                <button class="logout-button" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Se déconnecter
+                </button>
             </div>
 
-            <!-- Mes tickets -->
-            <div class="account-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <h2 class="card-title">Mes tickets</h2>
-                </div>
-                <div class="card-content">
-                    <div class="ticket-list">
-                        <div class="ticket-item">
-                            <div class="ticket-info">
-                                <h4>Soirée Étudiante</h4>
-                                <p>Mercredi 18 septembre 2025</p>
-                            </div>
-                            <span class="ticket-status status-valid">Valide</span>
-                        </div>
-                        <div class="ticket-item">
-                            <div class="ticket-info">
-                                <h4>Concert Rock</h4>
-                                <p>Vendredi 20 septembre 2025</p>
-                            </div>
-                            <span class="ticket-status status-used">Utilisé</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Tickets -->
+            <div class="tickets-section" data-aos="fade-left">
+                <h2 class="section-title">
+                    <i class="fas fa-ticket-alt"></i>
+                    Mes Tickets
+                </h2>
 
-            <!-- Statistiques -->
-            <div class="account-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h2 class="card-title">Statistiques</h2>
+                <div id="tickets-loading" class="loading">
+                    <div class="spinner"></div>
+                    <span>Chargement de vos tickets...</span>
                 </div>
-                <div class="card-content">
-                    <p><strong>Événements assistés :</strong> 2</p>
-                    <p><strong>Tickets achetés :</strong> 3</p>
-                    <p><strong>Économie réalisée :</strong> 15€</p>
-                    <p><strong>Membre actif :</strong> Oui</p>
-                </div>
-            </div>
 
-            <!-- Préférences -->
-            <div class="account-card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <i class="fas fa-cog"></i>
-                    </div>
-                    <h2 class="card-title">Préférences</h2>
+                <div id="tickets-container" style="display: none;">
+                    <!-- Tickets will be loaded here -->
                 </div>
-                <div class="card-content">
-                    <p><strong>Notifications :</strong> Activées</p>
-                    <p><strong>Newsletter :</strong> Abonné</p>
-                    <p><strong>Langue :</strong> Français</p>
-                    <p><strong>Thème :</strong> Sombre</p>
+
+                <div id="tickets-empty" class="empty-state" style="display: none;">
+                    <i class="fas fa-ticket-alt"></i>
+                    <h3>Aucun ticket trouvé</h3>
+                    <p>Vous n'avez pas encore de tickets. Découvrez nos événements !</p>
+                    <a href="billetterie.html" class="auth-switch-button" style="margin-top: 1rem; display: inline-block;">
+                        Voir les événements
+                    </a>
                 </div>
             </div>
         </div>
-
-        <!-- Actions rapides -->
-        <div class="quick-actions">
-            <a href="billetterie.html" class="action-btn">
-                <div class="action-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Acheter des tickets</h3>
-                    <p>Découvrez les prochains événements</p>
-                </div>
-            </a>
-
-            <a href="#" class="action-btn">
-                <div class="action-icon">
-                    <i class="fas fa-history"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Historique</h3>
-                    <p>Voir tous vos achats passés</p>
-                </div>
-            </a>
-
-            <a href="#" class="action-btn">
-                <div class="action-icon">
-                    <i class="fas fa-bell"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Notifications</h3>
-                    <p>Gérer vos préférences</p>
-                </div>
-            </a>
-
-            <a href="#" class="action-btn">
-                <div class="action-icon">
-                    <i class="fas fa-edit"></i>
-                </div>
-                <div class="action-content">
-                    <h3>Modifier profil</h3>
-                    <p>Mettre à jour vos informations</p>
-                </div>
-            </a>
-        </div>
-
-        <!-- Bouton de déconnexion -->
-        <div style="text-align: center;">
-            <a href="#" class="logout-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
-                Se déconnecter
-            </a>
-        </div>
-    </main>
+    </div>
 
     <script>
-        // Fonction de déconnexion
-        function logout() {
-            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                // Simulation de déconnexion
-                alert('Déconnexion réussie !');
-                window.location.href = 'index.html';
+        // Initialisation AOS
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        // Vérifier l'authentification
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = 'connexion.html';
+                return;
+            }
+
+            loadUserProfile();
+            loadUserTickets();
+        });
+
+        async function loadUserProfile() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch('/api/user-profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    displayUserProfile(userData);
+                } else {
+                    console.error('Erreur lors du chargement du profil');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
             }
         }
 
-        // Simulation de chargement des données utilisateur
-        document.addEventListener('DOMContentLoaded', () => {
-            // Ici vous pourriez charger les vraies données depuis votre API
-            console.log('Page de compte chargée');
-        });
+        function displayUserProfile(userData) {
+            // Avatar avec initiales
+            const avatar = document.getElementById('profile-avatar');
+            const initials = (userData.first_name?.[0] || '') + (userData.last_name?.[0] || '');
+            if (initials) {
+                avatar.innerHTML = initials;
+            }
+
+            // Nom complet
+            const fullName = [userData.first_name, userData.last_name].filter(Boolean).join(' ');
+            document.getElementById('profile-name').textContent = fullName || 'Utilisateur';
+            document.getElementById('profile-email').textContent = userData.email || '';
+
+            // Informations détaillées
+            document.getElementById('profile-phone').textContent = userData.phone || '-';
+            document.getElementById('profile-birthdate').textContent = userData.date_of_birth ? 
+                new Date(userData.date_of_birth).toLocaleDateString('fr-FR') : '-';
+            document.getElementById('profile-school').textContent = userData.school || '-';
+            document.getElementById('profile-year').textContent = userData.study_year || '-';
+            document.getElementById('profile-city').textContent = userData.city || '-';
+        }
+
+        async function loadUserTickets() {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch('/api/user-tickets', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                document.getElementById('tickets-loading').style.display = 'none';
+
+                if (response.ok) {
+                    const tickets = await response.json();
+                    displayTickets(tickets);
+                } else {
+                    console.error('Erreur lors du chargement des tickets');
+                    document.getElementById('tickets-empty').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('tickets-loading').style.display = 'none';
+                document.getElementById('tickets-empty').style.display = 'block';
+            }
+        }
+
+        function displayTickets(tickets) {
+            const container = document.getElementById('tickets-container');
+            const emptyState = document.getElementById('tickets-empty');
+
+            if (!tickets || tickets.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = '';
+            tickets.forEach(ticket => {
+                const ticketCard = createTicketCard(ticket);
+                container.appendChild(ticketCard);
+            });
+
+            container.style.display = 'block';
+        }
+
+        function createTicketCard(ticket) {
+            const card = document.createElement('div');
+            card.className = 'ticket-card';
+
+            const statusClass = ticket.is_used ? 'used' : 'valid';
+            const statusText = ticket.is_used ? 'Utilisé' : 'Valide';
+
+            card.innerHTML = `
+                <div class="ticket-header">
+                    <div>
+                        <div class="ticket-event-name">${ticket.event_name || 'Événement'}</div>
+                        <div class="ticket-event-date">${ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR') : ''}</div>
+                    </div>
+                    <div class="ticket-status ${statusClass}">${statusText}</div>
+                </div>
+
+                <div class="ticket-details">
+                    <div class="ticket-detail">
+                        <span class="ticket-detail-label">Code du ticket</span>
+                        <span class="ticket-detail-value">${ticket.ticket_code || '-'}</span>
+                    </div>
+                    <div class="ticket-detail">
+                        <span class="ticket-detail-label">Prix payé</span>
+                        <span class="ticket-detail-value">${ticket.price_paid ? ticket.price_paid + '€' : '-'}</span>
+                    </div>
+                    <div class="ticket-detail">
+                        <span class="ticket-detail-label">Date d'achat</span>
+                        <span class="ticket-detail-value">${ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : '-'}</span>
+                    </div>
+                    <div class="ticket-detail">
+                        <span class="ticket-detail-label">Lieu</span>
+                        <span class="ticket-detail-value">${ticket.event_location || '-'}</span>
+                    </div>
+                </div>
+
+                ${ticket.ticket_code ? `
+                    <div class="ticket-qr">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code">
+                        <div class="ticket-code">${ticket.ticket_code}</div>
+                    </div>
+                ` : ''}
+            `;
+
+            return card;
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            window.location.href = 'connexion.html';
+        }
     </script>
 </body>
 </html>
