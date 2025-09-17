@@ -101,34 +101,6 @@ nav.nav-hidden {
     width: 100%;
 }
 
-/* Lien compte */
-.account-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: rgba(218, 252, 59, 0.1);
-    border: 2px solid var(--accent-color);
-    transition: var(--transition);
-    margin-left: 2rem;
-}
-
-.account-link:hover {
-    background-color: var(--accent-color);
-    color: var(--background-color);
-    transform: scale(1.1);
-}
-
-.account-link::after {
-    display: none;
-}
-
-.account-link i {
-    font-size: 1.2rem;
-}
-
 /* Header */
 header {
     min-height: 100vh;
