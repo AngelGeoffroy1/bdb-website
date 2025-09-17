@@ -1,4 +1,16 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialisation du client Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ Variables d\'environnement Supabase manquantes');
+    throw new Error('Configuration Supabase manquante');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event) => {
     console.log('📋 Fonction getSessionData appelée');
