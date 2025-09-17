@@ -222,7 +222,10 @@
             width: 150px;
             height: 150px;
             margin-bottom: 1rem;
-            border-radius: 10px;
+            border-radius: 20px;
+            border: 3px solid var(--accent-color);
+            padding: 10px;
+            background: white;
         }
 
         .qr-code-label {
@@ -237,6 +240,62 @@
             font-size: 0.8rem;
             word-break: break-all;
             text-align: center;
+        }
+
+        .transaction-info {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(218,252,59,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .transaction-id {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .transaction-id-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .transaction-id-value {
+            color: var(--accent-color);
+            font-family: monospace;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .copy-button {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .copy-button:hover {
+            background: #B8E026;
+            transform: translateY(-1px);
+        }
+
+        .copy-button:active {
+            transform: translateY(0);
+        }
+
+        .copy-button.copied {
+            background: #2ed573;
+            color: white;
         }
 
         @media (max-width: 768px) {
@@ -292,6 +351,16 @@
             <p class="success-message">
                 Votre paiement a été traité avec succès. Votre ticket vous a été envoyé par email et vous pouvez le retrouver ci-dessous.
             </p>
+
+            <div class="transaction-info" id="transaction-info" style="display: none;">
+                <div class="transaction-id">
+                    <span class="transaction-id-label">ID de transaction :</span>
+                    <span class="transaction-id-value" id="transaction-id-value"></span>
+                    <button class="copy-button" id="copy-transaction-id" onclick="copyTransactionId()">
+                        📋 Copier
+                    </button>
+                </div>
+            </div>
 
             <div class="ticket-details" id="ticket-details">
                 <!-- Contenu généré dynamiquement -->
@@ -388,9 +457,17 @@
             if (!sessionData) return;
 
             const successContent = document.getElementById('success-content');
+            const transactionInfo = document.getElementById('transaction-info');
+            const transactionIdValue = document.getElementById('transaction-id-value');
             const ticketDetails = document.getElementById('ticket-details');
             const qrCodesSection = document.getElementById('qr-codes-section');
             const qrCodesContainer = document.getElementById('qr-codes-container');
+
+            // Afficher l'ID de transaction
+            if (sessionData.id) {
+                transactionIdValue.textContent = sessionData.id.substring(0, 20) + '...';
+                transactionInfo.style.display = 'block';
+            }
 
             // Afficher les détails du ticket
             ticketDetails.innerHTML = `
@@ -480,6 +557,43 @@
                 lastScrollTop = currentScroll;
             }
         }, { passive: true });
+
+        // Fonction pour copier l'ID de transaction
+        function copyTransactionId() {
+            if (!sessionData || !sessionData.id) return;
+            
+            navigator.clipboard.writeText(sessionData.id).then(() => {
+                const copyButton = document.getElementById('copy-transaction-id');
+                const originalText = copyButton.textContent;
+                
+                copyButton.textContent = '✅ Copié !';
+                copyButton.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erreur lors de la copie:', err);
+                // Fallback pour les navigateurs plus anciens
+                const textArea = document.createElement('textarea');
+                textArea.value = sessionData.id;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const copyButton = document.getElementById('copy-transaction-id');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = '✅ Copié !';
+                copyButton.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                    copyButton.classList.remove('copied');
+                }, 2000);
+            });
+        }
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
