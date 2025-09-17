@@ -71,7 +71,7 @@ exports.handler = async (event) => {
                     for (let i = 0; i < quantity; i++) {
                         const ticketData = {
                             event_id: metadata.event_id,
-                            user_id: '00000000-0000-0000-0000-000000000000', // UUID par défaut pour les achats web
+                            user_id: require('crypto').randomUUID(), // UUID généré dynamiquement pour chaque achat web
                             quantity: 1, // Chaque ticket représente 1 place
                             total_amount: totalAmount / quantity, // Montant unitaire
                             customer_first_name: firstName,
