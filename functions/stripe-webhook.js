@@ -119,7 +119,7 @@ exports.handler = async (event) => {
                             webUserId = authUsers.id;
                             console.log('✅ Profil utilisateur créé avec l\'ID:', webUserId);
                         } else {
-                        // Créer un nouveau compte Supabase
+                            // Créer un nouveau compte Supabase
                         console.log('🔐 Création d\'un nouveau compte Supabase...');
                         
                         try {
@@ -149,6 +149,7 @@ exports.handler = async (event) => {
                         } catch (error) {
                             console.error('❌ Erreur lors de l\'appel createSupabaseUser:', error);
                             throw new Error(`Erreur création compte: ${error.message}`);
+                        }
                         }
                     }
 
