@@ -13,6 +13,12 @@
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
+# Redirections API - DOIT être en premier
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 [[redirects]]
   from = "/politique-confidentialite"
   to = "/politique-confidentialite.html"
@@ -48,9 +54,4 @@
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["node_modules/apn/**/*"]
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200 
+  included_files = ["node_modules/apn/**/*"] 

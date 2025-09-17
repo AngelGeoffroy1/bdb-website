@@ -112,7 +112,8 @@ nav.nav-hidden {
     background: rgba(218, 252, 59, 0.1);
     border: 1px solid rgba(218, 252, 59, 0.3);
     transition: var(--transition);
-    margin-left: 1rem !important;
+    margin-left: 1.5rem;
+    flex-shrink: 0;
 }
 
 .account-link:hover {
