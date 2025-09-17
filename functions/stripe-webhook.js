@@ -66,37 +66,45 @@ exports.handler = async (event) => {
                         customer_email: metadata.customer_email
                     });
 
-                    // Créer un utilisateur avec les vraies informations du client
-                    console.log('👤 Création d\'un utilisateur avec les informations du client...');
-                    const { data: newUser, error: userError } = await supabase
-                        .from('users')
-                        .insert({
-                            first_name: firstName,
-                            last_name: lastName,
-                            email: metadata.customer_email,
-                            date_of_birth: '2000-01-01', // Date par défaut (obligatoire)
-                            school: 'Bordeaux', // École par défaut (obligatoire)
-                            study_year: 'N/A', // Année par défaut (obligatoire)
-                            city: 'Bordeaux', // Ville par défaut (obligatoire)
-                            is_admin: false
-                            // created_at sera automatiquement défini par la valeur par défaut
+                    // Créer un compte Supabase complet (mot de passe obligatoire)
+                    console.log('🔐 Création d\'un compte Supabase complet avec mot de passe...');
+                    
+                    let webUserId = null;
+                    try {
+                        const createUserResponse = await fetch(`${process.env.URL || 'https://bureaudesbureaux.com'}/.netlify/functions/createSupabaseUser`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: metadata.customer_email,
+                                password: metadata.customer_password,
+                                firstName: firstName,
+                                lastName: lastName,
+                                phone: metadata.customer_phone || null
+                            })
                         });
 
-                    if (userError) {
-                        console.error('❌ Erreur lors de la création de l\'utilisateur temporaire:', userError);
-                        throw new Error(`Erreur création utilisateur temporaire: ${userError.message}`);
+                        if (createUserResponse.ok) {
+                            const userData = await createUserResponse.json();
+                            webUserId = userData.userId;
+                            console.log('✅ Compte Supabase créé avec l\'ID:', webUserId);
+                        } else {
+                            const errorText = await createUserResponse.text();
+                            console.error('❌ Erreur lors de la création du compte Supabase:', errorText);
+                            throw new Error(`Erreur création compte: ${errorText}`);
+                        }
+                    } catch (error) {
+                        console.error('❌ Erreur lors de l\'appel createSupabaseUser:', error);
+                        throw new Error(`Erreur création compte: ${error.message}`);
                     }
-
-                    // Récupérer l'ID de l'utilisateur créé
-                    const webUserId = newUser[0].id;
-                    console.log('✅ Utilisateur temporaire créé avec l\'ID:', webUserId);
 
                     // Créer les tickets (un ticket par quantité)
                     const tickets = [];
                     for (let i = 0; i < quantity; i++) {
                         const ticketData = {
                             event_id: metadata.event_id,
-                            user_id: webUserId, // Utiliser l'ID de l'utilisateur temporaire créé
+                            user_id: webUserId, // ID du compte Supabase créé
                             quantity: 1, // Chaque ticket représente 1 place
                             total_amount: totalAmount / quantity, // Montant unitaire
                             customer_first_name: firstName,

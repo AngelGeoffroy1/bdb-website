@@ -150,6 +150,13 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
+        .help-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+            display: block;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -441,6 +448,12 @@
                         <input type="tel" id="phone" name="phone">
                     </div>
 
+                    <div class="form-group">
+                        <label for="password">Mot de passe *</label>
+                        <input type="password" id="password" name="password" required placeholder="Créez votre mot de passe BDB">
+                        <small class="help-text">Un compte BDB sera créé avec vos informations pour gérer vos tickets</small>
+                    </div>
+
                     <div class="price-breakdown" id="price-breakdown">
                         <!-- Contenu généré dynamiquement -->
                     </div>
@@ -627,12 +640,19 @@
                 firstName: formData.get('firstName'),
                 lastName: formData.get('lastName'),
                 email: formData.get('email'),
-                phone: formData.get('phone') || ''
+                phone: formData.get('phone') || '',
+                password: formData.get('password')
             };
 
             // Validation
-            if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email) {
+            if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.password) {
                 showError('Veuillez remplir tous les champs obligatoires');
+                return;
+            }
+
+            // Validation du mot de passe
+            if (customerInfo.password.length < 6) {
+                showError('Le mot de passe doit contenir au moins 6 caractères');
                 return;
             }
 
