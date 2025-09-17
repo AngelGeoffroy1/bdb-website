@@ -171,10 +171,10 @@
             border-radius: 15px;
             padding: 0;
             transition: var(--transition);
-            flex: 0 0 350px;
+            flex: 0 0 320px;
             min-width: 0;
             overflow: hidden;
-            max-width: 350px;
+            max-width: 320px;
         }
 
         .ticket-card:hover {
@@ -184,7 +184,7 @@
 
         .ticket-image {
             width: 100%;
-            height: 180px;
+            height: 140px;
             background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
             background-size: cover;
             background-position: center;
@@ -429,12 +429,12 @@
             }
 
             .ticket-card {
-                flex: 0 0 280px;
-                max-width: 280px;
+                flex: 0 0 260px;
+                max-width: 260px;
             }
 
             .ticket-image {
-                height: 140px;
+                height: 120px;
             }
 
             .carousel-btn {
@@ -450,12 +450,12 @@
 
         @media (max-width: 480px) {
             .ticket-card {
-                flex: 0 0 250px;
-                max-width: 250px;
+                flex: 0 0 240px;
+                max-width: 240px;
             }
 
             .ticket-image {
-                height: 120px;
+                height: 100px;
             }
 
             .ticket-content {
@@ -608,6 +608,11 @@
             if (nextBtn) {
                 nextBtn.addEventListener('click', nextSlide);
             }
+
+            // Recalculate carousel position on window resize
+            window.addEventListener('resize', () => {
+                updateCarouselPosition();
+            });
         });
 
         async function loadUserProfile() {
@@ -746,7 +751,17 @@
             const slider = document.getElementById('tickets-slider');
             const dots = document.querySelectorAll('.carousel-dot');
             
-            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+            // Calculate the translation based on card width + gap
+            let cardWidth = 344; // 320px card + 24px gap (default desktop)
+            
+            // Adjust for different screen sizes
+            if (window.innerWidth <= 480) {
+                cardWidth = 264; // 240px card + 24px gap
+            } else if (window.innerWidth <= 768) {
+                cardWidth = 284; // 260px card + 24px gap
+            }
+            
+            slider.style.transform = `translateX(-${currentSlide * cardWidth}px)`;
             
             dots.forEach((dot, index) => {
                 dot.classList.toggle('active', index === currentSlide);
