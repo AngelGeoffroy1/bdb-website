@@ -80,7 +80,7 @@ exports.handler = async (event) => {
         const ticketsData = createTestTicketsData();
 
         // Configuration du transporteur SMTP OVH
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             host: 'ssl0.ovh.net',
             port: 587,
             secure: false, // TLS
