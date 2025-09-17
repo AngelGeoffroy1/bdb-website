@@ -152,9 +152,53 @@
             gap: 0.5rem;
         }
 
-        .tickets-grid {
-            display: grid;
+        .tickets-container {
+            position: relative;
+        }
+
+        .tickets-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-arrow {
+            background: rgba(218, 252, 59, 0.1);
+            border: 1px solid rgba(218, 252, 59, 0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(218, 252, 59, 0.2);
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ticket-counter {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .tickets-grid {
+            display: block;
         }
 
         .ticket-card {
@@ -163,6 +207,15 @@
             border-radius: 12px;
             padding: 1rem;
             transition: var(--transition);
+            opacity: 0;
+            transform: translateX(20px);
+            pointer-events: none;
+        }
+
+        .ticket-card.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
         }
 
         .ticket-card:hover {
@@ -352,6 +405,21 @@
                 width: 70px;
                 height: 70px;
             }
+
+            .tickets-nav {
+                gap: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .nav-arrow {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .ticket-counter {
+                font-size: 0.8rem;
+            }
         }
 
         @media (max-width: 480px) {
@@ -380,6 +448,21 @@
             .ticket-qr img {
                 width: 60px;
                 height: 60px;
+            }
+
+            .tickets-nav {
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .nav-arrow {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+
+            .ticket-counter {
+                font-size: 0.75rem;
             }
         }
     </style>
@@ -461,7 +544,18 @@
                 </div>
 
                 <div id="tickets-container" style="display: none;">
-                    <!-- Tickets will be loaded here -->
+                    <div class="tickets-nav">
+                        <button class="nav-arrow" id="prev-ticket" onclick="previousTicket()">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="ticket-counter" id="ticket-counter">1 / 1</span>
+                        <button class="nav-arrow" id="next-ticket" onclick="nextTicket()">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div id="tickets-grid" class="tickets-grid">
+                        <!-- Tickets will be loaded here -->
+                    </div>
                 </div>
 
                 <div id="tickets-empty" class="empty-state" style="display: none;">
@@ -493,6 +587,15 @@
 
             loadUserProfile();
             loadUserTickets();
+
+            // Navigation au clavier
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    previousTicket();
+                } else if (e.key === 'ArrowRight') {
+                    nextTicket();
+                }
+            });
         });
 
         async function loadUserProfile() {
@@ -566,22 +669,74 @@
             }
         }
 
+        // Variables globales pour la navigation
+        let currentTicketIndex = 0;
+        let allTickets = [];
+
         function displayTickets(tickets) {
             const container = document.getElementById('tickets-container');
             const emptyState = document.getElementById('tickets-empty');
+            const ticketsGrid = document.getElementById('tickets-grid');
 
             if (!tickets || tickets.length === 0) {
                 emptyState.style.display = 'block';
                 return;
             }
 
-            container.innerHTML = '';
-            tickets.forEach(ticket => {
+            // Stocker tous les tickets
+            allTickets = tickets;
+            currentTicketIndex = 0;
+
+            // Créer tous les tickets mais les masquer
+            ticketsGrid.innerHTML = '';
+            tickets.forEach((ticket, index) => {
                 const ticketCard = createTicketCard(ticket);
-                container.appendChild(ticketCard);
+                if (index === 0) {
+                    ticketCard.classList.add('active');
+                }
+                ticketsGrid.appendChild(ticketCard);
             });
 
+            // Mettre à jour la navigation
+            updateNavigation();
+
             container.style.display = 'block';
+        }
+
+        function updateNavigation() {
+            const prevButton = document.getElementById('prev-ticket');
+            const nextButton = document.getElementById('next-ticket');
+            const counter = document.getElementById('ticket-counter');
+
+            // Mettre à jour le compteur
+            counter.textContent = `${currentTicketIndex + 1} / ${allTickets.length}`;
+
+            // Activer/désactiver les boutons
+            prevButton.disabled = currentTicketIndex === 0;
+            nextButton.disabled = currentTicketIndex === allTickets.length - 1;
+
+            // Masquer tous les tickets
+            const ticketCards = document.querySelectorAll('.ticket-card');
+            ticketCards.forEach(card => card.classList.remove('active'));
+
+            // Afficher le ticket actuel
+            if (ticketCards[currentTicketIndex]) {
+                ticketCards[currentTicketIndex].classList.add('active');
+            }
+        }
+
+        function previousTicket() {
+            if (currentTicketIndex > 0) {
+                currentTicketIndex--;
+                updateNavigation();
+            }
+        }
+
+        function nextTicket() {
+            if (currentTicketIndex < allTickets.length - 1) {
+                currentTicketIndex++;
+                updateNavigation();
+            }
         }
 
         function createTicketCard(ticket) {
