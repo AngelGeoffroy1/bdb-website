@@ -84,7 +84,7 @@ exports.handler = async (event) => {
                     } else {
                         console.log('🔍 Utilisateur non trouvé dans users, vérification dans auth.users...');
                         
-                        // Vérifier dans auth.users via requête directe
+                        // Vérifier dans auth.users via requête SQL directe avec service key
                         const { data: authUsers, error: authError } = await supabase
                             .from('auth.users')
                             .select('id, email')
@@ -163,15 +163,15 @@ exports.handler = async (event) => {
                             total_amount: totalAmount / quantity, // Montant unitaire
                             customer_first_name: firstName,
                             customer_last_name: lastName,
-                            customer_email: metadata.customer_email,
+                        customer_email: metadata.customer_email,
                             customer_phone: metadata.customer_phone || null,
                             ticket_code: require('crypto').randomUUID(),
                             is_used: false,
                             is_golden: false,
                             skip_points_update: true, // Pas de mise à jour des points pour les achats web
                             purchase_date: new Date().toISOString(),
-                            created_at: new Date().toISOString()
-                        };
+                        created_at: new Date().toISOString()
+                    };
                         tickets.push(ticketData);
                     }
 
