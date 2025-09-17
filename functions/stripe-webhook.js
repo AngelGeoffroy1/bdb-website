@@ -70,15 +70,49 @@ exports.handler = async (event) => {
                     console.log('🔍 Vérification si l\'utilisateur existe déjà...');
                     
                     let webUserId = null;
-                    const { data: existingUser } = await supabase
-                        .from('users')
-                        .select('id')
-                        .eq('email', metadata.customer_email)
-                        .single();
+                    
+                    // D'abord vérifier dans Supabase Auth
+                    const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(metadata.customer_email);
+                    
+                    if (authUser && authUser.user) {
+                        console.log('✅ Utilisateur trouvé dans Supabase Auth avec l\'ID:', authUser.user.id);
+                        
+                        // Vérifier si le profil existe dans la table users
+                        const { data: existingUser, error: userError } = await supabase
+                            .from('users')
+                            .select('id')
+                            .eq('id', authUser.user.id)
+                            .single();
 
-                    if (existingUser) {
-                        console.log('✅ Utilisateur existant trouvé avec l\'ID:', existingUser.id);
-                        webUserId = existingUser.id;
+                        if (existingUser) {
+                            console.log('✅ Profil utilisateur trouvé dans la table users');
+                            webUserId = existingUser.id;
+                        } else {
+                            console.log('⚠️ Utilisateur Auth trouvé mais pas de profil dans users, création du profil...');
+                            // Créer le profil manquant
+                            const { error: insertError } = await supabase
+                                .from('users')
+                                .insert({
+                                    id: authUser.user.id,
+                                    email: metadata.customer_email,
+                                    first_name: firstName,
+                                    last_name: lastName,
+                                    phone: metadata.customer_phone || null,
+                                    date_of_birth: '2000-01-01', // Date par défaut
+                                    school: 'Non spécifié',
+                                    study_year: 'Non spécifié',
+                                    city: 'Non spécifié',
+                                    is_admin: false
+                                });
+
+                            if (insertError) {
+                                console.error('❌ Erreur création profil:', insertError);
+                                throw new Error(`Erreur création profil: ${insertError.message}`);
+                            }
+                            
+                            webUserId = authUser.user.id;
+                            console.log('✅ Profil utilisateur créé avec l\'ID:', webUserId);
+                        }
                     } else {
                         // Créer un nouveau compte Supabase
                         console.log('🔐 Création d\'un nouveau compte Supabase...');
