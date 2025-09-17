@@ -889,7 +889,10 @@
             const strengthFill = document.getElementById('strength-fill');
             const strengthText = document.getElementById('strength-text');
             
-            if (!strengthFill || !strengthText) return;
+            if (!strengthFill || !strengthText) {
+                console.log('❌ Éléments de force du mot de passe non trouvés');
+                return;
+            }
             
             const strength = calculatePasswordStrength(password);
             
@@ -924,9 +927,12 @@
             if (passwordInput) {
                 passwordInput.addEventListener('input', function() {
                     const password = this.value;
+                    console.log('🔐 Mot de passe modifié:', password.length, 'caractères');
                     updatePasswordRequirements(password);
                     updatePasswordStrength(password);
                 });
+            } else {
+                console.log('❌ Champ mot de passe non trouvé');
             }
         });
     </script>
