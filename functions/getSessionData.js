@@ -80,6 +80,29 @@ exports.handler = async (event) => {
             }
         }
 
+        // Récupérer les tickets créés pour cette session
+        console.log('🎫 Récupération des tickets créés...');
+        let tickets = [];
+        
+        try {
+            const { data: ticketsData, error: ticketsError } = await supabase
+                .from('tickets')
+                .select('ticket_code, quantity, customer_first_name, customer_last_name, created_at')
+                .eq('customer_email', session.customer_details?.email || session.metadata?.customer_email)
+                .eq('event_id', session.metadata?.event_id)
+                .gte('created_at', new Date(session.created * 1000 - 60000).toISOString()) // Tickets créés dans la dernière minute
+                .order('created_at', { ascending: false });
+
+            if (!ticketsError && ticketsData) {
+                tickets = ticketsData;
+                console.log('✅ Tickets récupérés:', tickets.length);
+            } else {
+                console.log('⚠️ Aucun ticket trouvé ou erreur:', ticketsError?.message);
+            }
+        } catch (error) {
+            console.error('❌ Erreur lors de la récupération des tickets:', error);
+        }
+
         // Construire la réponse avec les données de la session
         const sessionData = {
             id: session.id,
@@ -91,7 +114,8 @@ exports.handler = async (event) => {
                 ...session.metadata,
                 event_name: eventName
             },
-            created: session.created
+            created: session.created,
+            tickets: tickets
         };
 
         return {

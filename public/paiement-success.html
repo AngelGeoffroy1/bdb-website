@@ -189,6 +189,56 @@
             display: none;
         }
 
+        .qr-codes-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(218,252,59,0.1);
+        }
+
+        .qr-codes-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .qr-code {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(218,252,59,0.1);
+        }
+
+        .qr-code:last-child {
+            margin-bottom: 0;
+        }
+
+        .qr-code img {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+        }
+
+        .qr-code-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .qr-code-value {
+            color: var(--accent-color);
+            font-family: monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+            text-align: center;
+        }
+
         @media (max-width: 768px) {
             .success-title {
                 font-size: 2rem;
@@ -245,6 +295,13 @@
 
             <div class="ticket-details" id="ticket-details">
                 <!-- Contenu généré dynamiquement -->
+            </div>
+
+            <div class="qr-codes-section" id="qr-codes-section" style="display: none;">
+                <h3>Vos tickets QR Code</h3>
+                <div id="qr-codes-container">
+                    <!-- QR codes générés dynamiquement -->
+                </div>
             </div>
 
             <div class="actions">
@@ -313,12 +370,27 @@
             }
         }
 
+        // Fonction pour générer un QR code
+        function generateQRCode(text, containerId) {
+            // Utiliser l'API QR Server pour générer le QR code
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(text)}`;
+            
+            const qrContainer = document.getElementById(containerId);
+            qrContainer.innerHTML = `
+                <img src="${qrUrl}" alt="QR Code" onerror="this.style.display='none'">
+                <div class="qr-code-label">Code du ticket</div>
+                <div class="qr-code-value">${text}</div>
+            `;
+        }
+
         // Fonction pour afficher le contenu de succès
         function displaySuccessContent() {
             if (!sessionData) return;
 
             const successContent = document.getElementById('success-content');
             const ticketDetails = document.getElementById('ticket-details');
+            const qrCodesSection = document.getElementById('qr-codes-section');
+            const qrCodesContainer = document.getElementById('qr-codes-container');
 
             // Afficher les détails du ticket
             ticketDetails.innerHTML = `
@@ -348,6 +420,28 @@
                     <span class="detail-value">${sessionData.id}</span>
                 </div>
             `;
+
+            // Afficher les QR codes si des tickets sont disponibles
+            if (sessionData.tickets && sessionData.tickets.length > 0) {
+                console.log('🎫 Affichage des QR codes pour', sessionData.tickets.length, 'tickets');
+                
+                qrCodesContainer.innerHTML = '';
+                
+                sessionData.tickets.forEach((ticket, index) => {
+                    const qrCodeDiv = document.createElement('div');
+                    qrCodeDiv.className = 'qr-code';
+                    qrCodeDiv.id = `qr-code-${index}`;
+                    qrCodesContainer.appendChild(qrCodeDiv);
+                    
+                    // Générer le QR code avec le ticket_code
+                    generateQRCode(ticket.ticket_code, `qr-code-${index}`);
+                });
+                
+                qrCodesSection.style.display = 'block';
+            } else {
+                console.log('⚠️ Aucun ticket trouvé pour afficher les QR codes');
+                qrCodesSection.style.display = 'none';
+            }
 
             successContent.style.display = 'block';
         }

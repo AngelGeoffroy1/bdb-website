@@ -46,27 +46,94 @@ exports.handler = async (event) => {
                 });
 
                 try {
-                    // Créer le ticket dans la base de données
-                    const ticketData = {
+                    const { createClient } = require('@supabase/supabase-js');
+                    
+                    // Initialisation du client Supabase
+                    const supabaseUrl = process.env.SUPABASE_URL;
+                    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+                    const supabase = createClient(supabaseUrl, supabaseKey);
+
+                    const quantity = parseInt(metadata.quantity);
+                    const totalAmount = paymentIntent.amount / 100; // Convertir les centimes en euros
+                    const customerNames = metadata.customer_name.split(' ');
+                    const firstName = customerNames[0] || '';
+                    const lastName = customerNames.slice(1).join(' ') || '';
+
+                    console.log('🎫 Création des tickets dans Supabase...', {
                         event_id: metadata.event_id,
-                        quantity: parseInt(metadata.quantity),
-                        total_amount: paymentIntent.amount / 100, // Convertir les centimes en euros
-                        customer_name: metadata.customer_name,
-                        customer_email: metadata.customer_email,
-                        payment_id: paymentIntent.id,
-                        payment_status: 'completed',
-                        created_at: new Date().toISOString()
-                    };
+                        quantity,
+                        totalAmount,
+                        customer_email: metadata.customer_email
+                    });
 
-                    // TODO: Ajouter ici l'appel à votre base de données pour sauvegarder le ticket
-                    console.log('Ticket à créer:', ticketData);
+                    // Créer les tickets (un ticket par quantité)
+                    const tickets = [];
+                    for (let i = 0; i < quantity; i++) {
+                        const ticketData = {
+                            event_id: metadata.event_id,
+                            user_id: null, // Pas d'utilisateur connecté pour les paiements web
+                            quantity: 1, // Chaque ticket représente 1 place
+                            total_amount: totalAmount / quantity, // Montant unitaire
+                            customer_first_name: firstName,
+                            customer_last_name: lastName,
+                            customer_email: metadata.customer_email,
+                            customer_phone: metadata.customer_phone || null,
+                            ticket_code: require('crypto').randomUUID(),
+                            is_used: false,
+                            is_golden: false,
+                            skip_points_update: true, // Pas de mise à jour des points pour les achats web
+                            purchase_date: new Date().toISOString(),
+                            created_at: new Date().toISOString()
+                        };
+                        tickets.push(ticketData);
+                    }
 
-                    // Envoyer un email de confirmation
-                    // TODO: Implémenter l'envoi d'email
-                    console.log('Email de confirmation à envoyer à:', metadata.customer_email);
+                    // Insérer les tickets dans Supabase
+                    const { data: insertedTickets, error: ticketsError } = await supabase
+                        .from('tickets')
+                        .insert(tickets);
+
+                    if (ticketsError) {
+                        console.error('❌ Erreur lors de l\'insertion des tickets:', ticketsError);
+                        throw new Error(`Erreur insertion tickets: ${ticketsError.message}`);
+                    }
+
+                    console.log('✅ Tickets créés avec succès:', insertedTickets?.length || quantity);
+
+                    // Mettre à jour le nombre de tickets disponibles
+                    console.log('🔄 Mise à jour des tickets disponibles...');
+                    
+                    // D'abord récupérer le nombre actuel de tickets disponibles
+                    const { data: eventData, error: fetchError } = await supabase
+                        .from('events')
+                        .select('available_tickets')
+                        .eq('id', metadata.event_id)
+                        .single();
+
+                    if (fetchError) {
+                        console.error('❌ Erreur lors de la récupération de l\'événement:', fetchError);
+                    } else {
+                        const newAvailableTickets = Math.max(0, eventData.available_tickets - quantity);
+                        
+                        const { error: updateError } = await supabase
+                            .from('events')
+                            .update({ 
+                                available_tickets: newAvailableTickets
+                            })
+                            .eq('id', metadata.event_id);
+
+                        if (updateError) {
+                            console.error('❌ Erreur lors de la mise à jour des tickets disponibles:', updateError);
+                            // Ne pas faire échouer le webhook pour cette erreur
+                        } else {
+                            console.log('✅ Tickets disponibles mis à jour');
+                        }
+                    }
+
+                    console.log('🎉 Paiement web traité avec succès');
 
                 } catch (error) {
-                    console.error('Erreur lors de la création du ticket:', error);
+                    console.error('❌ Erreur lors de la création du ticket:', error);
                     // On ne renvoie pas d'erreur à Stripe pour éviter les retentatives
                 }
                 break;
@@ -81,15 +148,48 @@ exports.handler = async (event) => {
                 });
 
                 try {
-                    // Mettre à jour le statut de la réservation
+                    const { createClient } = require('@supabase/supabase-js');
+                    
+                    // Initialisation du client Supabase
+                    const supabaseUrl = process.env.SUPABASE_URL;
+                    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+                    const supabase = createClient(supabaseUrl, supabaseKey);
+
                     const eventId = failedPayment.metadata.event_id;
                     const quantity = parseInt(failedPayment.metadata.quantity);
 
-                    // TODO: Mettre à jour votre base de données pour libérer les places
-                    console.log('Places à libérer:', {
+                    console.log('🔄 Libération des places pour paiement échoué:', {
                         eventId,
-                        quantity
+                        quantity,
+                        paymentIntentId: failedPayment.id
                     });
+
+                    // Récupérer le nombre actuel de tickets disponibles
+                    const { data: eventData, error: fetchError } = await supabase
+                        .from('events')
+                        .select('available_tickets')
+                        .eq('id', eventId)
+                        .single();
+
+                    if (fetchError) {
+                        console.error('❌ Erreur lors de la récupération de l\'événement:', fetchError);
+                    } else {
+                        // Remettre les tickets disponibles (en cas d'échec de paiement)
+                        const newAvailableTickets = eventData.available_tickets + quantity;
+                        
+                        const { error: updateError } = await supabase
+                            .from('events')
+                            .update({ 
+                                available_tickets: newAvailableTickets
+                            })
+                            .eq('id', eventId);
+
+                        if (updateError) {
+                            console.error('❌ Erreur lors de la libération des tickets:', updateError);
+                        } else {
+                            console.log('✅ Tickets libérés avec succès');
+                        }
+                    }
 
                     // Envoyer une notification d'échec
                     // TODO: Implémenter l'envoi de notification
