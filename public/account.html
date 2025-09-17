@@ -117,11 +117,11 @@
         }
 
         .logout-button {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            border: none;
             border-radius: 12px;
             padding: 1rem;
-            color: var(--text-color);
+            color: white;
             font-weight: bold;
             cursor: pointer;
             transition: var(--transition);
@@ -130,9 +130,8 @@
         }
 
         .logout-button:hover {
-            border-color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.05);
             transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(244, 67, 54, 0.3);
         }
 
         .tickets-section {
@@ -140,43 +139,98 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(218, 252, 59, 0.2);
             border-radius: 20px;
-            padding: 1.5rem;
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .tickets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .section-title {
             font-size: 1.8rem;
             font-weight: bold;
             color: var(--accent-color);
-            margin-bottom: 1.5rem;
+            margin: 0;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .tickets-carousel {
-            position: relative;
-            overflow: hidden;
-            border-radius: 15px;
+        .search-container {
+            flex: 1;
+            max-width: 300px;
         }
 
-        .tickets-container {
+        .search-input-wrapper {
+            position: relative;
             display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(218, 252, 59, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .clear-search {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .clear-search:hover {
+            color: var(--accent-color);
+            background: rgba(218, 252, 59, 0.1);
+        }
+
+        .tickets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
-            transition: transform 0.3s ease;
         }
 
         .ticket-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 0;
-            transition: var(--transition);
-            flex: 0 0 320px;
-            min-width: 0;
+            border-radius: 12px;
             overflow: hidden;
-            max-width: 320px;
+            transition: var(--transition);
+            position: relative;
         }
 
         .ticket-card:hover {
@@ -198,7 +252,28 @@
 
         .ticket-image-placeholder {
             color: rgba(255, 255, 255, 0.3);
-            font-size: 3rem;
+            font-size: 2rem;
+        }
+
+        .ticket-status-overlay {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .ticket-status-overlay.valid {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .ticket-status-overlay.used {
+            background: rgba(158, 158, 158, 0.9);
+            color: white;
         }
 
         .ticket-content {
@@ -206,145 +281,67 @@
         }
 
         .ticket-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .ticket-event-name {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: bold;
             color: var(--text-color);
             margin-bottom: 0.25rem;
+            line-height: 1.3;
         }
 
         .ticket-event-date {
             color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-        }
-
-        .ticket-status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
             font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
         }
 
-        .ticket-status.valid {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-
-        .ticket-status.used {
-            background: rgba(158, 158, 158, 0.2);
-            color: #9E9E9E;
-            border: 1px solid rgba(158, 158, 158, 0.3);
+        .ticket-event-location {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
         }
 
         .ticket-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .ticket-detail {
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .ticket-detail-label {
-            color: rgba(255, 255, 255, 0.6);
+        .ticket-price {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .ticket-date {
             font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .ticket-detail-value {
-            color: var(--text-color);
-            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .ticket-qr {
             text-align: center;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 0.75rem;
         }
 
         .ticket-qr img {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
         }
 
         .ticket-code {
             color: var(--accent-color);
             font-family: monospace;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             margin-top: 0.5rem;
             word-break: break-all;
-        }
-
-        .carousel-nav {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .carousel-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            color: var(--text-color);
-        }
-
-        .carousel-btn:hover {
-            background: rgba(218, 252, 59, 0.1);
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .carousel-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .carousel-btn:disabled:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            color: var(--text-color);
-        }
-
-        .carousel-dots {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-
-        .carousel-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .carousel-dot.active {
-            background: var(--accent-color);
+            line-height: 1.2;
         }
 
         .empty-state {
@@ -421,56 +418,70 @@
                 padding: 1.5rem;
             }
 
-            .ticket-details {
-                grid-template-columns: 1fr;
-            }
-
-            .ticket-header {
+            .tickets-header {
                 flex-direction: column;
-                gap: 0.5rem;
+                align-items: stretch;
+                gap: 1rem;
             }
 
-            .ticket-card {
-                flex: 0 0 260px;
-                max-width: 260px;
+            .search-container {
+                max-width: none;
+            }
+
+            .tickets-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
             }
 
             .ticket-image {
                 height: 100px;
             }
 
-            .carousel-btn {
-                width: 35px;
-                height: 35px;
+            .ticket-content {
+                padding: 0.75rem;
             }
 
-            .carousel-nav {
-                gap: 0.75rem;
-                margin-top: 1rem;
+            .ticket-event-name {
+                font-size: 0.9rem;
+            }
+
+            .ticket-qr img {
+                width: 50px;
+                height: 50px;
             }
         }
 
         @media (max-width: 480px) {
-            .ticket-card {
-                flex: 0 0 240px;
-                max-width: 240px;
+            .account-container {
+                padding: 0.5rem;
             }
 
-            .ticket-image {
-                height: 80px;
-            }
-
-            .ticket-content {
+            .profile-card,
+            .tickets-section {
                 padding: 1rem;
             }
 
-            .carousel-btn {
-                width: 32px;
-                height: 32px;
+            .tickets-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
             }
 
-            .carousel-nav {
-                gap: 0.5rem;
+            .ticket-image {
+                height: 90px;
+            }
+
+            .ticket-content {
+                padding: 0.75rem;
+            }
+
+            .ticket-event-name {
+                font-size: 0.85rem;
+            }
+
+            .ticket-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
             }
         }
     </style>
@@ -541,10 +552,22 @@
 
             <!-- Tickets -->
             <div class="tickets-section" data-aos="fade-left">
-                <h2 class="section-title">
-                    <i class="fas fa-ticket-alt"></i>
-                    Mes Tickets
-                </h2>
+                <div class="tickets-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-ticket-alt"></i>
+                        Mes Tickets
+                    </h2>
+                    
+                    <div class="search-container" id="search-container" style="display: none;">
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="ticket-search" class="search-input" placeholder="Rechercher un ticket...">
+                            <button type="button" id="clear-search" class="clear-search" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="tickets-loading" class="loading">
                     <div class="spinner"></div>
@@ -552,22 +575,7 @@
                 </div>
 
                 <div id="tickets-container" style="display: none;">
-                    <div class="tickets-carousel">
-                        <div class="tickets-container" id="tickets-slider">
-                            <!-- Tickets will be loaded here -->
-                        </div>
-                        <div class="carousel-nav">
-                            <button class="carousel-btn" id="prev-btn" disabled>
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <button class="carousel-btn" id="next-btn" disabled>
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div class="carousel-dots" id="carousel-dots">
-                            <!-- Dots will be generated here -->
-                        </div>
-                    </div>
+                    <!-- Tickets will be loaded here -->
                 </div>
 
                 <div id="tickets-empty" class="empty-state" style="display: none;">
@@ -577,6 +585,15 @@
                     <a href="billetterie.html" class="primary-button">
                         Voir les événements
                     </a>
+                </div>
+
+                <div id="no-search-results" class="empty-state" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <h3>Aucun résultat trouvé</h3>
+                    <p>Essayez avec d'autres mots-clés.</p>
+                    <button type="button" class="primary-button" onclick="clearSearch()">
+                        Effacer la recherche
+                    </button>
                 </div>
             </div>
         </div>
@@ -599,22 +616,6 @@
 
             loadUserProfile();
             loadUserTickets();
-
-            // Add carousel event listeners
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-
-            if (prevBtn) {
-                prevBtn.addEventListener('click', prevSlide);
-            }
-            if (nextBtn) {
-                nextBtn.addEventListener('click', nextSlide);
-            }
-
-            // Recalculate carousel position on window resize
-            window.addEventListener('resize', () => {
-                updateCarouselPosition();
-            });
         });
 
         async function loadUserProfile() {
@@ -691,105 +692,102 @@
         function displayTickets(tickets) {
             const container = document.getElementById('tickets-container');
             const emptyState = document.getElementById('tickets-empty');
-            const slider = document.getElementById('tickets-slider');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const dotsContainer = document.getElementById('carousel-dots');
+            const searchContainer = document.getElementById('search-container');
 
             if (!tickets || tickets.length === 0) {
                 emptyState.style.display = 'block';
+                searchContainer.style.display = 'none';
                 return;
             }
 
-            // Clear previous content
-            slider.innerHTML = '';
-            dotsContainer.innerHTML = '';
+            // Stocker tous les tickets pour la recherche
+            window.allTickets = tickets;
 
-            // Create ticket cards
-            tickets.forEach((ticket, index) => {
+            container.innerHTML = '';
+            tickets.forEach(ticket => {
                 const ticketCard = createTicketCard(ticket);
-                slider.appendChild(ticketCard);
+                container.appendChild(ticketCard);
             });
-
-            // Initialize carousel
-            initializeCarousel(tickets.length);
 
             container.style.display = 'block';
+            searchContainer.style.display = 'flex';
+
+            // Ajouter les event listeners pour la recherche
+            setupSearchFunctionality();
         }
 
-        let currentSlide = 0;
-        let totalSlides = 0;
+        function setupSearchFunctionality() {
+            const searchInput = document.getElementById('ticket-search');
+            const clearButton = document.getElementById('clear-search');
 
-        function initializeCarousel(ticketCount) {
-            totalSlides = ticketCount;
-            currentSlide = 0;
-            
-            updateCarouselButtons();
-            createCarouselDots();
-            updateCarouselPosition();
+            searchInput.addEventListener('input', filterTickets);
+            clearButton.addEventListener('click', clearSearch);
         }
 
-        function updateCarouselButtons() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            
-            prevBtn.disabled = currentSlide === 0;
-            nextBtn.disabled = currentSlide >= totalSlides - 1;
-        }
+        function filterTickets() {
+            const searchTerm = document.getElementById('ticket-search').value.toLowerCase().trim();
+            const clearButton = document.getElementById('clear-search');
+            const container = document.getElementById('tickets-container');
+            const noResults = document.getElementById('no-search-results');
 
-        function createCarouselDots() {
-            const dotsContainer = document.getElementById('carousel-dots');
-            dotsContainer.innerHTML = '';
-            
-            for (let i = 0; i < totalSlides; i++) {
-                const dot = document.createElement('div');
-                dot.className = `carousel-dot ${i === 0 ? 'active' : ''}`;
-                dot.addEventListener('click', () => goToSlide(i));
-                dotsContainer.appendChild(dot);
+            // Afficher/masquer le bouton clear
+            clearButton.style.display = searchTerm ? 'block' : 'none';
+
+            if (!searchTerm) {
+                // Afficher tous les tickets
+                displayAllTickets();
+                return;
             }
-        }
 
-        function updateCarouselPosition() {
-            const slider = document.getElementById('tickets-slider');
-            const dots = document.querySelectorAll('.carousel-dot');
-            
-            // Calculate the translation based on card width + gap
-            let cardWidth = 344; // 320px card + 24px gap (default desktop)
-            
-            // Adjust for different screen sizes
-            if (window.innerWidth <= 480) {
-                cardWidth = 264; // 240px card + 24px gap
-            } else if (window.innerWidth <= 768) {
-                cardWidth = 284; // 260px card + 24px gap
-            }
-            
-            slider.style.transform = `translateX(-${currentSlide * cardWidth}px)`;
-            
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
+            // Filtrer les tickets
+            const filteredTickets = window.allTickets.filter(ticket => {
+                const eventName = (ticket.event_name || '').toLowerCase();
+                const location = (ticket.event_location || '').toLowerCase();
+                const ticketCode = (ticket.ticket_code || '').toLowerCase();
+                const date = ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR').toLowerCase() : '';
+
+                return eventName.includes(searchTerm) ||
+                       location.includes(searchTerm) ||
+                       ticketCode.includes(searchTerm) ||
+                       date.includes(searchTerm);
             });
-        }
 
-        function goToSlide(slideIndex) {
-            currentSlide = slideIndex;
-            updateCarouselPosition();
-            updateCarouselButtons();
-        }
-
-        function nextSlide() {
-            if (currentSlide < totalSlides - 1) {
-                currentSlide++;
-                updateCarouselPosition();
-                updateCarouselButtons();
+            // Afficher les résultats
+            if (filteredTickets.length === 0) {
+                container.style.display = 'none';
+                noResults.style.display = 'block';
+            } else {
+                container.innerHTML = '';
+                filteredTickets.forEach(ticket => {
+                    const ticketCard = createTicketCard(ticket);
+                    container.appendChild(ticketCard);
+                });
+                container.style.display = 'block';
+                noResults.style.display = 'none';
             }
         }
 
-        function prevSlide() {
-            if (currentSlide > 0) {
-                currentSlide--;
-                updateCarouselPosition();
-                updateCarouselButtons();
-            }
+        function displayAllTickets() {
+            const container = document.getElementById('tickets-container');
+            const noResults = document.getElementById('no-search-results');
+
+            container.innerHTML = '';
+            window.allTickets.forEach(ticket => {
+                const ticketCard = createTicketCard(ticket);
+                container.appendChild(ticketCard);
+            });
+
+            container.style.display = 'block';
+            noResults.style.display = 'none';
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('ticket-search');
+            const clearButton = document.getElementById('clear-search');
+
+            searchInput.value = '';
+            clearButton.style.display = 'none';
+            displayAllTickets();
         }
 
         function createTicketCard(ticket) {
@@ -799,7 +797,7 @@
             const statusClass = ticket.is_used ? 'used' : 'valid';
             const statusText = ticket.is_used ? 'Utilisé' : 'Valide';
 
-            // Create image element
+            // Créer l'image de couverture ou placeholder
             const imageElement = ticket.event_image ? 
                 `<div class="ticket-image" style="background-image: url('${ticket.event_image}');"></div>` :
                 `<div class="ticket-image">
@@ -808,37 +806,23 @@
 
             card.innerHTML = `
                 ${imageElement}
+                <div class="ticket-status-overlay ${statusClass}">${statusText}</div>
+                
                 <div class="ticket-content">
                     <div class="ticket-header">
-                        <div>
-                            <div class="ticket-event-name">${ticket.event_name || 'Événement'}</div>
-                            <div class="ticket-event-date">${ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR') : ''}</div>
-                        </div>
-                        <div class="ticket-status ${statusClass}">${statusText}</div>
+                        <div class="ticket-event-name">${ticket.event_name || 'Événement'}</div>
+                        <div class="ticket-event-date">${ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR') : ''}</div>
+                        ${ticket.event_location ? `<div class="ticket-event-location">${ticket.event_location}</div>` : ''}
                     </div>
 
                     <div class="ticket-details">
-                        <div class="ticket-detail">
-                            <span class="ticket-detail-label">Code du ticket</span>
-                            <span class="ticket-detail-value">${ticket.ticket_code || '-'}</span>
-                        </div>
-                        <div class="ticket-detail">
-                            <span class="ticket-detail-label">Prix payé</span>
-                            <span class="ticket-detail-value">${ticket.price_paid ? ticket.price_paid + '€' : '-'}</span>
-                        </div>
-                        <div class="ticket-detail">
-                            <span class="ticket-detail-label">Date d'achat</span>
-                            <span class="ticket-detail-value">${ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : '-'}</span>
-                        </div>
-                        <div class="ticket-detail">
-                            <span class="ticket-detail-label">Lieu</span>
-                            <span class="ticket-detail-value">${ticket.event_location || '-'}</span>
-                        </div>
+                        <div class="ticket-price">${ticket.price_paid ? ticket.price_paid + '€' : 'Gratuit'}</div>
+                        <div class="ticket-date">${ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : ''}</div>
                     </div>
 
                     ${ticket.ticket_code ? `
                         <div class="ticket-qr">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code">
                             <div class="ticket-code">${ticket.ticket_code}</div>
                         </div>
                     ` : ''}
