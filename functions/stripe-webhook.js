@@ -83,9 +83,7 @@ exports.handler = async (event) => {
                             study_year: 'N/A', // Année par défaut (obligatoire)
                             city: 'Bordeaux', // Ville par défaut (obligatoire)
                             phone: metadata.customer_phone || null,
-                            is_admin: false,
-                            is_sso_user: false,
-                            is_anonymous: true // Marquer comme utilisateur web
+                            is_admin: false
                         });
 
                     if (userError) {
