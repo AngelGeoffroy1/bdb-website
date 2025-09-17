@@ -66,12 +66,41 @@ exports.handler = async (event) => {
                         customer_email: metadata.customer_email
                     });
 
+                    // Générer un UUID unique pour cet achat web
+                    const webUserId = require('crypto').randomUUID();
+                    
+                    // Créer un utilisateur avec les vraies informations du client
+                    console.log('👤 Création d\'un utilisateur avec les informations du client...');
+                    const { error: userError } = await supabase
+                        .from('users')
+                        .insert({
+                            id: webUserId,
+                            first_name: firstName,
+                            last_name: lastName,
+                            email: metadata.customer_email,
+                            date_of_birth: '2000-01-01', // Date par défaut (obligatoire)
+                            school: 'Bordeaux', // École par défaut (obligatoire)
+                            study_year: 'N/A', // Année par défaut (obligatoire)
+                            city: 'Bordeaux', // Ville par défaut (obligatoire)
+                            phone: metadata.customer_phone || null,
+                            is_admin: false,
+                            is_sso_user: false,
+                            is_anonymous: true // Marquer comme utilisateur web
+                        });
+
+                    if (userError) {
+                        console.error('❌ Erreur lors de la création de l\'utilisateur temporaire:', userError);
+                        throw new Error(`Erreur création utilisateur temporaire: ${userError.message}`);
+                    }
+
+                    console.log('✅ Utilisateur temporaire créé avec l\'ID:', webUserId);
+
                     // Créer les tickets (un ticket par quantité)
                     const tickets = [];
                     for (let i = 0; i < quantity; i++) {
                         const ticketData = {
                             event_id: metadata.event_id,
-                            user_id: require('crypto').randomUUID(), // UUID généré dynamiquement pour chaque achat web
+                            user_id: webUserId, // Utiliser l'ID de l'utilisateur temporaire créé
                             quantity: 1, // Chaque ticket représente 1 place
                             total_amount: totalAmount / quantity, // Montant unitaire
                             customer_first_name: firstName,
