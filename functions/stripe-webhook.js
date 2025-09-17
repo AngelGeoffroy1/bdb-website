@@ -66,15 +66,11 @@ exports.handler = async (event) => {
                         customer_email: metadata.customer_email
                     });
 
-                    // Générer un UUID unique pour cet achat web
-                    const webUserId = require('crypto').randomUUID();
-                    
                     // Créer un utilisateur avec les vraies informations du client
                     console.log('👤 Création d\'un utilisateur avec les informations du client...');
-                    const { error: userError } = await supabase
+                    const { data: newUser, error: userError } = await supabase
                         .from('users')
                         .insert({
-                            id: webUserId,
                             first_name: firstName,
                             last_name: lastName,
                             email: metadata.customer_email,
@@ -91,6 +87,8 @@ exports.handler = async (event) => {
                         throw new Error(`Erreur création utilisateur temporaire: ${userError.message}`);
                     }
 
+                    // Récupérer l'ID de l'utilisateur créé
+                    const webUserId = newUser[0].id;
                     console.log('✅ Utilisateur temporaire créé avec l\'ID:', webUserId);
 
                     // Créer les tickets (un ticket par quantité)
