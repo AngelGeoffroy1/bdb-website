@@ -17,7 +17,6 @@
     
     <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
     
     <!-- Styles spécifiques au paiement -->
     <style>
@@ -242,34 +241,6 @@
 
         .requirement.invalid {
             color: #ff4757;
-        }
-
-        .event-map {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 1px solid rgba(218,252,59,0.1);
-        }
-
-        .event-map h3 {
-            color: var(--accent-color);
-            font-size: 1.1rem;
-            margin: 0 0 1rem 0;
-            text-align: center;
-        }
-
-        .map-container {
-            width: 100%;
-            height: 200px;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid rgba(218,252,59,0.2);
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
         }
 
         .form-row {
@@ -584,13 +555,6 @@
                         <!-- Contenu généré dynamiquement -->
                     </div>
 
-                    <div class="event-map" id="event-map" style="display: none;">
-                        <h3>📍 Localisation de l'événement</h3>
-                        <div class="map-container">
-                            <div id="map"></div>
-                        </div>
-                    </div>
-
                     <button type="submit" class="pay-button" id="pay-button">
                         <div class="loading-spinner" id="loading-spinner"></div>
                         <span id="pay-button-text">Payer maintenant</span>
@@ -667,16 +631,6 @@
                     eventData = data.event;
                     displayEventSummary();
                     updatePriceBreakdown();
-                    
-                    // Initialiser la carte si Google Maps est chargé
-                    if (typeof google !== 'undefined' && google.maps) {
-                        initializeEventMap(eventData);
-                    } else {
-                        // Attendre que Google Maps soit chargé
-                        window.initMap = () => {
-                            initializeEventMap(eventData);
-                        };
-                    }
                 } else {
                     throw new Error(data.error || 'Erreur lors du chargement de l\'événement');
                 }
@@ -913,15 +867,13 @@
             const requirements = {
                 length: password.length >= 8,
                 uppercase: /[A-Z]/.test(password),
-                lowercase: /[a-z]/.test(password),
-                number: /\d/.test(password),
-                special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                lowercase: /[a-z]/.test(password)
             };
 
             // Compter les critères remplis
             const fulfilledRequirements = Object.values(requirements).filter(req => req).length;
             
-            if (fulfilledRequirements >= 4 && password.length >= 10) return 'strong';
+            if (fulfilledRequirements >= 3 && password.length >= 12) return 'strong';
             if (fulfilledRequirements >= 3) return 'good';
             if (fulfilledRequirements >= 2) return 'fair';
             return 'weak';
@@ -960,85 +912,6 @@
             };
             
             strengthText.textContent = strengthLabels[strength];
-        }
-
-        // Variables globales pour la carte
-        let map;
-        let marker;
-
-        // Initialisation de la carte Google Maps
-        function initMap() {
-            // La carte sera initialisée quand on aura les données de l'événement
-            console.log('🗺️ Google Maps API chargée');
-        }
-
-        // Fonction pour initialiser la carte avec les données de l'événement
-        function initializeEventMap(eventData) {
-            if (!eventData || !eventData.location) return;
-
-            // Afficher la section de la carte
-            const mapSection = document.getElementById('event-map');
-            mapSection.style.display = 'block';
-
-            // Géocoder l'adresse pour obtenir les coordonnées
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ address: eventData.location }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    const location = results[0].geometry.location;
-                    
-                    // Créer la carte
-                    map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 15,
-                        center: location,
-                        mapTypeId: google.maps.MapTypeId.ROADMAP,
-                        styles: [
-                            {
-                                featureType: 'all',
-                                elementType: 'labels.text.fill',
-                                stylers: [{ color: '#ffffff' }]
-                            },
-                            {
-                                featureType: 'all',
-                                elementType: 'labels.text.stroke',
-                                stylers: [{ color: '#000000' }, { weight: 2 }]
-                            }
-                        ]
-                    });
-
-                    // Ajouter un marqueur
-                    marker = new google.maps.Marker({
-                        position: location,
-                        map: map,
-                        title: eventData.name,
-                        icon: {
-                            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="16" cy="16" r="12" fill="#DAFC3B" stroke="#050505" stroke-width="2"/>
-                                    <text x="16" y="20" text-anchor="middle" font-family="Arial" font-size="16" fill="#050505">📍</text>
-                                </svg>
-                            `)
-                        }
-                    });
-
-                    // Ajouter une info window
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div style="color: #050505; font-family: Arial;">
-                                <strong>${eventData.name}</strong><br>
-                                ${eventData.location}
-                            </div>
-                        `
-                    });
-
-                    marker.addListener('click', () => {
-                        infoWindow.open(map, marker);
-                    });
-                } else {
-                    console.error('Erreur de géocodage:', status);
-                    // Masquer la carte si l'adresse n'est pas trouvée
-                    document.getElementById('event-map').style.display = 'none';
-                }
-            });
         }
 
         // Initialisation
