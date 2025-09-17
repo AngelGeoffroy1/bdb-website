@@ -82,8 +82,8 @@ exports.handler = async (event) => {
                             school: 'Bordeaux', // École par défaut (obligatoire)
                             study_year: 'N/A', // Année par défaut (obligatoire)
                             city: 'Bordeaux', // Ville par défaut (obligatoire)
-                            phone: metadata.customer_phone || null,
                             is_admin: false
+                            // created_at sera automatiquement défini par la valeur par défaut
                         });
 
                     if (userError) {
