@@ -117,11 +117,11 @@
         }
 
         .logout-button {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-            border: none;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 1rem;
-            color: white;
+            color: var(--text-color);
             font-weight: bold;
             cursor: pointer;
             transition: var(--transition);
@@ -130,8 +130,9 @@
         }
 
         .logout-button:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.05);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(244, 67, 54, 0.3);
         }
 
         .tickets-section {
@@ -152,22 +153,53 @@
             gap: 0.5rem;
         }
 
-        .tickets-grid {
-            display: grid;
+        .tickets-carousel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        .tickets-container {
+            display: flex;
             gap: 1.5rem;
+            transition: transform 0.3s ease;
         }
 
         .ticket-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            padding: 1.5rem;
+            padding: 0;
             transition: var(--transition);
+            flex: 0 0 100%;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .ticket-card:hover {
             border-color: rgba(218, 252, 59, 0.3);
             transform: translateY(-2px);
+        }
+
+        .ticket-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ticket-image-placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 3rem;
+        }
+
+        .ticket-content {
+            padding: 1.5rem;
         }
 
         .ticket-header {
@@ -254,6 +286,64 @@
             word-break: break-all;
         }
 
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .carousel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        .carousel-btn:hover {
+            background: rgba(218, 252, 59, 0.1);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .carousel-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .carousel-btn:disabled:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .carousel-dot.active {
+            background: var(--accent-color);
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
@@ -336,6 +426,39 @@
                 flex-direction: column;
                 gap: 0.5rem;
             }
+
+            .ticket-image {
+                height: 150px;
+            }
+
+            .carousel-btn {
+                width: 35px;
+                height: 35px;
+            }
+
+            .carousel-nav {
+                gap: 0.75rem;
+                margin-top: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ticket-image {
+                height: 120px;
+            }
+
+            .ticket-content {
+                padding: 1rem;
+            }
+
+            .carousel-btn {
+                width: 32px;
+                height: 32px;
+            }
+
+            .carousel-nav {
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
@@ -416,7 +539,22 @@
                 </div>
 
                 <div id="tickets-container" style="display: none;">
-                    <!-- Tickets will be loaded here -->
+                    <div class="tickets-carousel">
+                        <div class="tickets-container" id="tickets-slider">
+                            <!-- Tickets will be loaded here -->
+                        </div>
+                        <div class="carousel-nav">
+                            <button class="carousel-btn" id="prev-btn" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="carousel-btn" id="next-btn" disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="carousel-dots" id="carousel-dots">
+                            <!-- Dots will be generated here -->
+                        </div>
+                    </div>
                 </div>
 
                 <div id="tickets-empty" class="empty-state" style="display: none;">
@@ -448,6 +586,17 @@
 
             loadUserProfile();
             loadUserTickets();
+
+            // Add carousel event listeners
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', prevSlide);
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', nextSlide);
+            }
         });
 
         async function loadUserProfile() {
@@ -524,19 +673,95 @@
         function displayTickets(tickets) {
             const container = document.getElementById('tickets-container');
             const emptyState = document.getElementById('tickets-empty');
+            const slider = document.getElementById('tickets-slider');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const dotsContainer = document.getElementById('carousel-dots');
 
             if (!tickets || tickets.length === 0) {
                 emptyState.style.display = 'block';
                 return;
             }
 
-            container.innerHTML = '';
-            tickets.forEach(ticket => {
+            // Clear previous content
+            slider.innerHTML = '';
+            dotsContainer.innerHTML = '';
+
+            // Create ticket cards
+            tickets.forEach((ticket, index) => {
                 const ticketCard = createTicketCard(ticket);
-                container.appendChild(ticketCard);
+                slider.appendChild(ticketCard);
             });
 
+            // Initialize carousel
+            initializeCarousel(tickets.length);
+
             container.style.display = 'block';
+        }
+
+        let currentSlide = 0;
+        let totalSlides = 0;
+
+        function initializeCarousel(ticketCount) {
+            totalSlides = ticketCount;
+            currentSlide = 0;
+            
+            updateCarouselButtons();
+            createCarouselDots();
+            updateCarouselPosition();
+        }
+
+        function updateCarouselButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide >= totalSlides - 1;
+        }
+
+        function createCarouselDots() {
+            const dotsContainer = document.getElementById('carousel-dots');
+            dotsContainer.innerHTML = '';
+            
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.className = `carousel-dot ${i === 0 ? 'active' : ''}`;
+                dot.addEventListener('click', () => goToSlide(i));
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function updateCarouselPosition() {
+            const slider = document.getElementById('tickets-slider');
+            const dots = document.querySelectorAll('.carousel-dot');
+            
+            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+        }
+
+        function goToSlide(slideIndex) {
+            currentSlide = slideIndex;
+            updateCarouselPosition();
+            updateCarouselButtons();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateCarouselPosition();
+                updateCarouselButtons();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateCarouselPosition();
+                updateCarouselButtons();
+            }
         }
 
         function createTicketCard(ticket) {
@@ -546,40 +771,50 @@
             const statusClass = ticket.is_used ? 'used' : 'valid';
             const statusText = ticket.is_used ? 'Utilisé' : 'Valide';
 
+            // Create image element
+            const imageElement = ticket.event_image ? 
+                `<div class="ticket-image" style="background-image: url('${ticket.event_image}');"></div>` :
+                `<div class="ticket-image">
+                    <i class="fas fa-image ticket-image-placeholder"></i>
+                </div>`;
+
             card.innerHTML = `
-                <div class="ticket-header">
-                    <div>
-                        <div class="ticket-event-name">${ticket.event_name || 'Événement'}</div>
-                        <div class="ticket-event-date">${ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR') : ''}</div>
+                ${imageElement}
+                <div class="ticket-content">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-event-name">${ticket.event_name || 'Événement'}</div>
+                            <div class="ticket-event-date">${ticket.event_date ? new Date(ticket.event_date).toLocaleDateString('fr-FR') : ''}</div>
+                        </div>
+                        <div class="ticket-status ${statusClass}">${statusText}</div>
                     </div>
-                    <div class="ticket-status ${statusClass}">${statusText}</div>
-                </div>
 
-                <div class="ticket-details">
-                    <div class="ticket-detail">
-                        <span class="ticket-detail-label">Code du ticket</span>
-                        <span class="ticket-detail-value">${ticket.ticket_code || '-'}</span>
+                    <div class="ticket-details">
+                        <div class="ticket-detail">
+                            <span class="ticket-detail-label">Code du ticket</span>
+                            <span class="ticket-detail-value">${ticket.ticket_code || '-'}</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <span class="ticket-detail-label">Prix payé</span>
+                            <span class="ticket-detail-value">${ticket.price_paid ? ticket.price_paid + '€' : '-'}</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <span class="ticket-detail-label">Date d'achat</span>
+                            <span class="ticket-detail-value">${ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : '-'}</span>
+                        </div>
+                        <div class="ticket-detail">
+                            <span class="ticket-detail-label">Lieu</span>
+                            <span class="ticket-detail-value">${ticket.event_location || '-'}</span>
+                        </div>
                     </div>
-                    <div class="ticket-detail">
-                        <span class="ticket-detail-label">Prix payé</span>
-                        <span class="ticket-detail-value">${ticket.price_paid ? ticket.price_paid + '€' : '-'}</span>
-                    </div>
-                    <div class="ticket-detail">
-                        <span class="ticket-detail-label">Date d'achat</span>
-                        <span class="ticket-detail-value">${ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : '-'}</span>
-                    </div>
-                    <div class="ticket-detail">
-                        <span class="ticket-detail-label">Lieu</span>
-                        <span class="ticket-detail-value">${ticket.event_location || '-'}</span>
-                    </div>
-                </div>
 
-                ${ticket.ticket_code ? `
-                    <div class="ticket-qr">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code">
-                        <div class="ticket-code">${ticket.ticket_code}</div>
-                    </div>
-                ` : ''}
+                    ${ticket.ticket_code ? `
+                        <div class="ticket-qr">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(ticket.ticket_code)}" alt="QR Code">
+                            <div class="ticket-code">${ticket.ticket_code}</div>
+                        </div>
+                    ` : ''}
+                </div>
             `;
 
             return card;
