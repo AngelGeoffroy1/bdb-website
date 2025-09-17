@@ -67,59 +67,41 @@ exports.handler = async (event) => {
                     });
 
                     // Vérifier si l'utilisateur existe déjà
-                    console.log('🔍 Vérification si l\'utilisateur existe déjà...');
+                    console.log('🔍 Vérification de l\'existence de l\'utilisateur...');
                     
                     let webUserId = null;
+                    let userExists = false;
                     
-                    // Vérifier d'abord dans la table users (plus simple et direct)
-                    const { data: existingUser, error: userError } = await supabase
-                        .from('users')
-                        .select('id, email')
-                        .eq('email', metadata.customer_email)
-                        .single();
+                    try {
+                        const checkUserResponse = await fetch(`${process.env.URL || 'https://bureaudesbureaux.com'}/.netlify/functions/checkUserExists`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: metadata.customer_email
+                            })
+                        });
 
-                    if (existingUser && !userError) {
-                        console.log('✅ Utilisateur existant trouvé avec l\'ID:', existingUser.id);
-                        webUserId = existingUser.id;
-                    } else {
-                        console.log('🔍 Utilisateur non trouvé dans users, vérification dans auth.users...');
-                        
-                        // Vérifier dans auth.users via requête SQL directe avec service key
-                        const { data: authUsers, error: authError } = await supabase
-                            .from('auth.users')
-                            .select('id, email')
-                            .eq('email', metadata.customer_email)
-                            .single();
-
-                        if (authUsers && !authError) {
-                            console.log('✅ Utilisateur trouvé dans auth.users avec l\'ID:', authUsers.id);
+                        if (checkUserResponse.ok) {
+                            const checkUserData = await checkUserResponse.json();
+                            userExists = checkUserData.exists;
                             
-                            // Créer le profil manquant dans users
-                            console.log('⚠️ Création du profil manquant dans la table users...');
-                            const { error: insertError } = await supabase
-                                .from('users')
-                                .insert({
-                                    id: authUsers.id,
-                                    email: metadata.customer_email,
-                                    first_name: firstName,
-                                    last_name: lastName,
-                                    phone: metadata.customer_phone || null,
-                                    date_of_birth: '2000-01-01', // Date par défaut
-                                    school: 'Non spécifié',
-                                    study_year: 'Non spécifié',
-                                    city: 'Non spécifié',
-                                    is_admin: false
-                                });
-
-                            if (insertError) {
-                                console.error('❌ Erreur création profil:', insertError);
-                                throw new Error(`Erreur création profil: ${insertError.message}`);
+                            if (userExists) {
+                                webUserId = checkUserData.user.id;
+                                console.log('✅ Utilisateur existant trouvé:', webUserId);
+                            } else {
+                                console.log('🆕 Nouvel utilisateur, création du compte...');
                             }
-                            
-                            webUserId = authUsers.id;
-                            console.log('✅ Profil utilisateur créé avec l\'ID:', webUserId);
                         } else {
-                            // Créer un nouveau compte Supabase
+                            console.log('⚠️ Erreur lors de la vérification, création d\'un nouveau compte...');
+                        }
+                    } catch (error) {
+                        console.log('⚠️ Erreur lors de la vérification, création d\'un nouveau compte...', error.message);
+                    }
+
+                    // Créer un compte Supabase seulement si l'utilisateur n'existe pas
+                    if (!userExists) {
                         console.log('🔐 Création d\'un nouveau compte Supabase...');
                         
                         try {
@@ -150,7 +132,6 @@ exports.handler = async (event) => {
                             console.error('❌ Erreur lors de l\'appel createSupabaseUser:', error);
                             throw new Error(`Erreur création compte: ${error.message}`);
                         }
-                        }
                     }
 
                     // Créer les tickets (un ticket par quantité)
@@ -163,15 +144,15 @@ exports.handler = async (event) => {
                             total_amount: totalAmount / quantity, // Montant unitaire
                             customer_first_name: firstName,
                             customer_last_name: lastName,
-                        customer_email: metadata.customer_email,
+                            customer_email: metadata.customer_email,
                             customer_phone: metadata.customer_phone || null,
                             ticket_code: require('crypto').randomUUID(),
                             is_used: false,
                             is_golden: false,
                             skip_points_update: true, // Pas de mise à jour des points pour les achats web
                             purchase_date: new Date().toISOString(),
-                        created_at: new Date().toISOString()
-                    };
+                            created_at: new Date().toISOString()
+                        };
                         tickets.push(ticketData);
                     }
 

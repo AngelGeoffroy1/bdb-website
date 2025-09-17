@@ -100,40 +100,32 @@
             margin-bottom: 0.5rem;
         }
 
-        .event-price-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
         .event-price {
             font-size: 1.5rem;
             font-weight: bold;
             color: var(--accent-color);
-            margin: 0;
+            margin-bottom: 1rem;
         }
 
         .share-button {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            padding: 0.5rem;
-            color: rgba(255, 255, 255, 0.6);
+            padding: 0.5rem 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            flex-shrink: 0;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
 
         .share-button:hover {
-            background: rgba(218, 252, 59, 0.1);
-            border-color: rgba(218, 252, 59, 0.3);
+            background: rgba(255, 255, 255, 0.1);
             color: var(--accent-color);
+            border-color: rgba(218, 252, 59, 0.3);
         }
 
         .share-button i {
@@ -705,42 +697,36 @@
                         <span>${eventData.association_name || 'Association'}</span>
                     </div>
                 </div>
-                <div class="event-price-container">
-                    <div class="event-price">${eventData.price}€</div>
-                    <button class="share-button" onclick="shareEvent()" title="Partager cet événement">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
-                </div>
+                <div class="event-price">${eventData.price}€</div>
+                <button class="share-button" onclick="shareEvent()">
+                    <i class="fas fa-share-alt"></i>
+                    Partager
+                </button>
             `;
         }
 
         // Fonction pour partager l'événement
-        async function shareEvent() {
+        function shareEvent() {
             if (!eventData) return;
-
-            const shareData = {
-                title: eventData.name || 'Événement BDB',
-                text: `Découvrez cet événement étudiant : ${eventData.name || 'Événement'} - ${eventData.date ? new Date(eventData.date).toLocaleDateString('fr-FR') : ''}`,
-                url: window.location.href
-            };
-
-            try {
-                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                    await navigator.share(shareData);
-                } else {
-                    // Fallback : copier le lien dans le presse-papiers
-                    await navigator.clipboard.writeText(window.location.href);
-                    showNotification('Lien copié dans le presse-papiers !', 'success');
-                }
-            } catch (error) {
-                console.error('Erreur lors du partage:', error);
-                // Fallback : copier le lien
-                try {
-                    await navigator.clipboard.writeText(window.location.href);
-                    showNotification('Lien copié dans le presse-papiers !', 'success');
-                } catch (clipboardError) {
-                    showNotification('Erreur lors du partage', 'error');
-                }
+            
+            const shareUrl = window.location.href;
+            const shareText = `Découvre cet événement : ${eventData.name} - ${eventData.price}€`;
+            
+            if (navigator.share) {
+                // API Web Share native (mobile)
+                navigator.share({
+                    title: eventData.name,
+                    text: shareText,
+                    url: shareUrl
+                }).catch(err => console.log('Erreur partage:', err));
+            } else {
+                // Fallback : copier dans le presse-papier
+                navigator.clipboard.writeText(`${shareText} - ${shareUrl}`).then(() => {
+                    showNotification('Lien copié dans le presse-papier !', 'success');
+                }).catch(() => {
+                    // Fallback final : afficher le lien
+                    showNotification(`Lien à partager : ${shareUrl}`, 'success');
+                });
             }
         }
 
