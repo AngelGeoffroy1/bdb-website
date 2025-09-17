@@ -71,29 +71,35 @@ exports.handler = async (event) => {
                     
                     let webUserId = null;
                     
-                    // D'abord vérifier dans Supabase Auth
-                    const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(metadata.customer_email);
-                    
-                    if (authUser && authUser.user) {
-                        console.log('✅ Utilisateur trouvé dans Supabase Auth avec l\'ID:', authUser.user.id);
+                    // Vérifier d'abord dans la table users (plus simple et direct)
+                    const { data: existingUser, error: userError } = await supabase
+                        .from('users')
+                        .select('id, email')
+                        .eq('email', metadata.customer_email)
+                        .single();
+
+                    if (existingUser && !userError) {
+                        console.log('✅ Utilisateur existant trouvé avec l\'ID:', existingUser.id);
+                        webUserId = existingUser.id;
+                    } else {
+                        console.log('🔍 Utilisateur non trouvé dans users, vérification dans auth.users...');
                         
-                        // Vérifier si le profil existe dans la table users
-                        const { data: existingUser, error: userError } = await supabase
-                            .from('users')
-                            .select('id')
-                            .eq('id', authUser.user.id)
+                        // Vérifier dans auth.users via requête directe
+                        const { data: authUsers, error: authError } = await supabase
+                            .from('auth.users')
+                            .select('id, email')
+                            .eq('email', metadata.customer_email)
                             .single();
 
-                        if (existingUser) {
-                            console.log('✅ Profil utilisateur trouvé dans la table users');
-                            webUserId = existingUser.id;
-                        } else {
-                            console.log('⚠️ Utilisateur Auth trouvé mais pas de profil dans users, création du profil...');
-                            // Créer le profil manquant
+                        if (authUsers && !authError) {
+                            console.log('✅ Utilisateur trouvé dans auth.users avec l\'ID:', authUsers.id);
+                            
+                            // Créer le profil manquant dans users
+                            console.log('⚠️ Création du profil manquant dans la table users...');
                             const { error: insertError } = await supabase
                                 .from('users')
                                 .insert({
-                                    id: authUser.user.id,
+                                    id: authUsers.id,
                                     email: metadata.customer_email,
                                     first_name: firstName,
                                     last_name: lastName,
@@ -110,10 +116,9 @@ exports.handler = async (event) => {
                                 throw new Error(`Erreur création profil: ${insertError.message}`);
                             }
                             
-                            webUserId = authUser.user.id;
+                            webUserId = authUsers.id;
                             console.log('✅ Profil utilisateur créé avec l\'ID:', webUserId);
-                        }
-                    } else {
+                        } else {
                         // Créer un nouveau compte Supabase
                         console.log('🔐 Création d\'un nouveau compte Supabase...');
                         
