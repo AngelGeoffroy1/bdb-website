@@ -66,37 +66,51 @@ exports.handler = async (event) => {
                         customer_email: metadata.customer_email
                     });
 
-                    // Créer un compte Supabase complet (mot de passe obligatoire)
-                    console.log('🔐 Création d\'un compte Supabase complet avec mot de passe...');
+                    // Vérifier si l'utilisateur existe déjà
+                    console.log('🔍 Vérification si l\'utilisateur existe déjà...');
                     
                     let webUserId = null;
-                    try {
-                        const createUserResponse = await fetch(`${process.env.URL || 'https://bureaudesbureaux.com'}/.netlify/functions/createSupabaseUser`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                email: metadata.customer_email,
-                                password: metadata.customer_password,
-                                firstName: firstName,
-                                lastName: lastName,
-                                phone: metadata.customer_phone || null
-                            })
-                        });
+                    const { data: existingUser } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('email', metadata.customer_email)
+                        .single();
 
-                        if (createUserResponse.ok) {
-                            const userData = await createUserResponse.json();
-                            webUserId = userData.userId;
-                            console.log('✅ Compte Supabase créé avec l\'ID:', webUserId);
-                        } else {
-                            const errorText = await createUserResponse.text();
-                            console.error('❌ Erreur lors de la création du compte Supabase:', errorText);
-                            throw new Error(`Erreur création compte: ${errorText}`);
+                    if (existingUser) {
+                        console.log('✅ Utilisateur existant trouvé avec l\'ID:', existingUser.id);
+                        webUserId = existingUser.id;
+                    } else {
+                        // Créer un nouveau compte Supabase
+                        console.log('🔐 Création d\'un nouveau compte Supabase...');
+                        
+                        try {
+                            const createUserResponse = await fetch(`${process.env.URL || 'https://bureaudesbureaux.com'}/.netlify/functions/createSupabaseUser`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    email: metadata.customer_email,
+                                    password: metadata.customer_password,
+                                    firstName: firstName,
+                                    lastName: lastName,
+                                    phone: metadata.customer_phone || null
+                                })
+                            });
+
+                            if (createUserResponse.ok) {
+                                const userData = await createUserResponse.json();
+                                webUserId = userData.userId;
+                                console.log('✅ Nouveau compte Supabase créé avec l\'ID:', webUserId);
+                            } else {
+                                const errorText = await createUserResponse.text();
+                                console.error('❌ Erreur lors de la création du compte Supabase:', errorText);
+                                throw new Error(`Erreur création compte: ${errorText}`);
+                            }
+                        } catch (error) {
+                            console.error('❌ Erreur lors de l\'appel createSupabaseUser:', error);
+                            throw new Error(`Erreur création compte: ${error.message}`);
                         }
-                    } catch (error) {
-                        console.error('❌ Erreur lors de l\'appel createSupabaseUser:', error);
-                        throw new Error(`Erreur création compte: ${error.message}`);
                     }
 
                     // Créer les tickets (un ticket par quantité)

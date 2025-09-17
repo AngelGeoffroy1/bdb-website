@@ -100,36 +100,44 @@
             margin-bottom: 0.5rem;
         }
 
-        .share-button {
-            background: rgba(218, 252, 59, 0.1);
-            border: 1px solid var(--accent-color);
-            border-radius: 12px;
-            padding: 0.75rem 1.5rem;
-            color: var(--accent-color);
-            font-weight: 500;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
+        .event-price-container {
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .share-button:hover {
-            background: rgba(218, 252, 59, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .share-button i {
-            font-size: 1rem;
+            justify-content: space-between;
+            margin-bottom: 1rem;
         }
 
         .event-price {
             font-size: 1.5rem;
             font-weight: bold;
             color: var(--accent-color);
-            margin-bottom: 1rem;
+            margin: 0;
+        }
+
+        .share-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .share-button:hover {
+            background: rgba(218, 252, 59, 0.1);
+            border-color: rgba(218, 252, 59, 0.3);
+            color: var(--accent-color);
+        }
+
+        .share-button i {
+            font-size: 0.9rem;
         }
 
         .payment-form h3 {
@@ -696,13 +704,44 @@
                         <i class="fas fa-users"></i>
                         <span>${eventData.association_name || 'Association'}</span>
                     </div>
-                    <button class="share-button" onclick="shareEvent()">
+                </div>
+                <div class="event-price-container">
+                    <div class="event-price">${eventData.price}€</div>
+                    <button class="share-button" onclick="shareEvent()" title="Partager cet événement">
                         <i class="fas fa-share-alt"></i>
-                        Partager cet événement
                     </button>
                 </div>
-                <div class="event-price">${eventData.price}€</div>
             `;
+        }
+
+        // Fonction pour partager l'événement
+        async function shareEvent() {
+            if (!eventData) return;
+
+            const shareData = {
+                title: eventData.name || 'Événement BDB',
+                text: `Découvrez cet événement étudiant : ${eventData.name || 'Événement'} - ${eventData.date ? new Date(eventData.date).toLocaleDateString('fr-FR') : ''}`,
+                url: window.location.href
+            };
+
+            try {
+                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                    await navigator.share(shareData);
+                } else {
+                    // Fallback : copier le lien dans le presse-papiers
+                    await navigator.clipboard.writeText(window.location.href);
+                    showNotification('Lien copié dans le presse-papiers !', 'success');
+                }
+            } catch (error) {
+                console.error('Erreur lors du partage:', error);
+                // Fallback : copier le lien
+                try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    showNotification('Lien copié dans le presse-papiers !', 'success');
+                } catch (clipboardError) {
+                    showNotification('Erreur lors du partage', 'error');
+                }
+            }
         }
 
         // Fonction pour mettre à jour le détail des prix
@@ -960,32 +999,6 @@
             };
             
             strengthText.textContent = strengthLabels[strength];
-        }
-
-        // Fonction de partage
-        function shareEvent() {
-            if (navigator.share) {
-                // Utiliser l'API Web Share si disponible (mobile)
-                navigator.share({
-                    title: eventData?.name || 'Événement BDB',
-                    text: `Découvrez cet événement étudiant: ${eventData?.name || 'Événement'} par ${eventData?.association_name || 'Association'}`,
-                    url: window.location.href
-                }).catch(console.error);
-            } else {
-                // Fallback: copier le lien dans le presse-papiers
-                navigator.clipboard.writeText(window.location.href).then(() => {
-                    showNotification('Lien copié dans le presse-papiers !', 'success');
-                }).catch(() => {
-                    // Fallback pour les navigateurs plus anciens
-                    const textArea = document.createElement('textarea');
-                    textArea.value = window.location.href;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    showNotification('Lien copié dans le presse-papiers !', 'success');
-                });
-            }
         }
 
         // Initialisation
