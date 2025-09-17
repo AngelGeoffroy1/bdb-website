@@ -55,11 +55,11 @@ exports.handler = async (event, context) => {
 
         console.log('🔍 Vérification de l\'existence de l\'utilisateur:', email);
 
-        // Vérifier si l'utilisateur existe dans la table users
+        // Vérifier si l'utilisateur existe dans la table users (insensible à la casse)
         const { data: userData, error: userError } = await supabase
             .from('users')
             .select('id, email, first_name, last_name')
-            .eq('email', email)
+            .ilike('email', email)
             .single();
 
         if (userError && userError.code !== 'PGRST116') {
