@@ -900,7 +900,9 @@
             strengthFill.classList.remove('weak', 'fair', 'good', 'strong');
             
             if (password.length === 0) {
+                console.log('🔐 Mot de passe vide - remise à zéro de la barre');
                 strengthFill.style.width = '0%';
+                strengthFill.classList.remove('weak', 'fair', 'good', 'strong');
                 strengthText.textContent = 'Force du mot de passe';
                 return;
             }
