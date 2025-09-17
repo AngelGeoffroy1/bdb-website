@@ -71,7 +71,7 @@ exports.handler = async (event) => {
                     for (let i = 0; i < quantity; i++) {
                         const ticketData = {
                             event_id: metadata.event_id,
-                            user_id: null, // Pas d'utilisateur connecté pour les paiements web
+                            user_id: '00000000-0000-0000-0000-000000000000', // UUID par défaut pour les achats web
                             quantity: 1, // Chaque ticket représente 1 place
                             total_amount: totalAmount / quantity, // Montant unitaire
                             customer_first_name: firstName,
@@ -131,6 +131,32 @@ exports.handler = async (event) => {
                     }
 
                     console.log('🎉 Paiement web traité avec succès');
+
+                    // Envoyer l'email de confirmation avec les QR codes
+                    try {
+                        console.log('📧 Envoi de l\'email de confirmation...');
+                        
+                        const emailResponse = await fetch(`${process.env.URL || 'https://bureaudesbureaux.com'}/.netlify/functions/sendTicketEmail`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                sessionId: paymentIntent.id,
+                                customerEmail: metadata.customer_email,
+                                eventId: metadata.event_id
+                            })
+                        });
+
+                        if (emailResponse.ok) {
+                            console.log('✅ Email de confirmation envoyé avec succès');
+                        } else {
+                            console.error('❌ Erreur lors de l\'envoi de l\'email:', await emailResponse.text());
+                        }
+                    } catch (emailError) {
+                        console.error('❌ Erreur lors de l\'envoi de l\'email:', emailError);
+                        // Ne pas faire échouer le webhook pour une erreur d'email
+                    }
 
                 } catch (error) {
                     console.error('❌ Erreur lors de la création du ticket:', error);
