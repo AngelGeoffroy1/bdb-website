@@ -895,6 +895,7 @@
             }
             
             const strength = calculatePasswordStrength(password);
+            console.log('🔐 Force calculée:', strength, 'pour', password.length, 'caractères');
             
             // Retirer toutes les classes de force
             strengthFill.classList.remove('weak', 'fair', 'good', 'strong');
@@ -908,6 +909,16 @@
             }
             
             strengthFill.classList.add(strength);
+            
+            // Forcer la mise à jour de la largeur selon la classe
+            const widthMap = {
+                weak: '25%',
+                fair: '50%',
+                good: '75%',
+                strong: '100%'
+            };
+            
+            strengthFill.style.width = widthMap[strength] || '0%';
             
             const strengthLabels = {
                 weak: 'Faible',
