@@ -223,7 +223,9 @@
             }
 
             .auth-card {
-                padding: 2rem;
+                padding: 1.5rem;
+                margin: 1rem;
+                border-radius: 15px;
             }
 
             .form-row {
@@ -232,6 +234,83 @@
 
             .auth-title {
                 font-size: 1.5rem;
+            }
+
+            .auth-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .form-input {
+                padding: 0.875rem;
+                font-size: 16px; /* Évite le zoom sur iOS */
+            }
+
+            .auth-button {
+                padding: 0.875rem;
+                font-size: 0.95rem;
+            }
+
+            .auth-switch-button {
+                padding: 0.625rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .password-toggle {
+                right: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 0.5rem;
+            }
+
+            .auth-card {
+                padding: 1.25rem;
+                margin: 0.5rem;
+                border-radius: 12px;
+            }
+
+            .auth-title {
+                font-size: 1.25rem;
+            }
+
+            .auth-subtitle {
+                font-size: 0.85rem;
+            }
+
+            .form-label {
+                font-size: 0.85rem;
+            }
+
+            .form-input {
+                padding: 0.75rem;
+                border-radius: 8px;
+            }
+
+            .auth-button {
+                padding: 0.75rem;
+                border-radius: 8px;
+                font-size: 0.9rem;
+            }
+
+            .auth-switch-button {
+                padding: 0.5rem 1.25rem;
+                font-size: 0.85rem;
+                border-radius: 20px;
+            }
+
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            .error-message,
+            .success-message {
+                padding: 0.75rem;
+                font-size: 0.85rem;
+                border-radius: 6px;
             }
         }
     </style>

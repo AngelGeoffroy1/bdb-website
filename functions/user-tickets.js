@@ -84,7 +84,7 @@ exports.handler = async (event, context) => {
                     date,
                     location,
                     price,
-                    cover_image_url
+                    image_url
                 )
             `)
             .eq('user_id', user.id)
@@ -115,7 +115,7 @@ exports.handler = async (event, context) => {
             event_date: ticket.events?.date,
             event_location: ticket.events?.location,
             event_price: ticket.events?.price,
-            event_image: ticket.events?.cover_image_url
+            event_image: ticket.events?.image_url
         }));
 
         return {
