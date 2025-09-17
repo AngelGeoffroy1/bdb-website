@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - BDB</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Connectez-vous à votre compte BDB pour accéder à vos événements et billets.">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/Asset/favicon.png">
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .login-container {
+            background: rgba(45, 45, 45, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-color), #b8d633);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .welcome-text {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.5rem;
+        }
+
+        .main-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .skip-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .skip-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(218, 252, 59, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .password-field {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            color: var(--accent-color);
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+
+        .forgot-password a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .forgot-password a:hover {
+            color: var(--accent-color);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-color), #b8d633);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(218, 252, 59, 0.3);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            position: relative;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider span {
+            background: rgba(45, 45, 45, 0.95);
+            padding: 0 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .social-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .social-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .social-btn i {
+            font-size: 1.2rem;
+        }
+
+        .signup-section {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .signup-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .signup-btn {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: var(--transition);
+        }
+
+        .signup-btn:hover {
+            color: #b8d633;
+        }
+
+        .signup-form {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .signup-form.show {
+            display: block;
+        }
+
+        .additional-fields {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .additional-fields.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: #4CAF50;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(218, 252, 59, 0.3);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .social-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <button class="skip-btn" onclick="window.location.href='index.html'">Skip</button>
+        
+        <div class="header-section">
+            <div class="logo-icon">
+                <i class="fas fa-smile"></i>
+            </div>
+            <div class="welcome-text">Hey ! Bienvenue sur BDB</div>
+            <h1 class="main-title">Connectez-vous à votre compte !</h1>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="authForm" class="form-section">
+            <!-- Mode connexion -->
+            <div id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email ou nom d'utilisateur</label>
+                    <input type="email" id="email" class="form-input" placeholder="votre@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Mot de passe</label>
+                    <div class="password-field">
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="#" onclick="showForgotPassword()">Mot de passe oublié ?</a>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    Se connecter
+                </button>
+            </div>
+
+            <!-- Mode inscription -->
+            <div id="signupForm" class="signup-form">
+                <div class="form-group">
+                    <label class="form-label" for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" class="form-input" placeholder="votre@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="signupPassword">Mot de passe</label>
+                    <div class="password-field">
+                        <input type="password" id="signupPassword" class="form-input" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" onclick="toggleSignupPassword()">
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="additional-fields" id="additionalFields">
+                    <div class="form-group">
+                        <label class="form-label" for="firstName">Prénom</label>
+                        <input type="text" id="firstName" class="form-input" placeholder="Votre prénom" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="lastName">Nom</label>
+                        <input type="text" id="lastName" class="form-input" placeholder="Votre nom" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Téléphone</label>
+                        <input type="tel" id="phone" class="form-input" placeholder="06 12 34 56 78">
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn" id="signupBtn">
+                    S'inscrire
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+            </div>
+        </form>
+
+        <div class="divider">
+            <span>Ou</span>
+        </div>
+
+        <div class="social-buttons">
+            <a href="#" class="social-btn" onclick="signInWithGoogle()">
+                <i class="fab fa-google"></i>
+                <span>Google</span>
+            </a>
+            <a href="#" class="social-btn" onclick="signInWithApple()">
+                <i class="fab fa-apple"></i>
+                <span>Apple</span>
+            </a>
+        </div>
+
+        <div class="signup-section">
+            <div class="signup-text" id="signupText">Vous n'avez pas de compte ?</div>
+            <button class="signup-btn" id="signupToggleBtn" onclick="toggleSignup()">
+                S'inscrire
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let isSignupMode = false;
+        let isPasswordVisible = false;
+        let isSignupPasswordVisible = false;
+
+        // Toggle entre connexion et inscription
+        function toggleSignup() {
+            isSignupMode = !isSignupMode;
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const signupToggleBtn = document.getElementById('signupToggleBtn');
+            const signupText = document.getElementById('signupText');
+
+            if (isSignupMode) {
+                loginForm.style.display = 'none';
+                signupForm.classList.add('show');
+                signupToggleBtn.textContent = 'Se connecter';
+                signupText.textContent = 'Vous avez déjà un compte ?';
+                
+                // Afficher les champs supplémentaires après un délai
+                setTimeout(() => {
+                    document.getElementById('additionalFields').classList.add('show');
+                }, 300);
+            } else {
+                signupForm.classList.remove('show');
+                loginForm.style.display = 'block';
+                signupToggleBtn.textContent = 'S\'inscrire';
+                signupText.textContent = 'Vous n\'avez pas de compte ?';
+                document.getElementById('additionalFields').classList.remove('show');
+            }
+            
+            clearMessages();
+        }
+
+        // Toggle visibilité mot de passe
+        function togglePassword() {
+            const passwordField = document.getElementById('password');
+            const toggleBtn = passwordField.nextElementSibling.querySelector('i');
+            
+            isPasswordVisible = !isPasswordVisible;
+            passwordField.type = isPasswordVisible ? 'text' : 'password';
+            toggleBtn.className = isPasswordVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
+        }
+
+        function toggleSignupPassword() {
+            const passwordField = document.getElementById('signupPassword');
+            const toggleBtn = passwordField.nextElementSibling.querySelector('i');
+            
+            isSignupPasswordVisible = !isSignupPasswordVisible;
+            passwordField.type = isSignupPasswordVisible ? 'text' : 'password';
+            toggleBtn.className = isSignupPasswordVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
+        }
+
+        // Gestion du formulaire
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            const loginBtn = document.getElementById('loginBtn');
+            const signupBtn = document.getElementById('signupBtn');
+            
+            // Afficher le loading
+            loading.style.display = 'block';
+            loginBtn.disabled = true;
+            signupBtn.disabled = true;
+            
+            try {
+                if (isSignupMode) {
+                    await handleSignup();
+                } else {
+                    await handleLogin();
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('Une erreur est survenue. Veuillez réessayer.');
+            } finally {
+                loading.style.display = 'none';
+                loginBtn.disabled = false;
+                signupBtn.disabled = false;
+            }
+        });
+
+        // Gestion de la connexion
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Stocker le token d'authentification
+                if (result.session && result.session.access_token) {
+                    localStorage.setItem('authToken', result.session.access_token);
+                    localStorage.setItem('refreshToken', result.session.refresh_token);
+                    localStorage.setItem('userData', JSON.stringify(result.user));
+                }
+                
+                showSuccess('Connexion réussie ! Redirection...');
+                setTimeout(() => {
+                    window.location.href = 'account.html';
+                }, 1500);
+            } else {
+                showError(result.error || 'Erreur de connexion');
+            }
+        }
+
+        // Gestion de l'inscription
+        async function handleSignup() {
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const phone = document.getElementById('phone').value;
+
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    password, 
+                    firstName, 
+                    lastName, 
+                    phone 
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Stocker le token d'authentification si disponible
+                if (result.session && result.session.access_token) {
+                    localStorage.setItem('authToken', result.session.access_token);
+                    localStorage.setItem('refreshToken', result.session.refresh_token);
+                    localStorage.setItem('userData', JSON.stringify(result.user));
+                }
+                
+                showSuccess(result.message || 'Inscription réussie ! Redirection...');
+                setTimeout(() => {
+                    window.location.href = 'account.html';
+                }, 1500);
+            } else {
+                showError(result.error || 'Erreur d\'inscription');
+            }
+        }
+
+        // Fonctions d'affichage des messages
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            successDiv.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Fonctions sociales (placeholder)
+        function signInWithGoogle() {
+            showError('Connexion Google bientôt disponible');
+        }
+
+        function signInWithApple() {
+            showError('Connexion Apple bientôt disponible');
+        }
+
+        function showForgotPassword() {
+            showError('Récupération de mot de passe bientôt disponible');
+        }
+
+        // Vérifier si l'utilisateur est déjà connecté
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+        });
+
+        // Vérifier le statut d'authentification
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    // L'utilisateur est connecté, rediriger vers account
+                    window.location.href = 'account.html';
+                }
+            } catch (error) {
+                // Token invalide, le supprimer
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('userData');
+            }
+        }
+    </script>
+</body>
+</html>
