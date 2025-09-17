@@ -7,7 +7,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event) => {
-    console.log('🧪 Fonction testEmail appelée');
+    console.log('📧 Fonction sendTicketEmail appelée');
 
     // Vérifier la méthode HTTP
     if (event.httpMethod !== 'POST') {
@@ -37,10 +37,10 @@ exports.handler = async (event) => {
     }
 
     try {
-        const { testEmail, eventId } = JSON.parse(event.body);
+        const { sessionId, customerEmail, eventId } = JSON.parse(event.body);
 
-        if (!testEmail) {
-            console.log('❌ Email de test manquant');
+        if (!sessionId || !customerEmail || !eventId) {
+            console.log('❌ Paramètres manquants');
             return {
                 statusCode: 400,
                 headers: {
@@ -48,36 +48,42 @@ exports.handler = async (event) => {
                     'Access-Control-Allow-Headers': 'Content-Type',
                     'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
-                body: JSON.stringify({ error: 'Email de test requis' })
+                body: JSON.stringify({ error: 'Paramètres manquants' })
             };
         }
 
-        console.log('📧 Test d\'envoi email vers:', testEmail);
+        console.log('📝 Envoi email pour:', { sessionId, customerEmail, eventId });
 
-        // Récupérer un événement existant ou créer des données de test
-        let eventData;
-        if (eventId) {
-            const { data, error } = await supabase
-                .from('events')
-                .select(`
-                    id, name, description, date, location, price, image_url,
-                    associations (name, profile_image_url)
-                `)
-                .eq('id', eventId)
-                .single();
+        // Récupérer les détails de l'événement
+        const { data: eventData, error: eventError } = await supabase
+            .from('events')
+            .select(`
+                id, name, description, date, location, price, image_url,
+                associations (name, profile_image_url)
+            `)
+            .eq('id', eventId)
+            .single();
 
-            if (error || !data) {
-                console.log('⚠️ Événement non trouvé, utilisation de données de test');
-                eventData = createTestEventData();
-            } else {
-                eventData = data;
-            }
-        } else {
-            eventData = createTestEventData();
+        if (eventError || !eventData) {
+            console.error('❌ Erreur récupération événement:', eventError);
+            throw new Error('Événement non trouvé');
         }
 
-        // Créer des tickets de test
-        const ticketsData = createTestTicketsData();
+        // Récupérer les tickets créés
+        const { data: ticketsData, error: ticketsError } = await supabase
+            .from('tickets')
+            .select('ticket_code, quantity, total_amount, customer_first_name, customer_last_name, created_at')
+            .eq('customer_email', customerEmail)
+            .eq('event_id', eventId)
+            .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Tickets des 5 dernières minutes
+            .order('created_at', { ascending: false });
+
+        if (ticketsError || !ticketsData || ticketsData.length === 0) {
+            console.error('❌ Erreur récupération tickets:', ticketsError);
+            throw new Error('Tickets non trouvés');
+        }
+
+        console.log('✅ Tickets trouvés:', ticketsData.length);
 
         // Configuration du transporteur SMTP OVH
         const transporter = nodemailer.createTransport({
@@ -85,8 +91,8 @@ exports.handler = async (event) => {
             port: 587,
             secure: false, // TLS
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD
+                user: process.env.EMAIL_USER,     // contactus@bdbapp.fr
+                pass: process.env.EMAIL_PASSWORD  // Votre mot de passe OVH
             },
             tls: {
                 rejectUnauthorized: false
@@ -94,19 +100,19 @@ exports.handler = async (event) => {
         });
 
         // Générer le template HTML de l'email
-        const emailHtml = generateEmailTemplate(eventData, ticketsData, testEmail);
+        const emailHtml = generateEmailTemplate(eventData, ticketsData, customerEmail);
 
-        // Envoyer l'email de test
+        // Envoyer l'email
         const mailOptions = {
             from: `"BDB - Le Bureau des Bureaux" <${process.env.EMAIL_USER}>`,
-            to: testEmail,
-            subject: `🧪 [TEST] Votre ticket pour ${eventData.name} - BDB`,
+            to: customerEmail,
+            subject: `🎫 Votre ticket pour ${eventData.name} - BDB`,
             html: emailHtml,
-            text: generateEmailText(eventData, ticketsData, testEmail)
+            text: generateEmailText(eventData, ticketsData, customerEmail)
         };
 
         const result = await transporter.sendMail(mailOptions);
-        console.log('✅ Email de test envoyé avec succès:', result.messageId);
+        console.log('✅ Email envoyé avec succès:', result.messageId);
 
         return {
             statusCode: 200,
@@ -119,14 +125,12 @@ exports.handler = async (event) => {
             body: JSON.stringify({
                 success: true,
                 messageId: result.messageId,
-                message: 'Email de test envoyé avec succès',
-                eventUsed: eventData.name,
-                ticketsCount: ticketsData.length
+                message: 'Email envoyé avec succès'
             })
         };
 
     } catch (error) {
-        console.error('❌ Erreur lors de l\'envoi de l\'email de test:', error);
+        console.error('❌ Erreur lors de l\'envoi de l\'email:', error);
         return {
             statusCode: 500,
             headers: {
@@ -135,52 +139,14 @@ exports.handler = async (event) => {
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
             body: JSON.stringify({
-                error: 'Erreur lors de l\'envoi de l\'email de test',
+                error: 'Erreur lors de l\'envoi de l\'email',
                 details: error.message
             })
         };
     }
 };
 
-// Fonction pour créer des données d'événement de test
-function createTestEventData() {
-    return {
-        id: 'test-event-id',
-        name: 'Test Event - Soirée Étudiante',
-        description: 'Un événement de test pour valider le système d\'email de BDB. Venez découvrir l\'ambiance étudiante de Bordeaux !',
-        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Dans 7 jours
-        location: 'Bar des Étudiants, 33000 Bordeaux',
-        price: 5.00,
-        image_url: 'Asset/EventPhare 01.png',
-        associations: {
-            name: 'Association Test BDB'
-        }
-    };
-}
-
-// Fonction pour créer des tickets de test
-function createTestTicketsData() {
-    return [
-        {
-            ticket_code: 'test-ticket-001-' + Math.random().toString(36).substr(2, 9),
-            quantity: 1,
-            total_amount: 5.00,
-            customer_first_name: 'Test',
-            customer_last_name: 'Client',
-            created_at: new Date().toISOString()
-        },
-        {
-            ticket_code: 'test-ticket-002-' + Math.random().toString(36).substr(2, 9),
-            quantity: 1,
-            total_amount: 5.00,
-            customer_first_name: 'Test',
-            customer_last_name: 'Client',
-            created_at: new Date().toISOString()
-        }
-    ];
-}
-
-// Fonction pour générer le template HTML de l'email (reprise de sendTicketEmail.js)
+// Fonction pour générer le template HTML de l'email
 function generateEmailTemplate(eventData, ticketsData, customerEmail) {
     const eventDate = new Date(eventData.date);
     const formattedDate = eventDate.toLocaleDateString('fr-FR', {
@@ -193,14 +159,14 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
     });
 
     const totalAmount = ticketsData.reduce((sum, ticket) => sum + parseFloat(ticket.total_amount), 0);
-    const customerName = ticketsData[0] ? `${ticketsData[0].customer_first_name} ${ticketsData[0].customer_last_name}` : 'Test Client';
+    const customerName = ticketsData[0] ? `${ticketsData[0].customer_first_name} ${ticketsData[0].customer_last_name}` : 'Client';
 
     // Générer les QR codes
     const qrCodesHtml = ticketsData.map((ticket, index) => {
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(ticket.ticket_code)}`;
         return `
             <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;">
-                <h3 style="color: #DAFC3B; margin-bottom: 15px;">Ticket ${index + 1} [TEST]</h3>
+                <h3 style="color: #DAFC3B; margin-bottom: 15px;">Ticket ${index + 1}</h3>
                 <img src="${qrCodeUrl}" alt="QR Code Ticket ${index + 1}" style="max-width: 200px; height: 200px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                 <p style="margin-top: 10px; font-family: monospace; color: #666; font-size: 12px; word-break: break-all;">${ticket.ticket_code}</p>
             </div>
@@ -213,7 +179,7 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Votre ticket BDB [TEST]</title>
+            <title>Votre ticket BDB</title>
             <style>
                 body {
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -222,7 +188,7 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
                     max-width: 600px;
                     margin: 0 auto;
                     padding: 20px;
-                    background-color: #f4f4f4;
+                    background-color: #050505;
                 }
                 .container {
                     background: white;
@@ -240,14 +206,6 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
                     font-size: 24px;
                     font-weight: bold;
                     margin-bottom: 10px;
-                }
-                .test-banner {
-                    background: #ff6b6b;
-                    color: white;
-                    padding: 10px;
-                    text-align: center;
-                    font-weight: bold;
-                    font-size: 14px;
                 }
                 .content {
                     padding: 30px;
@@ -300,13 +258,9 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
         </head>
         <body style="background-color: #050505;">
             <div class="container">
-                <div class="test-banner">
-                    🧪 EMAIL DE TEST - Ceci est un email de test du système BDB
-                </div>
-                
                 <div class="header">
                     <div class="logo">🎫 BDB</div>
-                    <h1>Votre ticket est prêt ! [TEST]</h1>
+                    <h1>Votre ticket est prêt !</h1>
                     <p>Merci pour votre achat sur BDB - Le Bureau des Bureaux</p>
                 </div>
                 
@@ -316,7 +270,6 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
                         <p><strong>Nom :</strong> ${customerName}</p>
                         <p><strong>Email :</strong> ${customerEmail}</p>
                         <p><strong>Date d'achat :</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
-                        <p><strong>Type :</strong> <span style="color: #ff6b6b; font-weight: bold;">EMAIL DE TEST</span></p>
                     </div>
 
                     <div class="event-info">
@@ -330,7 +283,7 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
                     </div>
 
                     <div class="qr-section">
-                        <h2>📱 Vos QR Codes [TEST]</h2>
+                        <h2>📱 Vos QR Codes</h2>
                         <p>Présentez ces QR codes à l'entrée de l'événement :</p>
                         ${qrCodesHtml}
                     </div>
@@ -345,8 +298,8 @@ function generateEmailTemplate(eventData, ticketsData, customerEmail) {
                     <p>contactus@bdbapp.fr</p>
                     <p>Bordeaux, France</p>
                     <p style="margin-top: 15px; font-size: 12px; opacity: 0.8;">
-                        🧪 Cet email de test a été envoyé pour valider le système d'email BDB. 
-                        Les QR codes sont fonctionnels mais ne correspondent pas à de vrais tickets.
+                        Cet email a été envoyé automatiquement suite à votre achat. 
+                        Gardez précieusement vos QR codes pour l'entrée à l'événement.
                     </p>
                 </div>
             </div>
@@ -368,16 +321,16 @@ function generateEmailText(eventData, ticketsData, customerEmail) {
     });
 
     const totalAmount = ticketsData.reduce((sum, ticket) => sum + parseFloat(ticket.total_amount), 0);
-    const customerName = ticketsData[0] ? `${ticketsData[0].customer_first_name} ${ticketsData[0].customer_last_name}` : 'Test Client';
+    const customerName = ticketsData[0] ? `${ticketsData[0].customer_first_name} ${ticketsData[0].customer_last_name}` : 'Client';
 
     return `
-🧪 EMAIL DE TEST - BDB SYSTÈME DE TICKETS
+VOTRE TICKET BDB EST PRÊT !
 
 Bonjour ${customerName},
 
-Ceci est un email de test du système d'email BDB !
+Merci pour votre achat sur BDB - Le Bureau des Bureaux !
 
-DÉTAILS DE L'ÉVÉNEMENT [TEST] :
+DÉTAILS DE L'ÉVÉNEMENT :
 - Événement : ${eventData.name}
 - Date : ${formattedDate}
 - Lieu : ${eventData.location}
@@ -385,19 +338,19 @@ DÉTAILS DE L'ÉVÉNEMENT [TEST] :
 - Nombre de tickets : ${ticketsData.length}
 - Prix total : ${totalAmount.toFixed(2)}€
 
-VOS CODES DE TICKETS [TEST] :
+VOS CODES DE TICKETS :
 ${ticketsData.map((ticket, index) => `Ticket ${index + 1}: ${ticket.ticket_code}`).join('\n')}
 
 IMPORTANT : 
-🧪 Ceci est un email de test - les tickets ne sont pas valides
-- Les QR codes sont fonctionnels mais ne correspondent pas à de vrais événements
-- Utilisez cette fonction pour tester le système d'email
+- Présentez ces codes à l'entrée de l'événement
+- Gardez cet email précieusement
+- En cas de problème, contactez-nous à contactus@bdbapp.fr
 
 BDB - Le Bureau des Bureaux
 Bordeaux, France
 contactus@bdbapp.fr
 
 ---
-Cet email de test a été envoyé pour valider le système d'email BDB.
+Cet email a été envoyé automatiquement suite à votre achat.
     `.trim();
 }
