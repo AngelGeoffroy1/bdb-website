@@ -30,6 +30,13 @@
             padding-top: 2rem;
         }
 
+        /* Fix pour éviter la superposition avec le header fixe */
+        @media (max-width: 768px) {
+            .account-header {
+                padding-top: 6rem;
+            }
+        }
+
         .account-title {
             font-size: 2.5rem;
             font-weight: bold;

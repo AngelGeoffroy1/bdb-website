@@ -100,6 +100,31 @@
             margin-bottom: 0.5rem;
         }
 
+        .share-button {
+            background: rgba(218, 252, 59, 0.1);
+            border: 1px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            color: var(--accent-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .share-button:hover {
+            background: rgba(218, 252, 59, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .share-button i {
+            font-size: 1rem;
+        }
+
         .event-price {
             font-size: 1.5rem;
             font-weight: bold;
@@ -671,6 +696,10 @@
                         <i class="fas fa-users"></i>
                         <span>${eventData.association_name || 'Association'}</span>
                     </div>
+                    <button class="share-button" onclick="shareEvent()">
+                        <i class="fas fa-share-alt"></i>
+                        Partager cet événement
+                    </button>
                 </div>
                 <div class="event-price">${eventData.price}€</div>
             `;
@@ -931,6 +960,32 @@
             };
             
             strengthText.textContent = strengthLabels[strength];
+        }
+
+        // Fonction de partage
+        function shareEvent() {
+            if (navigator.share) {
+                // Utiliser l'API Web Share si disponible (mobile)
+                navigator.share({
+                    title: eventData?.name || 'Événement BDB',
+                    text: `Découvrez cet événement étudiant: ${eventData?.name || 'Événement'} par ${eventData?.association_name || 'Association'}`,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                // Fallback: copier le lien dans le presse-papiers
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showNotification('Lien copié dans le presse-papiers !', 'success');
+                }).catch(() => {
+                    // Fallback pour les navigateurs plus anciens
+                    const textArea = document.createElement('textarea');
+                    textArea.value = window.location.href;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showNotification('Lien copié dans le presse-papiers !', 'success');
+                });
+            }
         }
 
         // Initialisation
