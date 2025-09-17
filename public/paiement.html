@@ -21,409 +21,243 @@
     <!-- Styles spécifiques au paiement -->
     <style>
         .payment-container {
-            max-width: 1100px;
-            margin: 140px auto 80px;
+            max-width: 600px;
+            margin: 120px auto 60px;
             padding: 0 2rem;
         }
 
         .payment-header {
             text-align: center;
-            margin-bottom: 2.5rem;
-            animation: fadeSlide 0.6s ease forwards;
+            margin-bottom: 3rem;
         }
 
         .payment-header h1 {
-            font-size: 2.6rem;
+            font-size: 2.5rem;
             color: var(--accent-color);
-            margin-bottom: 0.8rem;
-            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
         }
 
         .payment-header p {
-            color: rgba(255, 255, 255, 0.75);
-            font-size: 1.05rem;
-        }
-
-        .feedback-banner {
-            display: none;
-            margin-bottom: 1.5rem;
-            padding: 1rem 1.25rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(244, 67, 54, 0.08);
-            color: #ff8080;
-            font-weight: 500;
-            backdrop-filter: blur(6px);
-            animation: fadeSlide 0.4s ease;
-        }
-
-        .feedback-banner.success {
-            background: rgba(76, 175, 80, 0.1);
-            color: #8be28d;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
         }
 
         .payment-card {
-            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(218,252,59,0.1);
+            padding: 2rem;
             display: grid;
-            grid-template-columns: minmax(280px, 360px) 1fr;
-            background: rgba(12, 12, 12, 0.85);
-            border: 1px solid rgba(218,252,59,0.12);
-            border-radius: 32px;
-            box-shadow: 0 32px 70px rgba(0, 0, 0, 0.55);
-            overflow: hidden;
-            backdrop-filter: blur(14px);
-            opacity: 0;
-            transform: translateY(24px) scale(0.98);
-            animation: cardEnter 0.6s ease forwards;
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
 
-        .payment-card::before {
-            content: '';
-            position: absolute;
-            inset: -40% -45% auto;
-            height: 70%;
-            background: radial-gradient(circle at top left, rgba(218,252,59,0.55), transparent 55%);
-            opacity: 0.35;
-            pointer-events: none;
+        .event-summary,
+        .payment-form {
+            background: transparent;
+            padding: 0;
+            border: none;
         }
 
-        .card-media {
-            position: relative;
-            overflow: hidden;
-            min-height: 100%;
-            z-index: 1;
-            background: rgba(0,0,0,0.6);
-        }
-
-        .card-media::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0) 20%, rgba(0,0,0,0.65) 100%);
-            pointer-events: none;
+        .event-summary h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
         }
 
         .event-image {
             width: 100%;
-            height: 100%;
+            height: 150px;
             background-size: cover;
             background-position: center;
-            transition: transform 6s ease;
-        }
-
-        .payment-card:hover .event-image {
-            transform: scale(1.08);
-        }
-
-        .media-content {
-            position: absolute;
-            inset: auto 24px 28px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            z-index: 2;
-        }
-
-        .event-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0.4rem 0.9rem;
-            border-radius: 999px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(218,252,59,0.35);
-            color: var(--accent-color);
-            font-size: 0.8rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .media-title {
-            font-size: 1.9rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.1;
-            text-shadow: 0 8px 20px rgba(0,0,0,0.55);
-        }
-
-        .media-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .media-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0.55rem 0.9rem;
-            border-radius: 16px;
-            background: rgba(0,0,0,0.55);
-            color: rgba(255,255,255,0.85);
-            font-size: 0.85rem;
-            backdrop-filter: blur(6px);
-        }
-
-        .media-pill i {
-            color: var(--accent-color);
-        }
-
-        .card-content {
-            position: relative;
-            z-index: 2;
-            padding: 36px 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 28px;
-        }
-
-        .event-overview {
-            display: grid;
-            gap: 20px;
+            border-radius: 10px;
+            margin-bottom: 1rem;
         }
 
         .event-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -0.02em;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
         }
 
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 14px;
+        .event-details {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
         }
 
-        .meta-item {
+        .event-detail {
             display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 14px 16px;
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
-        .meta-item i {
+        .event-price {
+            font-size: 1.5rem;
+            font-weight: bold;
             color: var(--accent-color);
-            margin-top: 3px;
+            margin-bottom: 1rem;
         }
 
-        .meta-item:hover {
-            transform: translateY(-2px);
-            border-color: rgba(218,252,59,0.35);
-            background: rgba(255, 255, 255, 0.05);
+        .payment-form h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
         }
 
-        .meta-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: rgba(255, 255, 255, 0.45);
+        .form-group {
+            margin: 0;
         }
 
-        .meta-value {
-            color: rgba(255, 255, 255, 0.88);
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
             font-weight: 500;
-        }
-
-        .event-description {
-            color: rgba(255, 255, 255, 0.72);
-            line-height: 1.55;
         }
 
         #payment-form {
             display: grid;
-            gap: 20px;
-        }
-
-        .quantity-selector {
-            display: inline-flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.6rem 0.8rem;
-            border-radius: 16px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.05);
-            width: fit-content;
-        }
-
-        .quantity-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            border: 1px solid rgba(218,252,59,0.45);
-            background: rgba(255,255,255,0.02);
-            color: var(--accent-color);
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
-        }
-
-        .quantity-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(218,252,59,0.15);
-            background: rgba(218,252,59,0.12);
-        }
-
-        .quantity-btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-        }
-
-        .quantity-input {
-            width: 64px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-            border: none;
-            background: transparent;
-            color: rgba(255,255,255,0.85);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-        }
-
-        .form-group label {
-            color: rgba(255, 255, 255, 0.65);
-            font-size: 0.9rem;
-            font-weight: 500;
+            gap: 1.5rem;
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 0.95rem 1rem;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.03);
-            color: rgba(255,255,255,0.88);
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(218,252,59,0.2);
+            border-radius: 10px;
+            color: var(--text-color);
             font-size: 1rem;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            transition: var(--transition);
         }
 
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: rgba(218,252,59,0.55);
-            box-shadow: 0 0 0 6px rgba(218,252,59,0.12);
-            background: rgba(255,255,255,0.06);
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .quantity-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent-color);
+            background: transparent;
+            color: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+
+        .quantity-btn:hover {
+            background: var(--accent-color);
+            color: var(--background-color);
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
         }
 
         .price-breakdown {
-            padding: 1.2rem 1.4rem;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            display: grid;
-            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 1.5rem;
         }
 
         .price-line {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            color: rgba(255,255,255,0.78);
-            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
         }
 
         .price-line.total {
-            padding-top: 0.6rem;
-            margin-top: 0.3rem;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #fff;
+            border-top: 1px solid rgba(218,252,59,0.2);
+            padding-top: 0.5rem;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
         }
 
         .pay-button {
             width: 100%;
-            padding: 1.1rem 1.3rem;
-            border-radius: 20px;
-            border: none;
-            background: linear-gradient(135deg, var(--accent-color), #6eff60 60%, #3bff70);
-            color: #000;
-            font-size: 1.05rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
+            padding: 1.2rem;
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            border-radius: 30px;
+            color: var(--text-color);
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-            box-shadow: 0 18px 35px rgba(110, 255, 96, 0.3);
+            transition: var(--transition);
             position: relative;
             overflow: hidden;
         }
 
-        .pay-button:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 24px 45px rgba(110, 255, 96, 0.35);
+        .pay-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease-out;
+            z-index: 0;
+        }
+
+        .pay-button:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .pay-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .pay-button:hover span {
+            color: var(--background-color);
         }
 
         .pay-button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .pay-button i {
-            transition: transform 0.3s ease;
-        }
-
-        .pay-button:hover i {
-            transform: translateX(4px);
         }
 
         .loading-spinner {
             display: none;
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(0,0,0,0.25);
-            border-top: 2px solid rgba(0,0,0,0.65);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid var(--text-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 16px 22px;
-            border-radius: 16px;
-            color: white;
-            font-weight: 500;
-            transform: translateY(120px);
-            opacity: 0;
-            transition: all 0.35s ease;
-            z-index: 1000;
-            max-width: 360px;
-            box-shadow: 0 20px 35px rgba(0,0,0,0.35);
-        }
-
-        .notification.success {
-            background: linear-gradient(135deg, #4CAF50, #6edb73);
-        }
-
-        .notification.error {
-            background: linear-gradient(135deg, #f36c5c, #f44336);
-        }
-
-        .notification.show {
-            transform: translateY(0);
-            opacity: 1;
+            margin-right: 10px;
         }
 
         @keyframes spin {
@@ -431,55 +265,77 @@
             100% { transform: rotate(360deg); }
         }
 
-        @keyframes cardEnter {
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #ff6b6b;
+            display: none;
         }
 
-        @keyframes fadeSlide {
-            from {
-                opacity: 0;
-                transform: translateY(18px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #4CAF50;
+            display: none;
         }
 
-        @media (max-width: 1100px) {
-            .payment-card {
-                grid-template-columns: 1fr;
-            }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-color);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
 
-            .card-media {
-                min-height: 280px;
-            }
+        .back-button:hover {
+            color: var(--text-color);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            background-color: #4CAF50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .notification.error {
+            background-color: #f44336;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
         }
 
         @media (max-width: 768px) {
-            .payment-container {
-                margin: 120px auto 60px;
-                padding: 0 1.25rem;
-            }
-
-            .card-content {
-                padding: 28px 26px 36px;
-            }
-
-            .payment-header h1 {
-                font-size: 2.1rem;
-            }
-
-            .meta-grid {
+            .form-row {
                 grid-template-columns: 1fr;
             }
-
-            .quantity-selector {
-                width: 100%;
-                justify-content: space-between;
+            
+            .payment-header h1 {
+                font-size: 2rem;
             }
         }
     </style>
@@ -517,58 +373,47 @@
             <p>Remplissez vos informations pour recevoir votre ticket</p>
         </div>
 
-        <div class="feedback-banner" id="error-message"></div>
-        <div class="feedback-banner success" id="success-message"></div>
+        <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
 
         <div class="payment-card">
-            <div class="card-media">
-                <div class="event-image" id="event-image"></div>
-                <div class="media-content">
-                    <span class="event-chip" id="event-pill">Événement à venir</span>
-                    <h2 class="media-title" id="event-title-visual">Nom de l'événement</h2>
-                    <div class="media-meta">
-                        <div class="media-pill">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span id="event-date-visual">Date à confirmer</span>
-                        </div>
-                        <div class="media-pill">
-                            <i class="fas fa-clock"></i>
-                            <span id="event-time-visual">--:--</span>
-                        </div>
-                    </div>
+            <!-- Résumé de l'événement -->
+            <div class="event-summary">
+                <h3>Résumé de votre commande</h3>
+                <div id="event-summary-content">
+                    <!-- Contenu généré dynamiquement -->
                 </div>
             </div>
 
-            <div class="card-content">
-                <div class="event-overview" id="event-overview">
-                    <!-- Contenu injecté dynamiquement -->
-                </div>
-
+            <!-- Formulaire de paiement -->
+            <div class="payment-form">
+                <h3>Informations de paiement</h3>
                 <form id="payment-form">
                     <div class="quantity-selector">
-                        <span>Quantité</span>
+                        <label>Quantité :</label>
                         <button type="button" class="quantity-btn" id="decrease-qty">-</button>
                         <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="10" readonly>
                         <button type="button" class="quantity-btn" id="increase-qty">+</button>
                     </div>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="firstName">Prénom *</label>
-                            <input type="text" id="firstName" name="firstName" placeholder="Votre prénom" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="lastName">Nom *</label>
-                            <input type="text" id="lastName" name="lastName" placeholder="Votre nom" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" placeholder="email@example.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="phone">Téléphone</label>
-                            <input type="tel" id="phone" name="phone" placeholder="06 12 34 56 78">
-                        </div>
+                    <div class="form-group">
+                        <label for="firstName">Prénom *</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Nom *</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Téléphone</label>
+                        <input type="tel" id="phone" name="phone">
                     </div>
 
                     <div class="price-breakdown" id="price-breakdown">
@@ -578,7 +423,6 @@
                     <button type="submit" class="pay-button" id="pay-button">
                         <div class="loading-spinner" id="loading-spinner"></div>
                         <span id="pay-button-text">Payer maintenant</span>
-                        <i class="fas fa-arrow-right"></i>
                     </button>
                 </form>
             </div>
@@ -663,116 +507,68 @@
 
         // Fonction pour afficher le résumé de l'événement
         function displayEventSummary() {
-            if (!eventData) {
-                return;
-            }
+            if (!eventData) return;
 
-            const eventImageEl = document.getElementById('event-image');
-            const eventTitleVisual = document.getElementById('event-title-visual');
-            const eventDateVisual = document.getElementById('event-date-visual');
-            const eventTimeVisual = document.getElementById('event-time-visual');
-            const eventPill = document.getElementById('event-pill');
-            const eventOverview = document.getElementById('event-overview');
-
-            const fallbackImage = 'Asset/EventPhare 01.png';
-            const eventDate = new Date(eventData.date);
-            const formattedDate = eventDate.toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            const formattedTime = eventDate.toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            if (eventImageEl) {
-                eventImageEl.style.backgroundImage = `url('${eventData.image_url || fallbackImage}')`;
-            }
-            if (eventTitleVisual) {
-                eventTitleVisual.textContent = eventData.name || 'Événement BDB';
-            }
-            if (eventDateVisual) {
-                eventDateVisual.textContent = formattedDate;
-            }
-            if (eventTimeVisual) {
-                eventTimeVisual.textContent = formattedTime;
-            }
-            if (eventPill) {
-                const pillText = eventDate > new Date() ? 'Événement à venir' : 'Événement passé';
-                eventPill.textContent = pillText.toUpperCase();
-            }
-
-            if (eventOverview) {
-                const safeDescription = eventData.description || 'Préparez-vous à vivre une expérience étudiante mémorable.';
-                const associationName = eventData.association_name || 'Association étudiante';
-                const location = eventData.location || 'Lieu communiqué prochainement';
-                const ticketPrice = Number(eventData.price || 0).toFixed(2);
-
-                eventOverview.innerHTML = `
-                    <div>
-                        <h2 class="event-title">${eventData.name || 'Événement BDB'}</h2>
-                        <p class="event-description">${safeDescription}</p>
+            const summaryContent = document.getElementById('event-summary-content');
+            summaryContent.innerHTML = `
+                <div class="event-image" style="background-image: url('${eventData.image_url || 'Asset/EventPhare 01.png'}')"></div>
+                <h4 class="event-title">${eventData.name}</h4>
+                <div class="event-details">
+                    <div class="event-detail">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${new Date(eventData.date).toLocaleDateString('fr-FR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</span>
                     </div>
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <div>
-                                <p class="meta-label">Lieu</p>
-                                <p class="meta-value">${location}</p>
-                            </div>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-users"></i>
-                            <div>
-                                <p class="meta-label">Organisé par</p>
-                                <p class="meta-value">${associationName}</p>
-                            </div>
-                        </div>
-                        <div class="meta-item">
-                            <i class="fas fa-ticket-alt"></i>
-                            <div>
-                                <p class="meta-label">Tarif</p>
-                                <p class="meta-value">${ticketPrice} €</p>
-                            </div>
-                        </div>
+                    <div class="event-detail">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${eventData.location}</span>
                     </div>
-                `;
-            }
+                    <div class="event-detail">
+                        <i class="fas fa-users"></i>
+                        <span>${eventData.association_name || 'Association'}</span>
+                    </div>
+                </div>
+                <div class="event-price">${eventData.price}€</div>
+            `;
         }
 
         // Fonction pour mettre à jour le détail des prix
         function updatePriceBreakdown() {
             if (!eventData) return;
 
-            const unitPrice = Number(eventData.price || 0);
-            const basePrice = unitPrice * quantity;
+            const basePrice = eventData.price * quantity;
             const feePercentage = eventData.platform_fee_percentage || 5;
             const feeAmount = (basePrice * feePercentage) / 100;
             const totalAmount = basePrice + feeAmount;
 
             const priceBreakdown = document.getElementById('price-breakdown');
-            if (priceBreakdown) {
-                priceBreakdown.innerHTML = `
-                    <div class="price-line">
-                        <span>Prix du ticket (${quantity}x ${unitPrice.toFixed(2)}€)</span>
-                        <span>${basePrice.toFixed(2)}€</span>
-                    </div>
-                    <div class="price-line">
-                        <span>Frais de service (${feePercentage}%)</span>
-                        <span>${feeAmount.toFixed(2)}€</span>
-                    </div>
-                    <div class="price-line total">
-                        <span>Total</span>
-                        <span>${totalAmount.toFixed(2)}€</span>
-                    </div>
-                `;
-            }
-            const payButtonText = document.getElementById('pay-button-text');
-            if (payButtonText) {
-                payButtonText.textContent = `Payer ${totalAmount.toFixed(2)}€`;
-            }
+            priceBreakdown.innerHTML = `
+                <div class="price-line">
+                    <span>Prix du ticket (${quantity}x ${eventData.price}€)</span>
+                    <span>${basePrice.toFixed(2)}€</span>
+                </div>
+                <div class="price-line">
+                    <span>Frais de service (${feePercentage}%)</span>
+                    <span>${feeAmount.toFixed(2)}€</span>
+                </div>
+                <div class="price-line total">
+                    <span>Total</span>
+                    <span>${totalAmount.toFixed(2)}€</span>
+                </div>
+            `;
+
+            // Mettre à jour le bouton de paiement
+            const payButton = document.getElementById('pay-button');
+            payButton.innerHTML = `
+                <div class="loading-spinner" id="loading-spinner"></div>
+                <span id="pay-button-text">Payer ${totalAmount.toFixed(2)}€</span>
+            `;
         }
 
         // Gestion des boutons de quantité
