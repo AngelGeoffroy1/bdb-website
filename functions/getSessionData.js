@@ -92,22 +92,51 @@ exports.handler = async (event) => {
             }
         }
 
-        // Récupérer les tickets créés pour cette session
-        console.log('🎫 Récupération des tickets créés...');
+        // Récupérer les tickets créés pour cette session spécifique
+        console.log('🎫 Récupération des tickets créés pour la session:', sessionId);
         let tickets = [];
         
         try {
+            // Calculer une fenêtre de temps plus précise basée sur la session
+            const sessionCreated = new Date(session.created * 1000);
+            const timeWindowStart = new Date(sessionCreated.getTime() - 30000); // 30 secondes avant
+            const timeWindowEnd = new Date(sessionCreated.getTime() + 300000); // 5 minutes après
+            
+            console.log('⏰ Fenêtre de temps:', {
+                sessionCreated: sessionCreated.toISOString(),
+                timeWindowStart: timeWindowStart.toISOString(),
+                timeWindowEnd: timeWindowEnd.toISOString()
+            });
+
+            const customerEmail = session.customer_details?.email || session.metadata?.customer_email;
+            const eventId = session.metadata?.event_id;
+            
+            console.log('🔍 Critères de recherche:', {
+                customerEmail,
+                eventId,
+                sessionId
+            });
+
             const { data: ticketsData, error: ticketsError } = await supabase
                 .from('tickets')
-                .select('ticket_code, quantity, customer_first_name, customer_last_name, created_at')
-                .eq('customer_email', session.customer_details?.email || session.metadata?.customer_email)
-                .eq('event_id', session.metadata?.event_id)
-                .gte('created_at', new Date(session.created * 1000 - 60000).toISOString()) // Tickets créés dans la dernière minute
+                .select('ticket_code, quantity, customer_first_name, customer_last_name, created_at, session_id')
+                .eq('customer_email', customerEmail)
+                .eq('event_id', eventId)
+                .gte('created_at', timeWindowStart.toISOString())
+                .lte('created_at', timeWindowEnd.toISOString())
                 .order('created_at', { ascending: false });
 
             if (!ticketsError && ticketsData) {
-                tickets = ticketsData;
-                console.log('✅ Tickets récupérés:', tickets.length);
+                // Filtrer par session_id si disponible dans les métadonnées des tickets
+                tickets = ticketsData.filter(ticket => {
+                    // Si le ticket a un session_id, on le compare
+                    if (ticket.session_id) {
+                        return ticket.session_id === sessionId;
+                    }
+                    // Sinon, on garde tous les tickets dans la fenêtre de temps
+                    return true;
+                });
+                console.log('✅ Tickets trouvés:', ticketsData.length, 'Tickets filtrés:', tickets.length);
             } else {
                 console.log('⚠️ Aucun ticket trouvé ou erreur:', ticketsError?.message);
             }
