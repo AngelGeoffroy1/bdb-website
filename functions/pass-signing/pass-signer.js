@@ -9,13 +9,15 @@ class PassSigner {
         const isNetlify = process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
         
         if (isNetlify) {
-            // En production Netlify, utiliser le certificat depuis les variables d'environnement
-            this.certificatePath = null; // Pas de fichier, on utilisera la variable d'environnement
-            this.certificateBase64 = process.env.PASS_CERTIFICATE_BASE64;
+            // En production Netlify, télécharger le certificat depuis Supabase
+            this.certificatePath = null;
+            this.certificateBase64 = null;
+            this.useSupabase = true;
         } else {
             // En développement local
             this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
             this.certificateBase64 = null;
+            this.useSupabase = false;
         }
         
         // Debug: afficher le chemin pour diagnostiquer
@@ -32,11 +34,15 @@ class PassSigner {
     }
 
     // Charger le certificat
-    loadCertificate() {
+    async loadCertificate() {
         try {
             let p12Buffer;
             
-            if (this.certificateBase64) {
+            if (this.useSupabase) {
+                // Télécharger le certificat depuis Supabase
+                console.log('Téléchargement du certificat depuis Supabase...');
+                p12Buffer = await this.downloadCertificateFromSupabase();
+            } else if (this.certificateBase64) {
                 // Utiliser le certificat depuis les variables d'environnement
                 console.log('Utilisation du certificat depuis les variables d\'environnement');
                 p12Buffer = Buffer.from(this.certificateBase64, 'base64');
@@ -49,10 +55,10 @@ class PassSigner {
                 console.log('Aucun certificat trouvé!');
                 console.log('certificateBase64:', !!this.certificateBase64);
                 console.log('certificatePath:', this.certificatePath);
+                console.log('useSupabase:', this.useSupabase);
                 console.log('Variables d\'environnement disponibles:');
-                console.log('- PASS_CERTIFICATE_BASE64:', !!process.env.PASS_CERTIFICATE_BASE64);
                 console.log('- PASS_CERTIFICATE_PASSWORD:', !!process.env.PASS_CERTIFICATE_PASSWORD);
-                throw new Error('Aucun certificat trouvé. Vérifiez la configuration des variables d\'environnement.');
+                throw new Error('Aucun certificat trouvé. Vérifiez la configuration.');
             }
             const p12Asn1 = forge.asn1.fromDer(p12Buffer.toString('binary'));
             const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, this.certificatePassword);
@@ -340,6 +346,43 @@ class PassSigner {
             return new Date(date * 1000).toISOString();
         } else {
             return new Date(date).toISOString();
+        }
+    }
+
+    // Télécharger le certificat depuis Supabase
+    async downloadCertificateFromSupabase() {
+        try {
+            const { createClient } = require('@supabase/supabase-js');
+            const supabaseUrl = process.env.SUPABASE_URL;
+            const supabaseKey = process.env.SUPABASE_ANON_KEY;
+            
+            if (!supabaseUrl || !supabaseKey) {
+                throw new Error('Variables d\'environnement Supabase manquantes');
+            }
+            
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            
+            // Télécharger le certificat depuis la table certificates
+            const { data, error } = await supabase
+                .from('certificates')
+                .select('certificate_data')
+                .eq('name', 'pass.com.bdb.ticket.p12')
+                .single();
+            
+            if (error) {
+                throw new Error(`Erreur Supabase: ${error.message}`);
+            }
+            
+            if (!data || !data.certificate_data) {
+                throw new Error('Certificat non trouvé dans Supabase');
+            }
+            
+            console.log('Certificat téléchargé depuis Supabase avec succès');
+            return Buffer.from(data.certificate_data, 'base64');
+            
+        } catch (error) {
+            console.error('Erreur lors du téléchargement depuis Supabase:', error);
+            throw error;
         }
     }
 
