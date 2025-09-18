@@ -661,10 +661,27 @@ class PassSigner {
             try {
                 const wwdrBuffer = await this.downloadCertificateFromSupabase(this.wwdrSupabaseName, { logLabel: 'certificat WWDR' });
                 if (wwdrBuffer && wwdrBuffer.length > 0) {
-                    const wwdrPem = wwdrBuffer.toString('utf8');
-                    this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPem);
-                    console.log('Certificat WWDR téléchargé depuis Supabase');
-                    return this.cachedWwdrCertificate;
+                    let wwdrPemCandidate = wwdrBuffer.toString('utf8').trim();
+
+                    if (wwdrPemCandidate.includes('BEGIN CERTIFICATE')) {
+                        try {
+                            this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPemCandidate);
+                            console.log('Certificat WWDR téléchargé depuis Supabase (format PEM)');
+                            return this.cachedWwdrCertificate;
+                        } catch (pemError) {
+                            console.warn('Impossible de parser le certificat WWDR comme PEM, tentative DER:', pemError.message);
+                        }
+                    }
+
+                    try {
+                        const wwdrDer = wwdrBuffer.toString('binary');
+                        const wwdrAsn1 = forge.asn1.fromDer(wwdrDer);
+                        this.cachedWwdrCertificate = forge.pki.certificateFromAsn1(wwdrAsn1);
+                        console.log('Certificat WWDR téléchargé depuis Supabase (format DER)');
+                        return this.cachedWwdrCertificate;
+                    } catch (derError) {
+                        console.warn('Impossible de parser le certificat WWDR comme DER:', derError.message);
+                    }
                 }
             } catch (supabaseError) {
                 console.warn('Échec du téléchargement du certificat WWDR depuis Supabase:', supabaseError.message);
