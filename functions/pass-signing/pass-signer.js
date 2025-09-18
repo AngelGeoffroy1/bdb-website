@@ -517,7 +517,7 @@ class PassSigner {
     // Télécharger le certificat depuis Supabase
     async downloadCertificateFromSupabase(recordName, options = {}) {
         try {
-            const { logLabel = 'certificat' } = options;
+            const { logLabel = 'certificat', allowPlaintext = false } = options;
             const certificateName = recordName || this.passCertificateSupabaseName;
 
             if (!certificateName) {
@@ -572,8 +572,25 @@ class PassSigner {
                 throw new Error(`${logLabel} non trouvé dans Supabase`);
             }
             
+            const encodedData = data.certificate_data;
             console.log(`${logLabel.charAt(0).toUpperCase() + logLabel.slice(1)} trouvé, conversion en Buffer...`);
-            const buffer = Buffer.from(data.certificate_data, 'base64');
+
+            if (typeof encodedData !== 'string') {
+                throw new Error('Le champ certificate_data doit être une chaîne encodée en base64 ou texte brut');
+            }
+
+            const trimmedData = encodedData.trim();
+            let buffer = Buffer.from(trimmedData, 'base64');
+
+            // Fallback pour les PEM stockés en clair (non base64)
+            if (allowPlaintext) {
+                const decodedPreview = buffer.toString('utf8').trim();
+                if (trimmedData.includes('BEGIN CERTIFICATE') && !decodedPreview.includes('BEGIN CERTIFICATE')) {
+                    console.log(`${logLabel.charAt(0).toUpperCase() + logLabel.slice(1)} semble stocké en texte brut, utilisation du contenu UTF-8`);
+                    buffer = Buffer.from(trimmedData, 'utf8');
+                }
+            }
+
             console.log('Taille du certificat:', buffer.length, 'bytes');
             console.log(`${logLabel.charAt(0).toUpperCase() + logLabel.slice(1)} téléchargé depuis Supabase avec succès`);
             return buffer;
@@ -659,9 +676,10 @@ class PassSigner {
 
             // Dernier recours: téléchargement depuis Supabase
             try {
-                const wwdrBuffer = await this.downloadCertificateFromSupabase(this.wwdrSupabaseName, { logLabel: 'certificat WWDR' });
+                const wwdrBuffer = await this.downloadCertificateFromSupabase(this.wwdrSupabaseName, { logLabel: 'certificat WWDR', allowPlaintext: true });
                 if (wwdrBuffer && wwdrBuffer.length > 0) {
                     const wwdrTextCandidate = wwdrBuffer.toString('utf8').trim();
+                    console.log('Aperçu certificat WWDR (premiers 80 caractères):', wwdrTextCandidate.slice(0, 80));
 
                     if (wwdrTextCandidate.includes('BEGIN CERTIFICATE')) {
                         try {
