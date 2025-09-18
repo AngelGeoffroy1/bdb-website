@@ -120,11 +120,22 @@ class PassSigner {
                 console.log('Conversion de la clé privée ASN.1...');
                 console.log('Clé ASN.1 détectée, conversion...');
                 try {
-                    privateKey = forge.pki.privateKeyFromAsn1(privateKey);
+                    // Essayer différentes méthodes de conversion
+                    if (privateKey.key.asn1) {
+                        console.log('Tentative de conversion avec privateKey.key.asn1...');
+                        privateKey = forge.pki.privateKeyFromAsn1(privateKey.key);
+                    } else if (privateKey.key) {
+                        console.log('Tentative de conversion avec privateKey.key...');
+                        privateKey = forge.pki.privateKeyFromAsn1(privateKey.key);
+                    } else {
+                        console.log('Tentative de conversion directe...');
+                        privateKey = forge.pki.privateKeyFromAsn1(privateKey);
+                    }
                     console.log('Clé privée convertie avec succès');
                     console.log('Méthodes après conversion:', Object.getOwnPropertyNames(privateKey));
                 } catch (convertError) {
                     console.log('Erreur lors de la conversion de la clé:', convertError.message);
+                    console.log('Structure de la clé privée:', JSON.stringify(privateKey, null, 2));
                     throw new Error('Impossible de convertir la clé privée');
                 }
             }
