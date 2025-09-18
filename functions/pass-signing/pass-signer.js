@@ -20,6 +20,7 @@ class PassSigner {
         
         // Debug: afficher le chemin pour diagnostiquer
         console.log('Chemin du certificat:', this.certificatePath);
+        console.log('Certificat base64 disponible:', !!this.certificateBase64);
         console.log('__dirname:', __dirname);
         console.log('isNetlify:', isNetlify);
         
@@ -39,13 +40,19 @@ class PassSigner {
                 // Utiliser le certificat depuis les variables d'environnement
                 console.log('Utilisation du certificat depuis les variables d\'environnement');
                 p12Buffer = Buffer.from(this.certificateBase64, 'base64');
-            } else {
+            } else if (this.certificatePath && fs.existsSync(this.certificatePath)) {
                 // Utiliser le fichier local
                 console.log('Utilisation du certificat depuis le fichier local');
-                if (!fs.existsSync(this.certificatePath)) {
-                    throw new Error(`Certificat non trouvé: ${this.certificatePath}`);
-                }
                 p12Buffer = fs.readFileSync(this.certificatePath);
+            } else {
+                // Aucun certificat trouvé
+                console.log('Aucun certificat trouvé!');
+                console.log('certificateBase64:', !!this.certificateBase64);
+                console.log('certificatePath:', this.certificatePath);
+                console.log('Variables d\'environnement disponibles:');
+                console.log('- PASS_CERTIFICATE_BASE64:', !!process.env.PASS_CERTIFICATE_BASE64);
+                console.log('- PASS_CERTIFICATE_PASSWORD:', !!process.env.PASS_CERTIFICATE_PASSWORD);
+                throw new Error('Aucun certificat trouvé. Vérifiez la configuration des variables d\'environnement.');
             }
             const p12Asn1 = forge.asn1.fromDer(p12Buffer.toString('binary'));
             const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, this.certificatePassword);
