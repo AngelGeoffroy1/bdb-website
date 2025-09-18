@@ -5,7 +5,17 @@ const archiver = require('archiver');
 
 class PassSigner {
     constructor() {
-        this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
+        // Gérer les chemins pour Netlify Functions et développement local
+        const isNetlify = process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+        
+        if (isNetlify) {
+            // En production Netlify, le certificat doit être dans le dossier functions/
+            this.certificatePath = path.join(__dirname, '..', 'certificates', 'pass.com.bdb.ticket.p12');
+        } else {
+            // En développement local
+            this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
+        }
+        
         this.certificatePassword = process.env.PASS_CERTIFICATE_PASSWORD || 'ton_mot_de_passe_certificat';
         this.teamIdentifier = process.env.APPLE_TEAM_IDENTIFIER || 'TYR3BN2ZH2';
         this.passTypeIdentifier = process.env.PASS_TYPE_IDENTIFIER || 'pass.com.bdb.ticket';
