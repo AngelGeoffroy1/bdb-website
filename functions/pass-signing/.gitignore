@@ -1,0 +1,12 @@
+# Certificats Apple Developer - NE JAMAIS COMMITER
+certificates/*.p12
+certificates/*.pem
+certificates/*.cer
+
+# Fichiers temporaires
+*.tmp
+*.log
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
