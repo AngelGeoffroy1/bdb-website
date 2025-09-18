@@ -388,24 +388,37 @@ class PassSigner {
     // Télécharger le certificat depuis Supabase
     async downloadCertificateFromSupabase() {
         try {
+            console.log('Début du téléchargement depuis Supabase...');
+            
             const { createClient } = require('@supabase/supabase-js');
             const supabaseUrl = process.env.SUPABASE_URL;
             const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+            
+            console.log('Variables Supabase:');
+            console.log('- SUPABASE_URL:', !!supabaseUrl);
+            console.log('- SUPABASE_SERVICE_KEY:', !!supabaseKey);
             
             if (!supabaseUrl || !supabaseKey) {
                 throw new Error('Variables d\'environnement Supabase manquantes');
             }
             
             const supabase = createClient(supabaseUrl, supabaseKey);
+            console.log('Client Supabase créé');
             
             // Télécharger le certificat depuis la table certificates
+            console.log('Recherche du certificat dans la table certificates...');
             const { data, error } = await supabase
                 .from('certificates')
                 .select('certificate_data')
                 .eq('name', 'pass.com.bdb.ticket.p12')
                 .single();
             
+            console.log('Résultat de la requête Supabase:');
+            console.log('- data:', !!data);
+            console.log('- error:', error);
+            
             if (error) {
+                console.log('Erreur Supabase détaillée:', error);
                 throw new Error(`Erreur Supabase: ${error.message}`);
             }
             
@@ -413,8 +426,11 @@ class PassSigner {
                 throw new Error('Certificat non trouvé dans Supabase');
             }
             
+            console.log('Certificat trouvé, conversion en Buffer...');
+            const buffer = Buffer.from(data.certificate_data, 'base64');
+            console.log('Taille du certificat:', buffer.length, 'bytes');
             console.log('Certificat téléchargé depuis Supabase avec succès');
-            return Buffer.from(data.certificate_data, 'base64');
+            return buffer;
             
         } catch (error) {
             console.error('Erreur lors du téléchargement depuis Supabase:', error);
