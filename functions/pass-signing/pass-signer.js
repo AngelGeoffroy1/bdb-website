@@ -10,7 +10,8 @@ class PassSigner {
         
         if (isNetlify) {
             // En production Netlify, le certificat doit être dans le dossier functions/certificates/
-            this.certificatePath = path.join(__dirname, '..', 'certificates', 'pass.com.bdb.ticket.p12');
+            // __dirname est /var/task/functions, donc on va vers /var/task/functions/certificates/
+            this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
         } else {
             // En développement local
             this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
