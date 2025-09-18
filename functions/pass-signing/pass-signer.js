@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const forge = require('node-forge');
 const archiver = require('archiver');
+const crypto = require('crypto');
 
 class PassSigner {
     constructor() {
@@ -31,6 +32,8 @@ class PassSigner {
         this.passTypeIdentifier = process.env.PASS_TYPE_IDENTIFIER || 'pass.com.bdb.ticket';
         this.organizationName = 'Babylone';
         this.logoText = 'Babylone';
+        this.cachedWwdrCertificate = null;
+        this.wwdrCertificateLoaded = false;
     }
 
     // Charger le certificat
@@ -354,17 +357,22 @@ class PassSigner {
                 throw new Error('Certificat non trouvé');
             }
             
+            // Préparer les fichiers du pass
+            console.log('Préparation des fichiers du pass...');
+            const files = this.preparePassFiles(passData);
+
             // Créer le manifest
             console.log('Création du manifest...');
-            const manifest = this.createManifest(passData);
-            
+            const manifest = this.createManifest(files);
+            const manifestJson = this.serializeManifest(manifest);
+
             // Signer le manifest
             console.log('Signature du manifest...');
-            const signature = this.signManifest(manifest, privateKey);
-            
+            const signature = await this.signManifest(manifestJson, privateKey, certificate);
+
             // Créer le fichier .pkpass
             console.log('Création du fichier .pkpass...');
-            const pkpassBuffer = await this.createPkpassFile(passData, manifest, signature, certificate);
+            const pkpassBuffer = await this.createPkpassFile(files, manifestJson, signature);
             
             console.log('Pass signé avec succès!');
             return pkpassBuffer;
@@ -374,42 +382,92 @@ class PassSigner {
         }
     }
 
-    // Créer le manifest
-    createManifest(passData) {
-        const manifest = {};
-        
-        // Ajouter le fichier pass.json
+    // Préparer les fichiers à inclure dans le pass
+    preparePassFiles(passData) {
+        const files = [];
+
+        // pass.json
         const passJson = JSON.stringify(passData, null, 2);
-        manifest['pass.json'] = Buffer.from(passJson).toString('base64');
-        
-        // Ajouter les images par défaut si disponibles
+        files.push({
+            name: 'pass.json',
+            data: Buffer.from(passJson, 'utf8')
+        });
+
+        // Images par défaut
         const defaultImages = ['logo.png', 'icon.png', 'logo@2x.png', 'icon@2x.png'];
         for (const imageName of defaultImages) {
             const imagePath = path.join(__dirname, 'templates', imageName);
             if (fs.existsSync(imagePath)) {
                 const imageBuffer = fs.readFileSync(imagePath);
-                manifest[imageName] = imageBuffer.toString('base64');
+                files.push({ name: imageName, data: imageBuffer });
             }
         }
-        
+
+        return files;
+    }
+
+    // Créer le manifest
+    createManifest(files) {
+        const manifest = {};
+
+        for (const file of files) {
+            const hash = crypto.createHash('sha1').update(file.data).digest('hex');
+            manifest[file.name] = hash;
+        }
+
         return manifest;
     }
 
-    // Signer le manifest
-    signManifest(manifest, privateKey) {
-        const manifestJson = JSON.stringify(manifest, Object.keys(manifest).sort());
-        const manifestBuffer = Buffer.from(manifestJson);
-        
-        // Créer la signature SHA1
-        const md = forge.md.sha1.create();
-        md.update(manifestBuffer.toString('binary'));
-        const signature = privateKey.sign(md);
-        
-        return Buffer.from(signature, 'binary');
+    // Sérialiser le manifest de manière déterministe
+    serializeManifest(manifest) {
+        const sortedManifest = {};
+        const keys = Object.keys(manifest).sort();
+        for (const key of keys) {
+            sortedManifest[key] = manifest[key];
+        }
+        return JSON.stringify(sortedManifest, null, 2);
+    }
+
+    // Signer le manifest avec PKCS#7 detached signature
+    async signManifest(manifestJson, privateKey, certificate) {
+        const p7 = forge.pkcs7.createSignedData();
+        const manifestBuffer = forge.util.createBuffer(forge.util.encodeUtf8(manifestJson));
+        p7.content = manifestBuffer;
+
+        // Ajouter le certificat WWDR d'Apple si disponible
+        const wwdrCertificate = await this.loadWwdrCertificate();
+        p7.addCertificate(certificate);
+        if (wwdrCertificate) {
+            p7.addCertificate(wwdrCertificate);
+        }
+
+        p7.addSigner({
+            key: privateKey,
+            certificate,
+            digestAlgorithm: forge.pki.oids.sha1,
+            authenticatedAttributes: [
+                {
+                    type: forge.pki.oids.contentType,
+                    value: forge.pki.oids.data
+                },
+                {
+                    type: forge.pki.oids.messageDigest
+                },
+                {
+                    type: forge.pki.oids.signingTime,
+                    value: new Date()
+                }
+            ]
+        });
+
+        p7.sign({ detached: true });
+
+        const signatureDer = forge.asn1.toDer(p7.toAsn1()).getBytes();
+        return Buffer.from(signatureDer, 'binary');
     }
 
     // Créer le fichier .pkpass
-    async createPkpassFile(passData, manifest, signature, certificate) {
+    async createPkpassFile(files, manifestJson, signature) {
         return new Promise((resolve, reject) => {
             const archive = archiver('zip', {
                 zlib: { level: 9 }
@@ -430,31 +488,15 @@ class PassSigner {
                 reject(err);
             });
             
-            // Ajouter le fichier pass.json
-            const passJson = JSON.stringify(passData, null, 2);
-            archive.append(passJson, { name: 'pass.json' });
-            
-            // Ajouter le manifest
-            const manifestJson = JSON.stringify(manifest, Object.keys(manifest).sort());
-            archive.append(manifestJson, { name: 'manifest.json' });
-            
-            // Ajouter la signature
-            archive.append(signature, { name: 'signature' });
-            
-            // Ajouter le certificat
-            const certPem = forge.pki.certificateToPem(certificate);
-            archive.append(certPem, { name: 'certificate.pem' });
-            
-            // Ajouter les images par défaut
-            const defaultImages = ['logo.png', 'icon.png', 'logo@2x.png', 'icon@2x.png'];
-            for (const imageName of defaultImages) {
-                const imagePath = path.join(__dirname, 'templates', imageName);
-                if (fs.existsSync(imagePath)) {
-                    const imageBuffer = fs.readFileSync(imagePath);
-                    archive.append(imageBuffer, { name: imageName });
-                }
+            // Ajouter les fichiers du pass
+            for (const file of files) {
+                archive.append(file.data, { name: file.name });
             }
-            
+
+            // Ajouter le manifest et la signature
+            archive.append(manifestJson, { name: 'manifest.json' });
+            archive.append(signature, { name: 'signature' });
+
             archive.finalize();
         });
     }
@@ -546,6 +588,51 @@ class PassSigner {
         } catch (error) {
             console.error('Erreur lors du téléchargement de l\'image:', error);
             return '';
+        }
+    }
+
+    async loadWwdrCertificate() {
+        if (this.wwdrCertificateLoaded) {
+            return this.cachedWwdrCertificate;
+        }
+
+        this.wwdrCertificateLoaded = true;
+        try {
+            // Priorité à la variable d'environnement en base64
+            const wwdrBase64 = process.env.WWDR_CERTIFICATE_BASE64;
+            if (wwdrBase64) {
+                const wwdrPem = Buffer.from(wwdrBase64, 'base64').toString('utf8');
+                this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPem);
+                console.log('Certificat WWDR chargé depuis la variable d\'environnement BASE64');
+                return this.cachedWwdrCertificate;
+            }
+
+            // Ensuite vérifier un chemin fourni par variable d'environnement
+            const wwdrPathEnv = process.env.WWDR_CERTIFICATE_PATH;
+            const candidatePaths = [];
+            if (wwdrPathEnv) {
+                candidatePaths.push(wwdrPathEnv);
+            }
+
+            // Chemins par défaut dans le projet
+            candidatePaths.push(path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'));
+            candidatePaths.push(path.join(__dirname, 'certificates', 'AppleWWDRCA.pem'));
+
+            for (const candidate of candidatePaths) {
+                if (candidate && fs.existsSync(candidate)) {
+                    const wwdrPem = fs.readFileSync(candidate, 'utf8');
+                    this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPem);
+                    console.log('Certificat WWDR chargé depuis:', candidate);
+                    return this.cachedWwdrCertificate;
+                }
+            }
+
+            console.warn('Certificat WWDR introuvable. La signature peut être refusée par Apple.');
+            return null;
+        } catch (error) {
+            console.error('Erreur lors du chargement du certificat WWDR:', error.message);
+            this.cachedWwdrCertificate = null;
+            return null;
         }
     }
 }
