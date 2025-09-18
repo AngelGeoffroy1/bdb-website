@@ -35,6 +35,8 @@ class PassSigner {
         this.passCertificateSupabaseName = process.env.PASS_CERTIFICATE_SUPABASE_NAME || 'pass.com.bdb.ticket.p12';
         this.wwdrSupabaseName = process.env.WWDR_CERTIFICATE_SUPABASE_NAME || 'AppleWWDRCAG3.pem';
         this.cachedWwdrCertificate = null;
+        this.cachedWwdrAsn1 = null;
+        this.cachedWwdrPem = null;
         this.wwdrCertificateLoaded = false;
     }
 
@@ -433,14 +435,24 @@ class PassSigner {
     // Signer le manifest avec PKCS#7 detached signature
     async signManifest(manifestJson, privateKey, certificate) {
         const p7 = forge.pkcs7.createSignedData();
+        this.enhancePkcs7ForRawCertificates(p7);
         const manifestBuffer = forge.util.createBuffer(forge.util.encodeUtf8(manifestJson));
         p7.content = manifestBuffer;
 
         // Ajouter le certificat WWDR d'Apple si disponible
-        const wwdrCertificate = await this.loadWwdrCertificate();
+        const wwdrData = await this.loadWwdrCertificate();
         p7.addCertificate(certificate);
-        if (wwdrCertificate) {
-            p7.addCertificate(wwdrCertificate);
+        if (wwdrData) {
+            if (wwdrData.certificate) {
+                p7.addCertificate(wwdrData.certificate);
+                console.log('Certificat WWDR ajouté via objet forge (X.509)');
+            } else if (wwdrData.asn1) {
+                p7.addRawCertificate(wwdrData.asn1);
+                console.log('Certificat WWDR ajouté en tant qu\'ASN.1 brut');
+            } else if (wwdrData.pem) {
+                p7.addRawCertificate(wwdrData.pem);
+                console.log('Certificat WWDR ajouté en tant que PEM brut');
+            }
         }
 
         p7.addSigner({
@@ -619,28 +631,38 @@ class PassSigner {
 
     async loadWwdrCertificate() {
         if (this.wwdrCertificateLoaded) {
-            return this.cachedWwdrCertificate;
+            if (this.cachedWwdrCertificate || this.cachedWwdrAsn1) {
+                return {
+                    certificate: this.cachedWwdrCertificate,
+                    asn1: this.cachedWwdrAsn1,
+                    pem: this.cachedWwdrPem
+                };
+            }
+            // Si aucun certificat n'a été mis en cache (échec précédent),
+            // réessayer un nouveau chargement.
         }
 
         this.wwdrCertificateLoaded = true;
         try {
-            // Priorité à la variable d'environnement en base64
             const wwdrBase64 = process.env.WWDR_CERTIFICATE_BASE64;
             if (wwdrBase64) {
-                const wwdrPem = Buffer.from(wwdrBase64, 'base64').toString('utf8');
-                this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPem);
-                console.log('Certificat WWDR chargé depuis la variable d\'environnement BASE64');
-                return this.cachedWwdrCertificate;
+                try {
+                    const wwdrBuffer = Buffer.from(wwdrBase64, 'base64');
+                    const parsedFromBase64 = this.parseWwdrCertificateBuffer(wwdrBuffer, 'variable d\'environnement BASE64');
+                    if (parsedFromBase64) {
+                        return this.cacheWwdrCertificate(parsedFromBase64, 'Certificat WWDR chargé depuis la variable d\'environnement BASE64');
+                    }
+                } catch (base64Error) {
+                    console.warn('Impossible de décoder WWDR_CERTIFICATE_BASE64:', base64Error.message);
+                }
             }
 
-            // Ensuite vérifier un chemin fourni par variable d'environnement
             const wwdrPathEnv = process.env.WWDR_CERTIFICATE_PATH;
             const candidatePaths = [];
             if (wwdrPathEnv) {
                 candidatePaths.push(wwdrPathEnv);
             }
 
-            // Chemins par défaut dans le projet
             const defaultDirs = this.getPotentialCertificateDirs();
             for (const dirPath of defaultDirs) {
                 candidatePaths.push(path.join(dirPath, 'AppleWWDRCAG3.pem'));
@@ -667,60 +689,24 @@ class PassSigner {
 
             for (const candidate of candidatePaths) {
                 if (candidate && fs.existsSync(candidate)) {
-                    const wwdrPem = fs.readFileSync(candidate, 'utf8');
-                    this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPem);
-                    console.log('Certificat WWDR chargé depuis:', candidate);
-                    return this.cachedWwdrCertificate;
+                    try {
+                        const fileBuffer = fs.readFileSync(candidate);
+                        const parsedFromFile = this.parseWwdrCertificateBuffer(fileBuffer, candidate);
+                        if (parsedFromFile) {
+                            return this.cacheWwdrCertificate(parsedFromFile, `Certificat WWDR chargé depuis: ${candidate}`);
+                        }
+                    } catch (fileError) {
+                        console.warn(`Impossible de lire le certificat WWDR depuis ${candidate}:`, fileError.message);
+                    }
                 }
             }
 
-            // Dernier recours: téléchargement depuis Supabase
             try {
                 const wwdrBuffer = await this.downloadCertificateFromSupabase(this.wwdrSupabaseName, { logLabel: 'certificat WWDR', allowPlaintext: true });
                 if (wwdrBuffer && wwdrBuffer.length > 0) {
-                    const wwdrTextCandidate = wwdrBuffer.toString('utf8').trim();
-                    console.log('Aperçu certificat WWDR (premiers 80 caractères):', wwdrTextCandidate.slice(0, 80));
-
-                    if (wwdrTextCandidate.includes('BEGIN CERTIFICATE')) {
-                        try {
-                            this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrTextCandidate);
-                            console.log('Certificat WWDR téléchargé depuis Supabase (format PEM)');
-                            return this.cachedWwdrCertificate;
-                        } catch (pemError) {
-                            console.warn('Impossible de parser le certificat WWDR comme PEM, tentative DER:', pemError.message);
-                        }
-                    }
-
-                    const potentialBase64 = wwdrTextCandidate.replace(/\s+/g, '');
-                    const base64Regex = /^[A-Za-z0-9+/=]+$/;
-                    if (base64Regex.test(potentialBase64) && potentialBase64.length % 4 === 0) {
-                        try {
-                            const nestedBuffer = Buffer.from(potentialBase64, 'base64');
-                            const nestedText = nestedBuffer.toString('utf8').trim();
-                            if (nestedText.includes('BEGIN CERTIFICATE')) {
-                                this.cachedWwdrCertificate = forge.pki.certificateFromPem(nestedText);
-                                console.log('Certificat WWDR téléchargé depuis Supabase (base64 -> PEM)');
-                                return this.cachedWwdrCertificate;
-                            }
-
-                            const nestedDer = nestedBuffer.toString('binary');
-                            const nestedAsn1 = forge.asn1.fromDer(nestedDer);
-                            this.cachedWwdrCertificate = forge.pki.certificateFromAsn1(nestedAsn1);
-                            console.log('Certificat WWDR téléchargé depuis Supabase (base64 -> DER)');
-                            return this.cachedWwdrCertificate;
-                        } catch (nestedError) {
-                            console.warn('Impossible de parser le certificat WWDR encodé en base64:', nestedError.message);
-                        }
-                    }
-
-                    try {
-                        const wwdrDer = wwdrBuffer.toString('binary');
-                        const wwdrAsn1 = forge.asn1.fromDer(wwdrDer);
-                        this.cachedWwdrCertificate = forge.pki.certificateFromAsn1(wwdrAsn1);
-                        console.log('Certificat WWDR téléchargé depuis Supabase (format DER)');
-                        return this.cachedWwdrCertificate;
-                    } catch (derError) {
-                        console.warn('Impossible de parser le certificat WWDR comme DER:', derError.message);
+                    const parsedFromSupabase = this.parseWwdrCertificateBuffer(wwdrBuffer, 'Supabase');
+                    if (parsedFromSupabase) {
+                        return this.cacheWwdrCertificate(parsedFromSupabase, 'Certificat WWDR téléchargé depuis Supabase');
                     }
                 }
             } catch (supabaseError) {
@@ -732,8 +718,204 @@ class PassSigner {
         } catch (error) {
             console.error('Erreur lors du chargement du certificat WWDR:', error.message);
             this.cachedWwdrCertificate = null;
+            this.cachedWwdrAsn1 = null;
+            this.cachedWwdrPem = null;
             return null;
         }
+    }
+
+    cacheWwdrCertificate(parsed, logMessage) {
+        this.cachedWwdrCertificate = parsed.certificate || null;
+        this.cachedWwdrAsn1 = parsed.asn1 || null;
+        this.cachedWwdrPem = parsed.pem || null;
+        console.log(logMessage);
+
+        if (!this.cachedWwdrAsn1 && this.cachedWwdrCertificate) {
+            try {
+                this.cachedWwdrAsn1 = forge.pki.certificateToAsn1(this.cachedWwdrCertificate);
+            } catch (error) {
+                console.warn('Impossible de convertir le certificat WWDR en ASN.1:', error.message);
+            }
+        }
+
+        return {
+            certificate: this.cachedWwdrCertificate,
+            asn1: this.cachedWwdrAsn1,
+            pem: this.cachedWwdrPem
+        };
+    }
+
+    parseWwdrCertificateBuffer(buffer, sourceLabel) {
+        if (!buffer || !buffer.length) {
+            console.warn(`Certificat WWDR vide depuis ${sourceLabel}`);
+            return null;
+        }
+
+        let pem = null;
+        let certificate = null;
+        let asn1Certificate = null;
+
+        const utf8Text = buffer.toString('utf8');
+        const trimmedText = utf8Text.trim();
+
+        if (trimmedText.includes('BEGIN CERTIFICATE')) {
+            pem = trimmedText;
+            try {
+                certificate = forge.pki.certificateFromPem(pem);
+            } catch (pemError) {
+                console.warn(`Impossible de parser le certificat WWDR PEM (${sourceLabel}) :`, pemError.message);
+            }
+
+            try {
+                const pemBlocks = forge.pem.decode(pem);
+                if (pemBlocks && pemBlocks.length > 0) {
+                    const derBuffer = forge.util.createBuffer(pemBlocks[0].body, 'binary');
+                    asn1Certificate = forge.asn1.fromDer(derBuffer);
+                }
+            } catch (decodeError) {
+                console.warn(`Impossible de décoder le PEM WWDR (${sourceLabel}) :`, decodeError.message);
+            }
+        } else {
+            let derData = buffer;
+            const base64Candidate = trimmedText.replace(/\s+/g, '');
+            const base64Regex = /^[A-Za-z0-9+/=]+$/;
+            if (base64Candidate.length > 0 && base64Candidate.length % 4 === 0 && base64Regex.test(base64Candidate)) {
+                try {
+                    derData = Buffer.from(base64Candidate, 'base64');
+                    console.log(`${sourceLabel}: certificat WWDR détecté en base64, conversion en DER`);
+                } catch (base64Error) {
+                    console.warn(`${sourceLabel}: impossible de décoder le certificat WWDR en base64:`, base64Error.message);
+                }
+            }
+
+            try {
+                const derBuffer = forge.util.createBuffer(derData.toString('binary'));
+                asn1Certificate = forge.asn1.fromDer(derBuffer);
+            } catch (derError) {
+                console.warn(`${sourceLabel}: impossible de parser le certificat WWDR comme DER:`, derError.message);
+            }
+        }
+
+        if (!asn1Certificate) {
+            return null;
+        }
+
+        if (!certificate) {
+            try {
+                certificate = forge.pki.certificateFromAsn1(asn1Certificate);
+            } catch (asn1Error) {
+                // Peut échouer pour les certificats ECC, ce n'est pas bloquant
+            }
+        }
+
+        if (!pem) {
+            try {
+                const tempCert = certificate || forge.pki.certificateFromAsn1(asn1Certificate);
+                pem = forge.pki.certificateToPem(tempCert);
+            } catch (pemBuildError) {
+                // Ignorer si la conversion PEM n'est pas possible
+            }
+        }
+
+        return {
+            certificate: certificate || null,
+            asn1: asn1Certificate,
+            pem: pem || null
+        };
+    }
+
+    enhancePkcs7ForRawCertificates(p7) {
+        if (p7._rawCertificateSupportInitialized) {
+            return;
+        }
+
+        p7._rawCertificateSupportInitialized = true;
+        p7._rawCertificates = [];
+        const originalToAsn1 = p7.toAsn1.bind(p7);
+
+        p7.addRawCertificate = (input) => {
+            try {
+                let asn1Certificate = null;
+
+                if (input && typeof input === 'object' && typeof input.tagClass === 'number') {
+                    asn1Certificate = input;
+                } else if (input && typeof input === 'object' && input.asn1) {
+                    asn1Certificate = input.asn1;
+                } else if (Buffer.isBuffer(input)) {
+                    const derBuffer = forge.util.createBuffer(input.toString('binary'));
+                    asn1Certificate = forge.asn1.fromDer(derBuffer);
+                } else if (typeof input === 'string') {
+                    const trimmed = input.trim();
+                    if (trimmed.includes('BEGIN CERTIFICATE')) {
+                        const pemBlocks = forge.pem.decode(trimmed);
+                        if (pemBlocks && pemBlocks.length > 0) {
+                            const derBuffer = forge.util.createBuffer(pemBlocks[0].body, 'binary');
+                            asn1Certificate = forge.asn1.fromDer(derBuffer);
+                        }
+                    } else {
+                        const base64Buffer = Buffer.from(trimmed, 'base64');
+                        const derBuffer = forge.util.createBuffer(base64Buffer.toString('binary'));
+                        asn1Certificate = forge.asn1.fromDer(derBuffer);
+                    }
+                } else if (input instanceof Uint8Array) {
+                    const derBuffer = forge.util.createBuffer(Buffer.from(input).toString('binary'));
+                    asn1Certificate = forge.asn1.fromDer(derBuffer);
+                }
+
+                if (!asn1Certificate) {
+                    console.warn('Format de certificat brut non reconnu, impossible de l\'ajouter au PKCS#7.');
+                    return;
+                }
+
+                p7._rawCertificates.push(asn1Certificate);
+            } catch (error) {
+                console.warn('Erreur lors de l\'ajout du certificat brut au PKCS#7:', error.message);
+            }
+        };
+
+        p7.toAsn1 = () => {
+            const asn1Structure = originalToAsn1();
+
+            if (!p7._rawCertificates || p7._rawCertificates.length === 0) {
+                return asn1Structure;
+            }
+
+            try {
+                const signedDataContainer = Array.isArray(asn1Structure.value) ? asn1Structure.value.find((element) => (
+                    element.tagClass === forge.asn1.Class.CONTEXT_SPECIFIC &&
+                    element.type === 0
+                )) : null;
+
+                if (!signedDataContainer || !Array.isArray(signedDataContainer.value) || signedDataContainer.value.length === 0) {
+                    return asn1Structure;
+                }
+
+                const signedDataSequence = signedDataContainer.value[0];
+                if (!signedDataSequence || !Array.isArray(signedDataSequence.value)) {
+                    return asn1Structure;
+                }
+
+                const sequenceValues = signedDataSequence.value;
+                let certificatesElement = sequenceValues.find((element) => (
+                    element.tagClass === forge.asn1.Class.CONTEXT_SPECIFIC &&
+                    element.type === 0
+                ));
+
+                if (!certificatesElement) {
+                    certificatesElement = forge.asn1.create(forge.asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
+                    sequenceValues.splice(3, 0, certificatesElement);
+                }
+
+                const certificateSet = certificatesElement.value;
+                for (const rawCert of p7._rawCertificates) {
+                    certificateSet.push(rawCert);
+                }
+            } catch (error) {
+                console.warn('Impossible d\'injecter les certificats WWDR bruts dans la structure PKCS#7:', error.message);
+            }
+
+            return asn1Structure;
+        };
     }
 
     getPotentialCertificateDirs() {
