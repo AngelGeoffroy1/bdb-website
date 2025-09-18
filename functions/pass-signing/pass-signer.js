@@ -32,6 +32,8 @@ class PassSigner {
         this.passTypeIdentifier = process.env.PASS_TYPE_IDENTIFIER || 'pass.com.bdb.ticket';
         this.organizationName = 'Babylone';
         this.logoText = 'Babylone';
+        this.passCertificateSupabaseName = process.env.PASS_CERTIFICATE_SUPABASE_NAME || 'pass.com.bdb.ticket.p12';
+        this.wwdrSupabaseName = process.env.WWDR_CERTIFICATE_SUPABASE_NAME || 'AppleWWDRCAG3.pem';
         this.cachedWwdrCertificate = null;
         this.wwdrCertificateLoaded = false;
     }
@@ -44,7 +46,7 @@ class PassSigner {
             if (this.useSupabase) {
                 // Télécharger le certificat depuis Supabase
                 console.log('Téléchargement du certificat depuis Supabase...');
-                p12Buffer = await this.downloadCertificateFromSupabase();
+                p12Buffer = await this.downloadCertificateFromSupabase(this.passCertificateSupabaseName, { logLabel: 'certificat P12' });
             } else if (this.certificateBase64) {
                 // Utiliser le certificat depuis les variables d'environnement
                 console.log('Utilisation du certificat depuis les variables d\'environnement');
@@ -513,9 +515,16 @@ class PassSigner {
     }
 
     // Télécharger le certificat depuis Supabase
-    async downloadCertificateFromSupabase() {
+    async downloadCertificateFromSupabase(recordName, options = {}) {
         try {
-            console.log('Début du téléchargement depuis Supabase...');
+            const { logLabel = 'certificat' } = options;
+            const certificateName = recordName || this.passCertificateSupabaseName;
+
+            if (!certificateName) {
+                throw new Error('Nom du certificat Supabase non fourni');
+            }
+
+            console.log(`Début du téléchargement ${logLabel} depuis Supabase...`);
             
             const { createClient } = require('@supabase/supabase-js');
             const supabaseUrl = process.env.SUPABASE_URL;
@@ -533,16 +542,16 @@ class PassSigner {
             console.log('Client Supabase créé');
             
             // Télécharger le certificat depuis la table certificates
-            console.log('Recherche du certificat dans la table certificates...');
+            console.log(`Recherche du ${logLabel} dans la table certificates... (nom: ${certificateName})`);
             
             let data, error;
             try {
                 const result = await supabase
                     .from('certificates')
                     .select('certificate_data')
-                    .eq('name', 'pass.com.bdb.ticket.p12')
+                    .eq('name', certificateName)
                     .single();
-                
+
                 data = result.data;
                 error = result.error;
                 
@@ -560,13 +569,13 @@ class PassSigner {
             }
             
             if (!data || !data.certificate_data) {
-                throw new Error('Certificat non trouvé dans Supabase');
+                throw new Error(`${logLabel} non trouvé dans Supabase`);
             }
             
-            console.log('Certificat trouvé, conversion en Buffer...');
+            console.log(`${logLabel.charAt(0).toUpperCase() + logLabel.slice(1)} trouvé, conversion en Buffer...`);
             const buffer = Buffer.from(data.certificate_data, 'base64');
             console.log('Taille du certificat:', buffer.length, 'bytes');
-            console.log('Certificat téléchargé depuis Supabase avec succès');
+            console.log(`${logLabel.charAt(0).toUpperCase() + logLabel.slice(1)} téléchargé depuis Supabase avec succès`);
             return buffer;
             
         } catch (error) {
@@ -646,6 +655,19 @@ class PassSigner {
                     console.log('Certificat WWDR chargé depuis:', candidate);
                     return this.cachedWwdrCertificate;
                 }
+            }
+
+            // Dernier recours: téléchargement depuis Supabase
+            try {
+                const wwdrBuffer = await this.downloadCertificateFromSupabase(this.wwdrSupabaseName, { logLabel: 'certificat WWDR' });
+                if (wwdrBuffer && wwdrBuffer.length > 0) {
+                    const wwdrPem = wwdrBuffer.toString('utf8');
+                    this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPem);
+                    console.log('Certificat WWDR téléchargé depuis Supabase');
+                    return this.cachedWwdrCertificate;
+                }
+            } catch (supabaseError) {
+                console.warn('Échec du téléchargement du certificat WWDR depuis Supabase:', supabaseError.message);
             }
 
             console.warn('Certificat WWDR introuvable. La signature peut être refusée par Apple.');
