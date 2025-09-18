@@ -103,6 +103,8 @@ class PassSigner {
             if (certBags[forge.pki.oids.certBag] && certBags[forge.pki.oids.certBag].length > 0) {
                 certificate = certBags[forge.pki.oids.certBag][0];
                 console.log('Certificat trouvé');
+                console.log('Type de certificat:', typeof certificate);
+                console.log('Méthodes du certificat:', Object.getOwnPropertyNames(certificate));
             }
             
             if (!privateKey) {
@@ -145,6 +147,18 @@ class PassSigner {
             if (!privateKey || typeof privateKey.sign !== 'function') {
                 console.log('Clé privée invalide - méthodes disponibles:', Object.getOwnPropertyNames(privateKey));
                 throw new Error('Clé privée invalide - méthode sign manquante');
+            }
+            
+            // Vérifier et convertir le certificat si nécessaire
+            if (certificate && typeof certificate === 'object' && certificate.cert) {
+                console.log('Conversion du certificat ASN.1...');
+                try {
+                    certificate = forge.pki.certificateFromAsn1(certificate.cert);
+                    console.log('Certificat converti avec succès');
+                } catch (convertError) {
+                    console.log('Erreur lors de la conversion du certificat:', convertError.message);
+                    throw new Error('Impossible de convertir le certificat');
+                }
             }
             
             console.log('Clé privée et certificat extraits avec succès');
