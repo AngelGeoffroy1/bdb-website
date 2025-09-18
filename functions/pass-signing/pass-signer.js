@@ -9,12 +9,13 @@ class PassSigner {
         const isNetlify = process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
         
         if (isNetlify) {
-            // En production Netlify, le certificat doit être dans le dossier functions/certificates/
-            // __dirname est /var/task/functions, donc on va vers /var/task/functions/certificates/
-            this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
+            // En production Netlify, utiliser le certificat depuis les variables d'environnement
+            this.certificatePath = null; // Pas de fichier, on utilisera la variable d'environnement
+            this.certificateBase64 = process.env.PASS_CERTIFICATE_BASE64;
         } else {
             // En développement local
             this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
+            this.certificateBase64 = null;
         }
         
         // Debug: afficher le chemin pour diagnostiquer
@@ -32,43 +33,20 @@ class PassSigner {
     // Charger le certificat
     loadCertificate() {
         try {
-            // Debug: vérifier l'existence du fichier
-            console.log('Vérification de l\'existence du certificat...');
-            console.log('Chemin à vérifier:', this.certificatePath);
-            console.log('Le fichier existe:', fs.existsSync(this.certificatePath));
+            let p12Buffer;
             
-            // Lister le contenu du dossier certificates
-            const certificatesDir = path.dirname(this.certificatePath);
-            console.log('Dossier certificates:', certificatesDir);
-            console.log('Le dossier existe:', fs.existsSync(certificatesDir));
-            
-            if (fs.existsSync(certificatesDir)) {
-                try {
-                    const files = fs.readdirSync(certificatesDir);
-                    console.log('Fichiers dans le dossier certificates:', files);
-                } catch (err) {
-                    console.log('Erreur lors de la lecture du dossier certificates:', err.message);
+            if (this.certificateBase64) {
+                // Utiliser le certificat depuis les variables d'environnement
+                console.log('Utilisation du certificat depuis les variables d\'environnement');
+                p12Buffer = Buffer.from(this.certificateBase64, 'base64');
+            } else {
+                // Utiliser le fichier local
+                console.log('Utilisation du certificat depuis le fichier local');
+                if (!fs.existsSync(this.certificatePath)) {
+                    throw new Error(`Certificat non trouvé: ${this.certificatePath}`);
                 }
+                p12Buffer = fs.readFileSync(this.certificatePath);
             }
-            
-            // Vérifier les chemins alternatifs
-            const alternativePaths = [
-                path.join(process.cwd(), 'functions', 'certificates', 'pass.com.bdb.ticket.p12'),
-                path.join(process.cwd(), 'certificates', 'pass.com.bdb.ticket.p12'),
-                '/var/task/certificates/pass.com.bdb.ticket.p12',
-                '/var/task/functions/certificates/pass.com.bdb.ticket.p12'
-            ];
-            
-            console.log('Test des chemins alternatifs:');
-            for (const altPath of alternativePaths) {
-                console.log(`- ${altPath}: ${fs.existsSync(altPath)}`);
-            }
-            
-            if (!fs.existsSync(this.certificatePath)) {
-                throw new Error(`Certificat non trouvé: ${this.certificatePath}`);
-            }
-
-            const p12Buffer = fs.readFileSync(this.certificatePath);
             const p12Asn1 = forge.asn1.fromDer(p12Buffer.toString('binary'));
             const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, this.certificatePassword);
             
