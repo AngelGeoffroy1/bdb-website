@@ -100,23 +100,43 @@ class PassSigner {
             }
             
             // Extraire le certificat
-            if (certBags[forge.pki.oids.certBag] && certBags[forge.pki.oids.certBag].length > 0) {
-                certificate = certBags[forge.pki.oids.certBag][0];
+            const certBagList = certBags[forge.pki.oids.certBag];
+            if (certBagList && certBagList.length > 0) {
+                const certBag = certBagList[0];
                 console.log('Certificat trouvé');
-                console.log('Type de certificat:', typeof certificate);
-                console.log('Méthodes du certificat:', Object.getOwnPropertyNames(certificate));
+                console.log('Cert bag keys:', Object.getOwnPropertyNames(certBag));
+
+                if (certBag.cert && certBag.cert.signatureOid) {
+                    certificate = certBag.cert;
+                } else if (certBag.cert) {
+                    try {
+                        certificate = forge.pki.certificateFromAsn1(certBag.cert);
+                        console.log('Certificat converti depuis certBag.cert');
+                    } catch (convertError) {
+                        console.log('Échec conversion certBag.cert:', convertError.message);
+                    }
+                }
+
+                if (!certificate && certBag.asn1) {
+                    try {
+                        certificate = forge.pki.certificateFromAsn1(certBag.asn1);
+                        console.log('Certificat converti depuis certBag.asn1');
+                    } catch (convertError) {
+                        console.log('Échec conversion certBag.asn1:', convertError.message);
+                    }
+                }
             }
-            
+
             if (!privateKey) {
                 console.log('Toutes les méthodes d\'extraction de clé ont échoué');
                 console.log('Bags disponibles:', Object.keys(keyBags));
                 throw new Error('Aucune clé privée trouvée dans le certificat');
             }
-            
+
             if (!certificate) {
-                throw new Error('Aucun certificat trouvé dans le fichier P12');
+                throw new Error('Aucun certificat X.509 valide trouvé dans le fichier P12');
             }
-            
+
             // Vérifier et convertir la clé privée si nécessaire
             if (privateKey && typeof privateKey === 'object' && privateKey.key) {
                 console.log('Conversion de la clé privée RSA...');
@@ -150,34 +170,13 @@ class PassSigner {
             }
             
             // Vérifier et convertir le certificat si nécessaire
-            if (certificate && typeof certificate === 'object' && certificate.cert) {
-                console.log('Conversion du certificat ASN.1...');
+            if (certificate && typeof certificate === 'object' && !certificate.signatureOid) {
+                console.log('Certificat sans signatureOid détecté, tentative de conversion générique...');
                 try {
-                    // Le certificat est déjà au format X.509, on peut l'utiliser directement
-                    if (certificate.cert.validity && certificate.cert.issuer && certificate.cert.subject) {
-                        console.log('Certificat déjà au format X.509, utilisation directe...');
-                        // Créer un objet certificat forge à partir des données existantes
-                        const forgeCert = {
-                            version: certificate.cert.version,
-                            serialNumber: certificate.cert.serialNumber,
-                            signature: certificate.cert.signature,
-                            issuer: certificate.cert.issuer,
-                            validity: certificate.cert.validity,
-                            subject: certificate.cert.subject,
-                            publicKey: certificate.cert.publicKey,
-                            extensions: certificate.cert.extensions
-                        };
-                        certificate = forgeCert;
-                        console.log('Certificat converti avec succès');
-                    } else {
-                        // Essayer la conversion ASN.1 traditionnelle
-                        console.log('Tentative de conversion ASN.1...');
-                        certificate = forge.pki.certificateFromAsn1(certificate.cert);
-                        console.log('Certificat converti avec succès');
-                    }
+                    certificate = forge.pki.certificateFromAsn1(certificate);
+                    console.log('Certificat converti avec signatureOid');
                 } catch (convertError) {
                     console.log('Erreur lors de la conversion du certificat:', convertError.message);
-                    console.log('Structure du certificat:', JSON.stringify(certificate, null, 2));
                     throw new Error('Impossible de convertir le certificat');
                 }
             }
