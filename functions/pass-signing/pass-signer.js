@@ -153,10 +153,21 @@ class PassSigner {
             if (certificate && typeof certificate === 'object' && certificate.cert) {
                 console.log('Conversion du certificat ASN.1...');
                 try {
-                    certificate = forge.pki.certificateFromAsn1(certificate.cert);
+                    // Essayer différentes méthodes de conversion
+                    if (certificate.cert.asn1) {
+                        console.log('Tentative avec certificate.cert.asn1...');
+                        certificate = forge.pki.certificateFromAsn1(certificate.cert.asn1);
+                    } else if (certificate.cert) {
+                        console.log('Tentative avec certificate.cert...');
+                        certificate = forge.pki.certificateFromAsn1(certificate.cert);
+                    } else {
+                        console.log('Tentative de conversion directe...');
+                        certificate = forge.pki.certificateFromAsn1(certificate);
+                    }
                     console.log('Certificat converti avec succès');
                 } catch (convertError) {
                     console.log('Erreur lors de la conversion du certificat:', convertError.message);
+                    console.log('Structure du certificat:', JSON.stringify(certificate, null, 2));
                     throw new Error('Impossible de convertir le certificat');
                 }
             }
