@@ -617,6 +617,23 @@ class PassSigner {
             // Chemins par défaut dans le projet
             candidatePaths.push(path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'));
             candidatePaths.push(path.join(__dirname, 'certificates', 'AppleWWDRCA.pem'));
+            candidatePaths.push(path.join(__dirname, 'certificates', 'Apple Worldwide Developer Relations Certification Authority.pem'));
+
+            try {
+                const certDir = path.join(__dirname, 'certificates');
+                const files = fs.readdirSync(certDir);
+                for (const fileName of files) {
+                    if (!fileName.toLowerCase().includes('wwdr')) {
+                        continue;
+                    }
+                    const fullPath = path.join(certDir, fileName);
+                    if (!candidatePaths.includes(fullPath)) {
+                        candidatePaths.push(fullPath);
+                    }
+                }
+            } catch (dirError) {
+                console.warn('Impossible de lister le dossier certificates pour trouver le WWDR:', dirError.message);
+            }
 
             for (const candidate of candidatePaths) {
                 if (candidate && fs.existsSync(candidate)) {
