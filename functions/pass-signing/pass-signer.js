@@ -153,18 +153,28 @@ class PassSigner {
             if (certificate && typeof certificate === 'object' && certificate.cert) {
                 console.log('Conversion du certificat ASN.1...');
                 try {
-                    // Essayer différentes méthodes de conversion
-                    if (certificate.cert.asn1) {
-                        console.log('Tentative avec certificate.cert.asn1...');
-                        certificate = forge.pki.certificateFromAsn1(certificate.cert.asn1);
-                    } else if (certificate.cert) {
-                        console.log('Tentative avec certificate.cert...');
-                        certificate = forge.pki.certificateFromAsn1(certificate.cert);
+                    // Le certificat est déjà au format X.509, on peut l'utiliser directement
+                    if (certificate.cert.validity && certificate.cert.issuer && certificate.cert.subject) {
+                        console.log('Certificat déjà au format X.509, utilisation directe...');
+                        // Créer un objet certificat forge à partir des données existantes
+                        const forgeCert = {
+                            version: certificate.cert.version,
+                            serialNumber: certificate.cert.serialNumber,
+                            signature: certificate.cert.signature,
+                            issuer: certificate.cert.issuer,
+                            validity: certificate.cert.validity,
+                            subject: certificate.cert.subject,
+                            publicKey: certificate.cert.publicKey,
+                            extensions: certificate.cert.extensions
+                        };
+                        certificate = forgeCert;
+                        console.log('Certificat converti avec succès');
                     } else {
-                        console.log('Tentative de conversion directe...');
-                        certificate = forge.pki.certificateFromAsn1(certificate);
+                        // Essayer la conversion ASN.1 traditionnelle
+                        console.log('Tentative de conversion ASN.1...');
+                        certificate = forge.pki.certificateFromAsn1(certificate.cert);
+                        console.log('Certificat converti avec succès');
                     }
-                    console.log('Certificat converti avec succès');
                 } catch (convertError) {
                     console.log('Erreur lors de la conversion du certificat:', convertError.message);
                     console.log('Structure du certificat:', JSON.stringify(certificate, null, 2));
