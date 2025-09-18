@@ -63,22 +63,58 @@ class PassSigner {
             const p12Asn1 = forge.asn1.fromDer(p12Buffer.toString('binary'));
             const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, this.certificatePassword);
             
+            console.log('Certificat P12 chargé, extraction des clés...');
+            
             // Extraire la clé privée et le certificat
             const keyBags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
             const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
             
-            if (!keyBags[forge.pki.oids.pkcs8ShroudedKeyBag] || keyBags[forge.pki.oids.pkcs8ShroudedKeyBag].length === 0) {
+            console.log('Key bags trouvés:', Object.keys(keyBags));
+            console.log('Cert bags trouvés:', Object.keys(certBags));
+            
+            // Essayer différentes méthodes pour extraire la clé privée
+            let privateKey = null;
+            let certificate = null;
+            
+            // Méthode 1: pkcs8ShroudedKeyBag
+            if (keyBags[forge.pki.oids.pkcs8ShroudedKeyBag] && keyBags[forge.pki.oids.pkcs8ShroudedKeyBag].length > 0) {
+                privateKey = keyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0];
+                console.log('Clé privée trouvée via pkcs8ShroudedKeyBag');
+            }
+            
+            // Méthode 2: keyBag (clé non chiffrée)
+            if (!privateKey && keyBags[forge.pki.oids.keyBag] && keyBags[forge.pki.oids.keyBag].length > 0) {
+                privateKey = keyBags[forge.pki.oids.keyBag][0];
+                console.log('Clé privée trouvée via keyBag');
+            }
+            
+            // Méthode 3: Essayer avec friendlyName
+            if (!privateKey) {
+                const friendlyNameBags = p12.getBags({ friendlyName: 'pass.com.bdb.ticket' });
+                if (friendlyNameBags[forge.pki.oids.pkcs8ShroudedKeyBag] && friendlyNameBags[forge.pki.oids.pkcs8ShroudedKeyBag].length > 0) {
+                    privateKey = friendlyNameBags[forge.pki.oids.pkcs8ShroudedKeyBag][0];
+                    console.log('Clé privée trouvée via friendlyName');
+                }
+            }
+            
+            // Extraire le certificat
+            if (certBags[forge.pki.oids.certBag] && certBags[forge.pki.oids.certBag].length > 0) {
+                certificate = certBags[forge.pki.oids.certBag][0];
+                console.log('Certificat trouvé');
+            }
+            
+            if (!privateKey) {
+                console.log('Toutes les méthodes d\'extraction de clé ont échoué');
+                console.log('Bags disponibles:', Object.keys(keyBags));
                 throw new Error('Aucune clé privée trouvée dans le certificat');
             }
             
-            if (!certBags[forge.pki.oids.certBag] || certBags[forge.pki.oids.certBag].length === 0) {
+            if (!certificate) {
                 throw new Error('Aucun certificat trouvé dans le fichier P12');
             }
             
-            return {
-                privateKey: keyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0],
-                certificate: certBags[forge.pki.oids.certBag][0]
-            };
+            console.log('Clé privée et certificat extraits avec succès');
+            return { privateKey, certificate };
         } catch (error) {
             console.error('Erreur lors du chargement du certificat:', error);
             throw error;
