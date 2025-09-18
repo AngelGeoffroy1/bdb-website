@@ -32,6 +32,38 @@ class PassSigner {
     // Charger le certificat
     loadCertificate() {
         try {
+            // Debug: vérifier l'existence du fichier
+            console.log('Vérification de l\'existence du certificat...');
+            console.log('Chemin à vérifier:', this.certificatePath);
+            console.log('Le fichier existe:', fs.existsSync(this.certificatePath));
+            
+            // Lister le contenu du dossier certificates
+            const certificatesDir = path.dirname(this.certificatePath);
+            console.log('Dossier certificates:', certificatesDir);
+            console.log('Le dossier existe:', fs.existsSync(certificatesDir));
+            
+            if (fs.existsSync(certificatesDir)) {
+                try {
+                    const files = fs.readdirSync(certificatesDir);
+                    console.log('Fichiers dans le dossier certificates:', files);
+                } catch (err) {
+                    console.log('Erreur lors de la lecture du dossier certificates:', err.message);
+                }
+            }
+            
+            // Vérifier les chemins alternatifs
+            const alternativePaths = [
+                path.join(process.cwd(), 'functions', 'certificates', 'pass.com.bdb.ticket.p12'),
+                path.join(process.cwd(), 'certificates', 'pass.com.bdb.ticket.p12'),
+                '/var/task/certificates/pass.com.bdb.ticket.p12',
+                '/var/task/functions/certificates/pass.com.bdb.ticket.p12'
+            ];
+            
+            console.log('Test des chemins alternatifs:');
+            for (const altPath of alternativePaths) {
+                console.log(`- ${altPath}: ${fs.existsSync(altPath)}`);
+            }
+            
             if (!fs.existsSync(this.certificatePath)) {
                 throw new Error(`Certificat non trouvé: ${this.certificatePath}`);
             }
