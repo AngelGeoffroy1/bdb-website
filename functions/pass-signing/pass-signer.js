@@ -615,25 +615,29 @@ class PassSigner {
             }
 
             // Chemins par défaut dans le projet
-            candidatePaths.push(path.join(__dirname, 'certificates', 'AppleWWDRCAG3.pem'));
-            candidatePaths.push(path.join(__dirname, 'certificates', 'AppleWWDRCA.pem'));
-            candidatePaths.push(path.join(__dirname, 'certificates', 'Apple Worldwide Developer Relations Certification Authority.pem'));
+            const defaultDirs = this.getPotentialCertificateDirs();
+            for (const dirPath of defaultDirs) {
+                candidatePaths.push(path.join(dirPath, 'AppleWWDRCAG3.pem'));
+                candidatePaths.push(path.join(dirPath, 'AppleWWDRCA.pem'));
+                candidatePaths.push(path.join(dirPath, 'Apple Worldwide Developer Relations Certification Authority.pem'));
 
-            try {
-                const certDir = path.join(__dirname, 'certificates');
-                const files = fs.readdirSync(certDir);
-                for (const fileName of files) {
-                    if (!fileName.toLowerCase().includes('wwdr')) {
-                        continue;
+                try {
+                    const files = fs.readdirSync(dirPath);
+                    for (const fileName of files) {
+                        if (!fileName.toLowerCase().includes('wwdr')) {
+                            continue;
+                        }
+                        const fullPath = path.join(dirPath, fileName);
+                        if (!candidatePaths.includes(fullPath)) {
+                            candidatePaths.push(fullPath);
+                        }
                     }
-                    const fullPath = path.join(certDir, fileName);
-                    if (!candidatePaths.includes(fullPath)) {
-                        candidatePaths.push(fullPath);
-                    }
+                } catch (dirError) {
+                    console.warn(`Impossible de lister le dossier de certificats "${dirPath}" :`, dirError.message);
                 }
-            } catch (dirError) {
-                console.warn('Impossible de lister le dossier certificates pour trouver le WWDR:', dirError.message);
             }
+
+            console.log('Chemins candidats pour le certificat WWDR:', candidatePaths);
 
             for (const candidate of candidatePaths) {
                 if (candidate && fs.existsSync(candidate)) {
@@ -651,6 +655,25 @@ class PassSigner {
             this.cachedWwdrCertificate = null;
             return null;
         }
+    }
+
+    getPotentialCertificateDirs() {
+        const dirs = new Set();
+        const envDir = process.env.PASS_CERTIFICATES_DIR;
+        if (envDir) {
+            dirs.add(envDir);
+        }
+
+        const currentDir = __dirname;
+        dirs.add(path.join(currentDir, 'certificates'));
+        dirs.add(path.join(currentDir, 'pass-signing', 'certificates'));
+
+        const cwd = process.cwd();
+        dirs.add(path.join(cwd, 'functions', 'pass-signing', 'certificates'));
+        dirs.add(path.join(cwd, 'pass-signing', 'certificates'));
+        dirs.add(path.join(cwd, 'certificates'));
+
+        return Array.from(dirs);
     }
 }
 
