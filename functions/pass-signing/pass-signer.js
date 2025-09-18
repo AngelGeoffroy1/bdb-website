@@ -271,17 +271,34 @@ class PassSigner {
     // Signer le pass
     async signPass(passData) {
         try {
-            const { privateKey, certificate } = this.loadCertificate();
+            console.log('Début de la signature du pass...');
+            const { privateKey, certificate } = await this.loadCertificate();
+            
+            console.log('Certificat chargé, vérification des clés...');
+            console.log('privateKey:', !!privateKey);
+            console.log('certificate:', !!certificate);
+            
+            if (!privateKey) {
+                throw new Error('Clé privée non trouvée');
+            }
+            
+            if (!certificate) {
+                throw new Error('Certificat non trouvé');
+            }
             
             // Créer le manifest
+            console.log('Création du manifest...');
             const manifest = this.createManifest(passData);
             
             // Signer le manifest
+            console.log('Signature du manifest...');
             const signature = this.signManifest(manifest, privateKey);
             
             // Créer le fichier .pkpass
+            console.log('Création du fichier .pkpass...');
             const pkpassBuffer = await this.createPkpassFile(passData, manifest, signature, certificate);
             
+            console.log('Pass signé avec succès!');
             return pkpassBuffer;
         } catch (error) {
             console.error('Erreur lors de la signature du pass:', error);
@@ -407,15 +424,25 @@ class PassSigner {
             
             // Télécharger le certificat depuis la table certificates
             console.log('Recherche du certificat dans la table certificates...');
-            const { data, error } = await supabase
-                .from('certificates')
-                .select('certificate_data')
-                .eq('name', 'pass.com.bdb.ticket.p12')
-                .single();
             
-            console.log('Résultat de la requête Supabase:');
-            console.log('- data:', !!data);
-            console.log('- error:', error);
+            let data, error;
+            try {
+                const result = await supabase
+                    .from('certificates')
+                    .select('certificate_data')
+                    .eq('name', 'pass.com.bdb.ticket.p12')
+                    .single();
+                
+                data = result.data;
+                error = result.error;
+                
+                console.log('Résultat de la requête Supabase:');
+                console.log('- data:', !!data);
+                console.log('- error:', error);
+            } catch (supabaseError) {
+                console.log('Erreur lors de la requête Supabase:', supabaseError);
+                throw new Error(`Erreur requête Supabase: ${supabaseError.message}`);
+            }
             
             if (error) {
                 console.log('Erreur Supabase détaillée:', error);
