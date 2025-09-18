@@ -661,15 +661,37 @@ class PassSigner {
             try {
                 const wwdrBuffer = await this.downloadCertificateFromSupabase(this.wwdrSupabaseName, { logLabel: 'certificat WWDR' });
                 if (wwdrBuffer && wwdrBuffer.length > 0) {
-                    let wwdrPemCandidate = wwdrBuffer.toString('utf8').trim();
+                    const wwdrTextCandidate = wwdrBuffer.toString('utf8').trim();
 
-                    if (wwdrPemCandidate.includes('BEGIN CERTIFICATE')) {
+                    if (wwdrTextCandidate.includes('BEGIN CERTIFICATE')) {
                         try {
-                            this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrPemCandidate);
+                            this.cachedWwdrCertificate = forge.pki.certificateFromPem(wwdrTextCandidate);
                             console.log('Certificat WWDR téléchargé depuis Supabase (format PEM)');
                             return this.cachedWwdrCertificate;
                         } catch (pemError) {
                             console.warn('Impossible de parser le certificat WWDR comme PEM, tentative DER:', pemError.message);
+                        }
+                    }
+
+                    const potentialBase64 = wwdrTextCandidate.replace(/\s+/g, '');
+                    const base64Regex = /^[A-Za-z0-9+/=]+$/;
+                    if (base64Regex.test(potentialBase64) && potentialBase64.length % 4 === 0) {
+                        try {
+                            const nestedBuffer = Buffer.from(potentialBase64, 'base64');
+                            const nestedText = nestedBuffer.toString('utf8').trim();
+                            if (nestedText.includes('BEGIN CERTIFICATE')) {
+                                this.cachedWwdrCertificate = forge.pki.certificateFromPem(nestedText);
+                                console.log('Certificat WWDR téléchargé depuis Supabase (base64 -> PEM)');
+                                return this.cachedWwdrCertificate;
+                            }
+
+                            const nestedDer = nestedBuffer.toString('binary');
+                            const nestedAsn1 = forge.asn1.fromDer(nestedDer);
+                            this.cachedWwdrCertificate = forge.pki.certificateFromAsn1(nestedAsn1);
+                            console.log('Certificat WWDR téléchargé depuis Supabase (base64 -> DER)');
+                            return this.cachedWwdrCertificate;
+                        } catch (nestedError) {
+                            console.warn('Impossible de parser le certificat WWDR encodé en base64:', nestedError.message);
                         }
                     }
 
