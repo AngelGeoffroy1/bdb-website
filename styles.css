@@ -106,19 +106,13 @@ nav.nav-hidden {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(218, 252, 59, 0.1);
-    border: 1px solid rgba(218, 252, 59, 0.3);
     transition: var(--transition);
     margin-left: 1.5rem;
     flex-shrink: 0;
+    padding: 0.5rem;
 }
 
 .account-link:hover {
-    background: rgba(218, 252, 59, 0.2);
-    border-color: var(--accent-color);
     transform: scale(1.1);
 }
 
@@ -128,12 +122,11 @@ nav.nav-hidden {
 
 .account-link i {
     color: var(--accent-color);
-    font-size: 1.1rem;
+    font-size: 1.3rem;
 }
 
-.account-link.active {
-    background: rgba(218, 252, 59, 0.2);
-    border-color: var(--accent-color);
+.account-link.active i {
+    color: var(--accent-color);
 }
 
 /* Header */
