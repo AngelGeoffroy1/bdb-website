@@ -9,12 +9,17 @@ class PassSigner {
         const isNetlify = process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
         
         if (isNetlify) {
-            // En production Netlify, le certificat doit être dans le dossier functions/
+            // En production Netlify, le certificat doit être dans le dossier functions/certificates/
             this.certificatePath = path.join(__dirname, '..', 'certificates', 'pass.com.bdb.ticket.p12');
         } else {
             // En développement local
             this.certificatePath = path.join(__dirname, 'certificates', 'pass.com.bdb.ticket.p12');
         }
+        
+        // Debug: afficher le chemin pour diagnostiquer
+        console.log('Chemin du certificat:', this.certificatePath);
+        console.log('__dirname:', __dirname);
+        console.log('isNetlify:', isNetlify);
         
         this.certificatePassword = process.env.PASS_CERTIFICATE_PASSWORD || 'ton_mot_de_passe_certificat';
         this.teamIdentifier = process.env.APPLE_TEAM_IDENTIFIER || 'TYR3BN2ZH2';
