@@ -80,6 +80,8 @@ class PassSigner {
             if (keyBags[forge.pki.oids.pkcs8ShroudedKeyBag] && keyBags[forge.pki.oids.pkcs8ShroudedKeyBag].length > 0) {
                 privateKey = keyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0];
                 console.log('Clé privée trouvée via pkcs8ShroudedKeyBag');
+                console.log('Type de clé:', typeof privateKey);
+                console.log('Méthodes disponibles:', Object.getOwnPropertyNames(privateKey));
             }
             
             // Méthode 2: keyBag (clé non chiffrée)
@@ -111,6 +113,24 @@ class PassSigner {
             
             if (!certificate) {
                 throw new Error('Aucun certificat trouvé dans le fichier P12');
+            }
+            
+            // Vérifier et convertir la clé privée si nécessaire
+            if (privateKey && typeof privateKey === 'object' && privateKey.asn1) {
+                console.log('Conversion de la clé privée ASN.1...');
+                try {
+                    privateKey = forge.pki.privateKeyFromAsn1(privateKey);
+                    console.log('Clé privée convertie avec succès');
+                } catch (convertError) {
+                    console.log('Erreur lors de la conversion de la clé:', convertError.message);
+                    throw new Error('Impossible de convertir la clé privée');
+                }
+            }
+            
+            // Vérifier que la clé privée a bien la méthode sign
+            if (!privateKey || typeof privateKey.sign !== 'function') {
+                console.log('Clé privée invalide - méthodes disponibles:', Object.getOwnPropertyNames(privateKey));
+                throw new Error('Clé privée invalide - méthode sign manquante');
             }
             
             console.log('Clé privée et certificat extraits avec succès');
