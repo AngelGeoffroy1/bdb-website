@@ -182,6 +182,70 @@
             display: block;
         }
 
+        .rgpd-consent {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(218, 252, 59, 0.1);
+        }
+
+        .rgpd-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .rgpd-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(218, 252, 59, 0.5);
+            border-radius: 4px;
+            background: transparent;
+            position: relative;
+            flex-shrink: 0;
+            transition: var(--transition);
+            margin-top: 2px;
+        }
+
+        .rgpd-checkbox input[type="checkbox"]:checked + .checkmark {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .rgpd-checkbox input[type="checkbox"]:checked + .checkmark::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--background-color);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .rgpd-text {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .rgpd-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .rgpd-link:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
         .password-container {
             position: relative;
             display: flex;
@@ -583,6 +647,17 @@
                         <!-- Contenu généré dynamiquement -->
                     </div>
 
+                    <div class="rgpd-consent">
+                        <label class="rgpd-checkbox">
+                            <input type="checkbox" id="rgpd-consent" required>
+                            <span class="checkmark"></span>
+                            <span class="rgpd-text">
+                                J'accepte la <a href="conditions-utilisation.html" target="_blank" class="rgpd-link">politique de confidentialité</a> 
+                                et les <a href="conditions-utilisation.html" target="_blank" class="rgpd-link">conditions d'utilisation</a> de BDB
+                            </span>
+                        </label>
+                    </div>
+
                     <button type="submit" class="pay-button" id="pay-button">
                         <div class="loading-spinner" id="loading-spinner"></div>
                         <span id="pay-button-text">Payer maintenant</span>
@@ -807,6 +882,13 @@
             // Validation du mot de passe
             if (!isPasswordValid(customerInfo.password)) {
                 showError('Le mot de passe ne respecte pas tous les critères de sécurité');
+                return;
+            }
+
+            // Validation RGPD
+            const rgpdConsent = document.getElementById('rgpd-consent');
+            if (!rgpdConsent.checked) {
+                showError('Vous devez accepter la politique de confidentialité et les conditions d\'utilisation');
                 return;
             }
 

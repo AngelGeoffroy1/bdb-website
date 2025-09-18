@@ -216,6 +216,70 @@
             100% { transform: rotate(360deg); }
         }
 
+        .rgpd-consent {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(218, 252, 59, 0.1);
+        }
+
+        .rgpd-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .rgpd-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(218, 252, 59, 0.5);
+            border-radius: 4px;
+            background: transparent;
+            position: relative;
+            flex-shrink: 0;
+            transition: var(--transition);
+            margin-top: 2px;
+        }
+
+        .rgpd-checkbox input[type="checkbox"]:checked + .checkmark {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .rgpd-checkbox input[type="checkbox"]:checked + .checkmark::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--background-color);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .rgpd-text {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .rgpd-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .rgpd-link:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             .auth-container {
@@ -416,6 +480,17 @@
                     </div>
                 </div>
 
+                <div class="rgpd-consent" id="rgpd-consent-section" style="display: none;">
+                    <label class="rgpd-checkbox">
+                        <input type="checkbox" id="rgpd-consent-checkbox" required>
+                        <span class="checkmark"></span>
+                        <span class="rgpd-text">
+                            J'accepte la <a href="conditions-utilisation.html" target="_blank" class="rgpd-link">politique de confidentialité</a> 
+                            et les <a href="conditions-utilisation.html" target="_blank" class="rgpd-link">conditions d'utilisation</a> de BDB
+                        </span>
+                    </label>
+                </div>
+
                 <button type="submit" class="auth-button" id="auth-button">
                     <span id="button-text">Se connecter</span>
                     <div class="loading" id="loading">
@@ -492,6 +567,10 @@
                 signupFields.style.display = 'block';
                 confirmPasswordField.required = true;
                 
+                // Afficher la case RGPD pour l'inscription
+                document.getElementById('rgpd-consent-section').style.display = 'block';
+                document.getElementById('rgpd-consent-checkbox').required = true;
+                
                 // Ajouter les champs requis pour l'inscription
                 document.getElementById('firstName').required = true;
                 document.getElementById('lastName').required = true;
@@ -506,6 +585,10 @@
                 switchButton.textContent = 'Créer un compte';
                 signupFields.style.display = 'none';
                 confirmPasswordField.required = false;
+                
+                // Masquer la case RGPD pour la connexion
+                document.getElementById('rgpd-consent-section').style.display = 'none';
+                document.getElementById('rgpd-consent-checkbox').required = false;
                 
                 // Retirer les champs requis pour la connexion
                 document.getElementById('firstName').required = false;
@@ -572,6 +655,14 @@
                     // Vérifier la force du mot de passe
                     if (data.password.length < 8) {
                         showError('Le mot de passe doit contenir au moins 8 caractères.');
+                        hideLoading();
+                        return;
+                    }
+
+                    // Vérifier l'acceptation RGPD
+                    const rgpdConsent = document.getElementById('rgpd-consent-checkbox');
+                    if (!rgpdConsent.checked) {
+                        showError('Vous devez accepter la politique de confidentialité et les conditions d\'utilisation.');
                         hideLoading();
                         return;
                     }

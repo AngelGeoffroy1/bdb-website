@@ -257,17 +257,6 @@ exports.handler = async (event) => {
 
         console.log('✅ Session Stripe Checkout créée:', session.id);
 
-        // Ajouter le session_id aux métadonnées du payment intent
-        if (session.payment_intent) {
-            await stripe.paymentIntents.update(session.payment_intent, {
-                metadata: {
-                    ...sessionParams.payment_intent_data.metadata,
-                    session_id: session.id
-                }
-            });
-            console.log('✅ Session ID ajouté aux métadonnées du payment intent');
-        }
-
         return {
             statusCode: 200,
             headers: {

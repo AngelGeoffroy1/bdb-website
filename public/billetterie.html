@@ -786,16 +786,16 @@
             }
 
             .events-container {
-                padding: 0.4rem 1rem 1rem;
+                padding: 0.2rem 1rem 0.8rem;
             }
 
             .events-section {
-                margin-bottom: 0.05rem;
+                margin-bottom: 0.02rem;
             }
 
             .events-section-header {
-                gap: 0.3rem;
-                margin-bottom: 1rem;
+                gap: 0.2rem;
+                margin-bottom: 0.8rem;
             }
 
             .events-section-title {
@@ -809,12 +809,55 @@
             }
 
             .events-carousel {
-                margin-top: 0.2rem;
+                margin-top: 0.1rem;
+                position: relative;
+            }
+
+            .events-carousel::after {
+                content: '← Swipe pour voir plus →';
+                position: absolute;
+                bottom: -25px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 0.75rem;
+                color: rgba(218, 252, 59, 0.7);
+                text-align: center;
+                pointer-events: none;
+                animation: swipeHint 2s ease-in-out infinite;
+            }
+
+            @keyframes swipeHint {
+                0%, 100% { opacity: 0.5; }
+                50% { opacity: 1; }
             }
 
             .events-track {
                 gap: 0.8rem;
-                padding-bottom: 1rem;
+                padding: 0.3rem 0 2rem 0;
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: var(--accent-color) transparent;
+                -ms-overflow-style: auto;
+            }
+
+            .events-track::-webkit-scrollbar {
+                height: 4px;
+            }
+
+            .events-track::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 2px;
+            }
+
+            .events-track::-webkit-scrollbar-thumb {
+                background: var(--accent-color);
+                border-radius: 2px;
+            }
+
+            .events-track::-webkit-scrollbar-thumb:hover {
+                background: rgba(218, 252, 59, 0.8);
             }
 
             .event-card {
@@ -955,7 +998,16 @@
             }
 
             .events-container {
-                padding: 0.3rem 0.8rem 0.8rem;
+                padding: 0.2rem 0.8rem 0.6rem;
+            }
+
+            .events-section {
+                margin-bottom: 0.01rem;
+            }
+
+            .events-section-header {
+                gap: 0.1rem;
+                margin-bottom: 0.6rem;
             }
 
             .events-section-title {
@@ -964,6 +1016,20 @@
 
             .events-section-subtitle {
                 font-size: 0.85rem;
+            }
+
+            .events-carousel {
+                margin-top: 0.05rem;
+            }
+
+            .events-carousel::after {
+                font-size: 0.7rem;
+                bottom: -20px;
+            }
+
+            .events-track {
+                gap: 0.6rem;
+                padding: 0.2rem 0 1.8rem 0;
             }
 
             .event-card {

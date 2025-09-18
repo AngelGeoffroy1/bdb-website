@@ -147,7 +147,6 @@ exports.handler = async (event) => {
                             customer_email: metadata.customer_email,
                             customer_phone: metadata.customer_phone || null,
                             ticket_code: require('crypto').randomUUID(),
-                            session_id: metadata.session_id || null, // ID de la session Stripe Checkout
                             is_used: false,
                             is_golden: false,
                             skip_points_update: true, // Pas de mise à jour des points pour les achats web
