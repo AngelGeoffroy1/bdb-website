@@ -3,6 +3,7 @@ const path = require('path');
 const forge = require('node-forge');
 const archiver = require('archiver');
 const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 
 const FALLBACK_IMAGES = {
     'icon.png': 'iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAIAAADZ8fBYAAAAMElEQVR4nO3MQQ0AMAwDsWwMwp/spJ0Kob8zAJ+2WXA30vgOX/jCF77whS984ZvvASc/AG1NzWdgAAAAAElFTkSuQmCC',
@@ -46,11 +47,21 @@ class PassSigner {
         this.cachedWwdrAsn1 = null;
         this.cachedWwdrPem = null;
         this.wwdrCertificateLoaded = false;
+
+        const supabaseUrl = process.env.SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+        if (supabaseUrl && supabaseKey) {
+            this.supabase = createClient(supabaseUrl, supabaseKey);
+        } else {
+            this.supabase = null;
+            console.warn('Supabase non configuré - utilisation de l\'ID du ticket pour le QR code');
+        }
     }
 
-    getBarcodeMessage(ticketData) {
+    extractBarcodeFromObject(ticketData) {
         if (!ticketData || typeof ticketData !== 'object') {
-            return '';
+            return null;
         }
 
         const candidateKeys = [
@@ -79,7 +90,67 @@ class PassSigner {
             }
         }
 
-        return ticketData.id ? ticketData.id.toString() : '';
+        return null;
+    }
+
+    async resolveBarcodeMessage(ticketData) {
+        const directValue = this.extractBarcodeFromObject(ticketData);
+        if (directValue) {
+            return directValue;
+        }
+
+        if (this.supabase) {
+            const candidateIds = new Set();
+            const idKeys = [
+                'ticketId',
+                'ticket_id',
+                'ticketID',
+                'id',
+                'ticketUuid',
+                'ticket_uuid'
+            ];
+
+            for (const key of idKeys) {
+                if (ticketData[key]) {
+                    candidateIds.add(ticketData[key]);
+                }
+            }
+
+            if (ticketData.ticket && typeof ticketData.ticket === 'object') {
+                for (const key of idKeys) {
+                    if (ticketData.ticket[key]) {
+                        candidateIds.add(ticketData.ticket[key]);
+                    }
+                }
+            }
+
+            for (const candidate of candidateIds) {
+                if (!candidate) {
+                    continue;
+                }
+
+                try {
+                    const { data, error } = await this.supabase
+                        .from('tickets')
+                        .select('ticket_code')
+                        .eq('id', candidate)
+                        .maybeSingle();
+
+                    if (error) {
+                        console.warn('Erreur Supabase lors de la récupération du ticket:', error.message);
+                        continue;
+                    }
+
+                    if (data && data.ticket_code) {
+                        return data.ticket_code.toString();
+                    }
+                } catch (supabaseError) {
+                    console.warn('Exception Supabase lors de la récupération du ticket:', supabaseError.message);
+                }
+            }
+        }
+
+        return ticketData && ticketData.id ? ticketData.id.toString() : '';
     }
 
     // Charger le certificat
@@ -240,6 +311,8 @@ class PassSigner {
 
     // Créer un pass pour un ticket d'événement
     async createEventTicketPass(ticketData) {
+        const barcodeMessage = await this.resolveBarcodeMessage(ticketData);
+
         const passTemplate = {
             "formatVersion": 1,
             "passTypeIdentifier": this.passTypeIdentifier,
@@ -302,7 +375,7 @@ class PassSigner {
                 ]
             },
             "barcode": {
-                "message": this.getBarcodeMessage(ticketData),
+                "message": barcodeMessage,
                 "format": "PKBarcodeFormatQR",
                 "messageEncoding": "iso-8859-1"
             },
@@ -314,6 +387,8 @@ class PassSigner {
 
     // Créer un pass pour un ticket de boîte de nuit
     async createNightclubTicketPass(ticketData) {
+        const barcodeMessage = await this.resolveBarcodeMessage(ticketData);
+
         const passTemplate = {
             "formatVersion": 1,
             "passTypeIdentifier": this.passTypeIdentifier,
@@ -376,7 +451,7 @@ class PassSigner {
                 ]
             },
             "barcode": {
-                "message": this.getBarcodeMessage(ticketData),
+                "message": barcodeMessage,
                 "format": "PKBarcodeFormatQR",
                 "messageEncoding": "iso-8859-1"
             }
