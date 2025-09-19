@@ -50,7 +50,7 @@ class PassSigner {
         this.teamIdentifier = process.env.APPLE_TEAM_IDENTIFIER || 'TYR3BN2ZH2';
         this.passTypeIdentifier = process.env.PASS_TYPE_IDENTIFIER || 'pass.com.bdb.ticket';
         this.organizationName = 'Babylone';
-        this.logoText = 'BDB';
+        this.brandText = 'BDB';
         this.passCertificateSupabaseName = process.env.PASS_CERTIFICATE_SUPABASE_NAME || 'pass.com.bdb.ticket.p12';
         this.wwdrSupabaseName = process.env.WWDR_CERTIFICATE_SUPABASE_NAME || 'AppleWWDRCAG3.pem';
         this.cachedWwdrCertificate = null;
@@ -505,7 +505,6 @@ class PassSigner {
             "teamIdentifier": this.teamIdentifier,
             "organizationName": this.organizationName,
             "description": `Billet pour ${ticketData.event.name}`,
-            "logoText": this.logoText,
             "foregroundColor": "rgb(218, 252, 59)",
             "backgroundColor": "rgb(0, 0, 0)",
             "labelColor": "rgb(218, 252, 59)",
@@ -514,7 +513,7 @@ class PassSigner {
                     {
                         "key": "brand",
                         "label": "",
-                        "value": this.logoText,
+                        "value": this.brandText,
                         "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
@@ -528,15 +527,15 @@ class PassSigner {
                 ],
                 "secondaryFields": [
                     {
-                        "key": "date",
+                        "key": "event_date",
                         "label": "Date",
-                        "value": this.formatDateForPass(ticketData.event.date),
+                        "value": this.formatDisplayDate(ticketData.event.date),
                         "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
-                        "key": "location",
-                        "label": "Lieu",
-                        "value": ticketData.event.location || "Non spécifié",
+                        "key": "event_time",
+                        "label": "Heure",
+                        "value": this.formatDisplayTime(ticketData.event.date),
                         "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
@@ -544,12 +543,14 @@ class PassSigner {
                     {
                         "key": "quantity",
                         "label": "Quantité",
-                        "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`
+                        "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`,
+                        "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
                         "key": "customer",
                         "label": "Nom",
-                        "value": `${ticketData.customerFirstName} ${ticketData.customerLastName}`
+                        "value": `${ticketData.customerFirstName} ${ticketData.customerLastName}`,
+                        "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
                 "backFields": [
@@ -592,7 +593,6 @@ class PassSigner {
             "teamIdentifier": this.teamIdentifier,
             "organizationName": this.organizationName,
             "description": `Billet pour ${ticketData.association.name}`,
-            "logoText": this.logoText,
             "foregroundColor": "rgb(218, 252, 59)",
             "backgroundColor": "rgb(0, 0, 0)",
             "labelColor": "rgb(218, 252, 59)",
@@ -601,7 +601,7 @@ class PassSigner {
                     {
                         "key": "brand",
                         "label": "",
-                        "value": this.logoText,
+                        "value": this.brandText,
                         "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
@@ -861,6 +861,41 @@ class PassSigner {
             return new Date(date * 1000).toISOString();
         } else {
             return new Date(date).toISOString();
+        }
+    }
+
+    formatDisplayDate(date) {
+        try {
+            const parsed = new Date(date);
+            if (Number.isNaN(parsed.getTime())) {
+                return '';
+            }
+            return parsed.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+        } catch (error) {
+            console.warn('Erreur formatDisplayDate:', error.message);
+            return '';
+        }
+    }
+
+    formatDisplayTime(date) {
+        try {
+            const parsed = new Date(date);
+            if (Number.isNaN(parsed.getTime())) {
+                return '';
+            }
+            return parsed.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        } catch (error) {
+            console.warn('Erreur formatDisplayTime:', error.message);
+            return '';
         }
     }
 
