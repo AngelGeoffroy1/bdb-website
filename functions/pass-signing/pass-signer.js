@@ -4,6 +4,16 @@ const forge = require('node-forge');
 const archiver = require('archiver');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
+const fetch = typeof globalThis.fetch === 'function'
+    ? (...args) => globalThis.fetch(...args)
+    : require('node-fetch');
+
+let sharp = null;
+try {
+    sharp = require('sharp');
+} catch (error) {
+    console.warn('sharp non disponible - les images seront utilisées uniquement si elles sont déjà en PNG');
+}
 
 const FALLBACK_IMAGES = {
     'icon.png': 'iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAIAAADZ8fBYAAAAMElEQVR4nO3MQQ0AMAwDsWwMwp/spJ0Kob8zAJ+2WXA30vgOX/jCF77whS984ZvvASc/AG1NzWdgAAAAAElFTkSuQmCC',
@@ -151,6 +161,112 @@ class PassSigner {
         }
 
         return ticketData && ticketData.id ? ticketData.id.toString() : '';
+    }
+
+    extractEventId(ticketData) {
+        if (!ticketData || typeof ticketData !== 'object') {
+            return null;
+        }
+
+        const candidates = new Set();
+
+        if (ticketData.event && typeof ticketData.event === 'object') {
+            const eventObj = ticketData.event;
+            const eventKeys = ['id', 'eventId', 'event_id', 'eventID', 'uuid', 'event_uuid', 'eventUuid'];
+            for (const key of eventKeys) {
+                if (eventObj[key]) {
+                    candidates.add(eventObj[key]);
+                }
+            }
+        }
+
+        const directKeys = ['eventId', 'event_id', 'eventID', 'eventUuid', 'event_uuid'];
+        for (const key of directKeys) {
+            if (ticketData[key]) {
+                candidates.add(ticketData[key]);
+            }
+        }
+
+        for (const candidate of candidates) {
+            if (!candidate) {
+                continue;
+            }
+            if (ticketData.id && candidate === ticketData.id) {
+                continue;
+            }
+            return candidate;
+        }
+
+        return null;
+    }
+
+    async fetchEventImage(ticketData) {
+        if (!this.supabase) {
+            return [];
+        }
+
+        const eventId = this.extractEventId(ticketData);
+        if (!eventId) {
+            return [];
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .from('events')
+                .select('image_url')
+                .eq('id', eventId)
+                .maybeSingle();
+
+            if (error) {
+                console.warn('Erreur Supabase lors de la récupération de l\'image de l\'événement:', error.message);
+                return [];
+            }
+
+            if (!data || !data.image_url) {
+                console.log('Aucune image trouvée pour l\'événement:', eventId);
+                return [];
+            }
+
+            const response = await fetch(data.image_url);
+
+            if (!response.ok) {
+                console.warn('Échec du téléchargement de l\'image de l\'événement:', response.status, response.statusText);
+                return [];
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            const arrayBuffer = await response.arrayBuffer();
+            const imageBuffer = Buffer.from(arrayBuffer);
+
+            if (sharp) {
+                try {
+                    const baseImage = await sharp(imageBuffer)
+                        .resize({ width: 624, height: 246, fit: 'cover', position: 'centre' })
+                        .png()
+                        .toBuffer();
+
+                    const retinaImage = await sharp(imageBuffer)
+                        .resize({ width: 1248, height: 492, fit: 'cover', position: 'centre' })
+                        .png()
+                        .toBuffer();
+
+                    return [
+                        { name: 'strip.png', data: baseImage },
+                        { name: 'strip@2x.png', data: retinaImage }
+                    ];
+                } catch (conversionError) {
+                    console.warn('Erreur lors de la conversion de l\'image en PNG:', conversionError.message);
+                }
+            } else if (contentType.includes('png')) {
+                return [{ name: 'strip.png', data: imageBuffer }];
+            } else {
+                console.warn('Image de l\'événement non PNG et sharp indisponible, image ignorée');
+            }
+        } catch (error) {
+            console.warn('Erreur lors de la récupération de l\'image de l\'événement:', error.message);
+        }
+
+        return [];
     }
 
     // Charger le certificat
@@ -312,6 +428,7 @@ class PassSigner {
     // Créer un pass pour un ticket d'événement
     async createEventTicketPass(ticketData) {
         const barcodeMessage = await this.resolveBarcodeMessage(ticketData);
+        const additionalAssets = await this.fetchEventImage(ticketData);
 
         const passTemplate = {
             "formatVersion": 1,
@@ -382,7 +499,7 @@ class PassSigner {
             "relevantDate": this.formatDateForPass(ticketData.event.date)
         };
 
-        return await this.signPass(passTemplate);
+        return await this.signPass(passTemplate, additionalAssets);
     }
 
     // Créer un pass pour un ticket de boîte de nuit
@@ -461,7 +578,7 @@ class PassSigner {
     }
 
     // Signer le pass
-    async signPass(passData) {
+    async signPass(passData, assets = []) {
         try {
             console.log('Début de la signature du pass...');
             const { privateKey, certificate } = await this.loadCertificate();
@@ -480,7 +597,7 @@ class PassSigner {
             
             // Préparer les fichiers du pass
             console.log('Préparation des fichiers du pass...');
-            const files = this.preparePassFiles(passData);
+            const files = this.preparePassFiles(passData, assets);
 
             // Créer le manifest
             console.log('Création du manifest...');
@@ -504,15 +621,12 @@ class PassSigner {
     }
 
     // Préparer les fichiers à inclure dans le pass
-    preparePassFiles(passData) {
-        const files = [];
+    preparePassFiles(passData, assets = []) {
+        const fileMap = new Map();
 
         // pass.json
         const passJson = JSON.stringify(passData, null, 2);
-        files.push({
-            name: 'pass.json',
-            data: Buffer.from(passJson, 'utf8')
-        });
+        fileMap.set('pass.json', Buffer.from(passJson, 'utf8'));
 
         // Images par défaut
         const defaultImages = ['icon.png', 'icon@2x.png', 'icon@3x.png', 'logo.png', 'logo@2x.png'];
@@ -520,10 +634,23 @@ class PassSigner {
             const imagePath = path.join(__dirname, 'templates', imageName);
             if (fs.existsSync(imagePath)) {
                 const imageBuffer = fs.readFileSync(imagePath);
-                files.push({ name: imageName, data: imageBuffer });
+                fileMap.set(imageName, imageBuffer);
             } else if (FALLBACK_IMAGES[imageName]) {
-                files.push({ name: imageName, data: Buffer.from(FALLBACK_IMAGES[imageName], 'base64'), fallback: true });
+                fileMap.set(imageName, Buffer.from(FALLBACK_IMAGES[imageName], 'base64'));
             }
+        }
+
+        if (Array.isArray(assets)) {
+            for (const asset of assets) {
+                if (asset && asset.name && asset.data) {
+                    fileMap.set(asset.name, asset.data);
+                }
+            }
+        }
+
+        const files = [];
+        for (const [name, data] of fileMap.entries()) {
+            files.push({ name, data });
         }
 
         return files;
