@@ -541,6 +541,12 @@ class PassSigner {
                 ],
                 "auxiliaryFields": [
                     {
+                        "key": "location",
+                        "label": "Lieu",
+                        "value": ticketData.event.location || "Non spécifié",
+                        "textAlignment": "PKTextAlignmentCenter"
+                    },
+                    {
                         "key": "quantity",
                         "label": "Quantité",
                         "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`,
@@ -866,15 +872,14 @@ class PassSigner {
 
     formatDisplayDate(date) {
         try {
-            const parsed = new Date(date);
-            if (Number.isNaN(parsed.getTime())) {
+            const parsedDate = new Date(date);
+            if (Number.isNaN(parsedDate.getTime())) {
                 return '';
             }
-            return parsed.toLocaleDateString('fr-FR', {
-                weekday: 'long',
+            return parsedDate.toLocaleDateString('fr-FR', {
                 day: '2-digit',
-                month: 'long',
-                year: 'numeric'
+                month: '2-digit',
+                year: '2-digit'
             });
         } catch (error) {
             console.warn('Erreur formatDisplayDate:', error.message);
@@ -884,11 +889,11 @@ class PassSigner {
 
     formatDisplayTime(date) {
         try {
-            const parsed = new Date(date);
-            if (Number.isNaN(parsed.getTime())) {
+            const parsedDate = new Date(date);
+            if (Number.isNaN(parsedDate.getTime())) {
                 return '';
             }
-            return parsed.toLocaleTimeString('fr-FR', {
+            return parsedDate.toLocaleTimeString('fr-FR', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false
