@@ -206,28 +206,53 @@ class PassSigner {
         }
 
         const eventId = this.extractEventId(ticketData);
-        if (!eventId) {
-            return [];
-        }
+        const eventName = ticketData?.event?.name || ticketData?.eventName;
+        let imageUrl = null;
 
         try {
-            const { data, error } = await this.supabase
-                .from('events')
-                .select('image_url')
-                .eq('id', eventId)
-                .maybeSingle();
+            if (eventId) {
+                const { data, error } = await this.supabase
+                    .from('events')
+                    .select('image_url')
+                    .eq('id', eventId)
+                    .maybeSingle();
 
-            if (error) {
-                console.warn('Erreur Supabase lors de la récupération de l\'image de l\'événement:', error.message);
+                if (error) {
+                    console.warn('Erreur Supabase lors de la récupération de l\'image via ID:', error.message);
+                } else if (data && data.image_url) {
+                    imageUrl = data.image_url;
+                } else {
+                    console.log('Aucune image trouvée pour l\'ID d\'événement:', eventId);
+                }
+            }
+
+            if (!imageUrl && eventName) {
+                let query = this.supabase
+                    .from('events')
+                    .select('image_url, date')
+                    .eq('name', eventName)
+                    .order('date', { ascending: false })
+                    .limit(3);
+
+                const { data: nameMatches, error: nameError } = await query;
+
+                if (nameError) {
+                    console.warn('Erreur Supabase lors de la récupération de l\'image via nom:', nameError.message);
+                } else if (Array.isArray(nameMatches) && nameMatches.length > 0) {
+                    const match = this.pickClosestEventMatch(nameMatches, ticketData?.event?.date);
+                    if (match?.image_url) {
+                        imageUrl = match.image_url;
+                    } else {
+                        console.log('Aucune image trouvée pour le nom d\'événement:', eventName);
+                    }
+                }
+            }
+
+            if (!imageUrl) {
                 return [];
             }
 
-            if (!data || !data.image_url) {
-                console.log('Aucune image trouvée pour l\'événement:', eventId);
-                return [];
-            }
-
-            const response = await fetch(data.image_url);
+            const response = await fetch(imageUrl);
 
             if (!response.ok) {
                 console.warn('Échec du téléchargement de l\'image de l\'événement:', response.status, response.statusText);
@@ -250,9 +275,15 @@ class PassSigner {
                         .png()
                         .toBuffer();
 
+                    const tripleImage = await sharp(imageBuffer)
+                        .resize({ width: 1872, height: 738, fit: 'cover', position: 'centre' })
+                        .png()
+                        .toBuffer();
+
                     return [
                         { name: 'strip.png', data: baseImage },
-                        { name: 'strip@2x.png', data: retinaImage }
+                        { name: 'strip@2x.png', data: retinaImage },
+                        { name: 'strip@3x.png', data: tripleImage }
                     ];
                 } catch (conversionError) {
                     console.warn('Erreur lors de la conversion de l\'image en PNG:', conversionError.message);
@@ -267,6 +298,43 @@ class PassSigner {
         }
 
         return [];
+    }
+
+    pickClosestEventMatch(matches, targetDate) {
+        if (!Array.isArray(matches) || matches.length === 0) {
+            return null;
+        }
+
+        if (!targetDate) {
+            return matches[0];
+        }
+
+        const targetTime = new Date(targetDate).getTime();
+        if (Number.isNaN(targetTime)) {
+            return matches[0];
+        }
+
+        let bestMatch = matches[0];
+        let smallestDiff = Infinity;
+
+        for (const match of matches) {
+            if (!match || !match.date) {
+                continue;
+            }
+
+            const matchTime = new Date(match.date).getTime();
+            if (Number.isNaN(matchTime)) {
+                continue;
+            }
+
+            const diff = Math.abs(matchTime - targetTime);
+            if (diff < smallestDiff) {
+                smallestDiff = diff;
+                bestMatch = match;
+            }
+        }
+
+        return bestMatch;
     }
 
     // Charger le certificat
