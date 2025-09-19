@@ -200,58 +200,74 @@ class PassSigner {
         return null;
     }
 
-    async fetchEventImage(ticketData) {
+    async fetchEventRecord(ticketData) {
+        const fallbackEvent = ticketData && typeof ticketData.event === 'object' ? ticketData.event : null;
+
+        if (!ticketData) {
+            return fallbackEvent;
+        }
+
         if (!this.supabase) {
-            return [];
+            return fallbackEvent;
         }
 
         const eventId = this.extractEventId(ticketData);
-        const eventName = ticketData?.event?.name || ticketData?.eventName;
-        let imageUrl = null;
+        const eventName = fallbackEvent?.name || ticketData?.eventName;
+        const targetDate = fallbackEvent?.date || ticketData?.eventDate;
 
         try {
             if (eventId) {
                 const { data, error } = await this.supabase
                     .from('events')
-                    .select('image_url')
+                    .select('id, name, description, image_url, date, location')
                     .eq('id', eventId)
                     .maybeSingle();
 
                 if (error) {
-                    console.warn('Erreur Supabase lors de la récupération de l\'image via ID:', error.message);
-                } else if (data && data.image_url) {
-                    imageUrl = data.image_url;
-                } else {
-                    console.log('Aucune image trouvée pour l\'ID d\'événement:', eventId);
+                    console.warn('Erreur Supabase lors de la récupération de l\'événement via ID:', error.message);
+                } else if (data) {
+                    return data;
                 }
             }
 
-            if (!imageUrl && eventName) {
-                let query = this.supabase
+            if (eventName) {
+                const { data, error } = await this.supabase
                     .from('events')
-                    .select('image_url, date')
+                    .select('id, name, description, image_url, date, location')
                     .eq('name', eventName)
                     .order('date', { ascending: false })
-                    .limit(3);
+                    .limit(5);
 
-                const { data: nameMatches, error: nameError } = await query;
-
-                if (nameError) {
-                    console.warn('Erreur Supabase lors de la récupération de l\'image via nom:', nameError.message);
-                } else if (Array.isArray(nameMatches) && nameMatches.length > 0) {
-                    const match = this.pickClosestEventMatch(nameMatches, ticketData?.event?.date);
-                    if (match?.image_url) {
-                        imageUrl = match.image_url;
-                    } else {
-                        console.log('Aucune image trouvée pour le nom d\'événement:', eventName);
-                    }
+                if (error) {
+                    console.warn('Erreur Supabase lors de la récupération de l\'événement via nom:', error.message);
+                } else if (Array.isArray(data) && data.length > 0) {
+                    const match = this.pickClosestEventMatch(data, targetDate);
+                    return match || data[0];
                 }
             }
+        } catch (error) {
+            console.warn('Exception lors de la récupération de l\'événement:', error.message);
+        }
 
-            if (!imageUrl) {
-                return [];
-            }
+        return fallbackEvent;
+    }
 
+    async fetchEventImage(ticketData, eventRecord) {
+        const imageUrlCandidates = [
+            eventRecord && typeof eventRecord === 'object' ? eventRecord.image_url : null,
+            ticketData?.event?.image_url,
+            ticketData?.event?.imageUrl,
+            ticketData?.image_url,
+            ticketData?.eventImageUrl
+        ].filter(Boolean);
+
+        const imageUrl = imageUrlCandidates.length > 0 ? imageUrlCandidates[0] : null;
+
+        if (!imageUrl) {
+            return [];
+        }
+
+        try {
             const response = await fetch(imageUrl);
 
             if (!response.ok) {
@@ -496,7 +512,14 @@ class PassSigner {
     // Créer un pass pour un ticket d'événement
     async createEventTicketPass(ticketData) {
         const barcodeMessage = await this.resolveBarcodeMessage(ticketData);
-        const additionalAssets = await this.fetchEventImage(ticketData);
+        const eventRecord = await this.fetchEventRecord(ticketData);
+        const additionalAssets = await this.fetchEventImage(ticketData, eventRecord);
+
+        const eventName = eventRecord?.name || ticketData?.event?.name || ticketData?.eventName || 'Événement';
+        const passDescription = `Billet pour ${eventName}`;
+        const eventDescription = eventRecord?.description || ticketData?.event?.description || passDescription;
+        const eventDateValue = eventRecord?.date || ticketData?.event?.date || ticketData?.eventDate;
+        const eventLocation = eventRecord?.location || ticketData?.event?.location || ticketData?.eventLocation || 'Non spécifié';
 
         const passTemplate = {
             "formatVersion": 1,
@@ -504,7 +527,7 @@ class PassSigner {
             "serialNumber": ticketData.id.toString(),
             "teamIdentifier": this.teamIdentifier,
             "organizationName": this.organizationName,
-            "description": `Billet pour ${ticketData.event.name}`,
+            "description": passDescription,
             "foregroundColor": "rgb(218, 252, 59)",
             "backgroundColor": "rgb(0, 0, 0)",
             "labelColor": "rgb(218, 252, 59)",
@@ -521,7 +544,7 @@ class PassSigner {
                     {
                         "key": "event",
                         "label": "Événement",
-                        "value": ticketData.event.name,
+                        "value": eventName,
                         "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
@@ -529,13 +552,13 @@ class PassSigner {
                     {
                         "key": "event_date",
                         "label": "Date",
-                        "value": this.formatDisplayDate(ticketData.event.date),
+                        "value": this.formatDisplayDate(eventDateValue),
                         "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
                         "key": "event_time",
                         "label": "Heure",
-                        "value": this.formatDisplayTime(ticketData.event.date),
+                        "value": this.formatDisplayTime(eventDateValue),
                         "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
@@ -543,7 +566,7 @@ class PassSigner {
                     {
                         "key": "location",
                         "label": "Lieu",
-                        "value": ticketData.event.location || "Non spécifié",
+                        "value": eventLocation,
                         "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
@@ -563,7 +586,7 @@ class PassSigner {
                     {
                         "key": "description",
                         "label": "Description",
-                        "value": ticketData.event.description || `Billet pour ${ticketData.event.name}`
+                        "value": eventDescription
                     },
                     {
                         "key": "purchase_date",
@@ -582,7 +605,7 @@ class PassSigner {
                 "format": "PKBarcodeFormatQR",
                 "messageEncoding": "iso-8859-1"
             },
-            "relevantDate": this.formatDateForPass(ticketData.event.date)
+            "relevantDate": this.formatDateForPass(eventDateValue || ticketData.purchaseDate)
         };
 
         return await this.signPass(passTemplate, additionalAssets);
