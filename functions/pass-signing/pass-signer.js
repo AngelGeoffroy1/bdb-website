@@ -50,7 +50,7 @@ class PassSigner {
         this.teamIdentifier = process.env.APPLE_TEAM_IDENTIFIER || 'TYR3BN2ZH2';
         this.passTypeIdentifier = process.env.PASS_TYPE_IDENTIFIER || 'pass.com.bdb.ticket';
         this.organizationName = 'Babylone';
-        this.logoText = 'Babylone';
+        this.logoText = 'BDB';
         this.passCertificateSupabaseName = process.env.PASS_CERTIFICATE_SUPABASE_NAME || 'pass.com.bdb.ticket.p12';
         this.wwdrSupabaseName = process.env.WWDR_CERTIFICATE_SUPABASE_NAME || 'AppleWWDRCAG3.pem';
         this.cachedWwdrCertificate = null;
@@ -506,27 +506,38 @@ class PassSigner {
             "organizationName": this.organizationName,
             "description": `Billet pour ${ticketData.event.name}`,
             "logoText": this.logoText,
-            "foregroundColor": "rgb(255, 255, 255)",
+            "foregroundColor": "rgb(218, 252, 59)",
             "backgroundColor": "rgb(0, 0, 0)",
-            "labelColor": "rgb(255, 255, 255)",
+            "labelColor": "rgb(218, 252, 59)",
             "eventTicket": {
+                "headerFields": [
+                    {
+                        "key": "brand",
+                        "label": "",
+                        "value": this.logoText,
+                        "textAlignment": "PKTextAlignmentCenter"
+                    }
+                ],
                 "primaryFields": [
                     {
                         "key": "event",
                         "label": "Événement",
-                        "value": ticketData.event.name
+                        "value": ticketData.event.name,
+                        "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
                 "secondaryFields": [
                     {
                         "key": "date",
                         "label": "Date",
-                        "value": this.formatDateForPass(ticketData.event.date)
+                        "value": this.formatDateForPass(ticketData.event.date),
+                        "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
                         "key": "location",
                         "label": "Lieu",
-                        "value": ticketData.event.location || "Non spécifié"
+                        "value": ticketData.event.location || "Non spécifié",
+                        "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
                 "auxiliaryFields": [
@@ -582,39 +593,52 @@ class PassSigner {
             "organizationName": this.organizationName,
             "description": `Billet pour ${ticketData.association.name}`,
             "logoText": this.logoText,
-            "foregroundColor": "rgb(255, 255, 255)",
+            "foregroundColor": "rgb(218, 252, 59)",
             "backgroundColor": "rgb(0, 0, 0)",
-            "labelColor": "rgb(255, 255, 255)",
+            "labelColor": "rgb(218, 252, 59)",
             "eventTicket": {
+                "headerFields": [
+                    {
+                        "key": "brand",
+                        "label": "",
+                        "value": this.logoText,
+                        "textAlignment": "PKTextAlignmentCenter"
+                    }
+                ],
                 "primaryFields": [
                     {
                         "key": "venue",
                         "label": "Établissement",
-                        "value": ticketData.association.name
+                        "value": ticketData.association.name,
+                        "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
                 "secondaryFields": [
                     {
                         "key": "ticket_type",
                         "label": "Type de billet",
-                        "value": ticketData.ticketType.name
+                        "value": ticketData.ticketType.name,
+                        "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
                         "key": "purchase_date",
                         "label": "Date d'achat",
-                        "value": this.formatDateForPass(ticketData.purchaseDate)
+                        "value": this.formatDateForPass(ticketData.purchaseDate),
+                        "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
                 "auxiliaryFields": [
                     {
                         "key": "quantity",
                         "label": "Quantité",
-                        "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`
+                        "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`,
+                        "textAlignment": "PKTextAlignmentCenter"
                     },
                     {
                         "key": "customer",
                         "label": "Nom",
-                        "value": `${ticketData.customerFirstName} ${ticketData.customerLastName}`
+                        "value": `${ticketData.customerFirstName} ${ticketData.customerLastName}`,
+                        "textAlignment": "PKTextAlignmentCenter"
                     }
                 ],
                 "backFields": [
