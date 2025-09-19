@@ -3,8 +3,6 @@ const path = require('path');
 const forge = require('node-forge');
 const archiver = require('archiver');
 const crypto = require('crypto');
-const fetch = require('node-fetch');
-const sharp = require('sharp');
 
 const FALLBACK_IMAGES = {
     'icon.png': 'iVBORw0KGgoAAAANSUhEUgAAAB0AAAAdCAIAAADZ8fBYAAAAMElEQVR4nO3MQQ0AMAwDsWwMwp/spJ0Kob8zAJ+2WXA30vgOX/jCF77whS984ZvvASc/AG1NzWdgAAAAAElFTkSuQmCC',
@@ -48,6 +46,40 @@ class PassSigner {
         this.cachedWwdrAsn1 = null;
         this.cachedWwdrPem = null;
         this.wwdrCertificateLoaded = false;
+    }
+
+    getBarcodeMessage(ticketData) {
+        if (!ticketData || typeof ticketData !== 'object') {
+            return '';
+        }
+
+        const candidateKeys = [
+            'ticket_code',
+            'ticketCode',
+            'qrCode',
+            'qr_code',
+            'qr',
+            'barcodeMessage',
+            'barcode_message'
+        ];
+
+        for (const key of candidateKeys) {
+            const value = ticketData[key];
+            if (value) {
+                return value.toString();
+            }
+        }
+
+        if (ticketData.ticket && typeof ticketData.ticket === 'object') {
+            for (const key of candidateKeys) {
+                const value = ticketData.ticket[key];
+                if (value) {
+                    return value.toString();
+                }
+            }
+        }
+
+        return ticketData.id ? ticketData.id.toString() : '';
     }
 
     // Charger le certificat
@@ -208,258 +240,153 @@ class PassSigner {
 
     // Créer un pass pour un ticket d'événement
     async createEventTicketPass(ticketData) {
-        const event = ticketData.event || {};
-        const ticketCode = this.resolveTicketCode(ticketData);
-        const attendeeName = this.formatCustomerName(ticketData);
-        const eventName = event.name || 'Événement Babylone';
-        const quantityLabel = this.formatQuantity(ticketData.quantity);
-        const eventDates = this.formatDateRange(
-            event.startDate || event.start_date || event.date,
-            event.endDate || event.end_date || event.finishDate || event.finish_date
-        );
-        const location = event.location || ticketData.location || 'Lieu à confirmer';
-        const ticketTypeName = ticketData.ticketType?.name || ticketData.ticket_type?.name;
-        const seatInfo = ticketData.seat || ticketData.seatNumber || ticketData.seat_number;
-        const purchaseDate = ticketData.purchaseDate || ticketData.purchase_date;
-        const totalAmount = Number(ticketData.totalAmount || ticketData.total_amount || 0);
-        const barcode = this.buildBarcodeObject(ticketCode);
-
-        const headerFields = [];
-        if (seatInfo) {
-            headerFields.push({
-                key: 'seat',
-                label: 'Place',
-                value: seatInfo.toString()
-            });
-        }
-        if (ticketTypeName && !seatInfo) {
-            headerFields.push({
-                key: 'ticket_type',
-                label: 'Type',
-                value: ticketTypeName
-            });
-        }
-
-        const secondaryFields = [
-            {
-                key: 'dates',
-                label: eventDates && eventDates.includes(' - ') ? 'Dates' : 'Date',
-                value: eventDates
-            },
-            {
-                key: 'location',
-                label: 'Lieu',
-                value: location
-            }
-        ].filter(field => !!field.value);
-
-        const auxiliaryFields = [
-            {
-                key: 'attendee',
-                label: 'Participant',
-                value: attendeeName
-            },
-            {
-                key: 'quantity',
-                label: 'Billets',
-                value: quantityLabel
-            }
-        ].filter(field => !!field.value);
-
-        const backFields = [
-            {
-                key: 'description',
-                label: 'Description',
-                value: event.description || `Billet pour ${eventName}`
-            },
-            {
-                key: 'ticket_code',
-                label: 'Code billet',
-                value: ticketCode
-            },
-            {
-                key: 'purchase_date',
-                label: "Date d'achat",
-                value: purchaseDate ? this.formatDisplayDate(purchaseDate) : null
-            },
-            {
-                key: 'total_amount',
-                label: 'Montant total',
-                value: totalAmount ? `${totalAmount.toFixed(2)} €` : null
-            }
-        ].filter(field => !!field.value);
-
         const passTemplate = {
-            formatVersion: 1,
-            passTypeIdentifier: this.passTypeIdentifier,
-            serialNumber: ticketCode,
-            teamIdentifier: this.teamIdentifier,
-            organizationName: this.organizationName,
-            description: `Billet pour ${eventName}`,
-            logoText: this.logoText,
-            foregroundColor: 'rgb(255, 255, 255)',
-            backgroundColor: 'rgb(98, 63, 188)',
-            labelColor: 'rgba(255, 255, 255, 0.85)',
-            groupingIdentifier: event.id ? `event-${event.id}` : undefined,
-            suppressStripShine: true,
-            eventTicket: {
-                primaryFields: [
+            "formatVersion": 1,
+            "passTypeIdentifier": this.passTypeIdentifier,
+            "serialNumber": ticketData.id.toString(),
+            "teamIdentifier": this.teamIdentifier,
+            "organizationName": this.organizationName,
+            "description": `Billet pour ${ticketData.event.name}`,
+            "logoText": this.logoText,
+            "foregroundColor": "rgb(255, 255, 255)",
+            "backgroundColor": "rgb(0, 0, 0)",
+            "labelColor": "rgb(255, 255, 255)",
+            "eventTicket": {
+                "primaryFields": [
                     {
-                        key: 'event',
-                        label: 'Événement',
-                        value: eventName
+                        "key": "event",
+                        "label": "Événement",
+                        "value": ticketData.event.name
+                    }
+                ],
+                "secondaryFields": [
+                    {
+                        "key": "date",
+                        "label": "Date",
+                        "value": this.formatDateForPass(ticketData.event.date)
+                    },
+                    {
+                        "key": "location",
+                        "label": "Lieu",
+                        "value": ticketData.event.location || "Non spécifié"
+                    }
+                ],
+                "auxiliaryFields": [
+                    {
+                        "key": "quantity",
+                        "label": "Quantité",
+                        "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`
+                    },
+                    {
+                        "key": "customer",
+                        "label": "Nom",
+                        "value": `${ticketData.customerFirstName} ${ticketData.customerLastName}`
+                    }
+                ],
+                "backFields": [
+                    {
+                        "key": "description",
+                        "label": "Description",
+                        "value": ticketData.event.description || `Billet pour ${ticketData.event.name}`
+                    },
+                    {
+                        "key": "purchase_date",
+                        "label": "Date d'achat",
+                        "value": this.formatDateForPass(ticketData.purchaseDate)
+                    },
+                    {
+                        "key": "total_amount",
+                        "label": "Montant total",
+                        "value": `${ticketData.totalAmount.toFixed(2)} €`
                     }
                 ]
             },
-            barcode,
-            barcodes: [barcode],
-            relevantDate: event.date ? this.formatDateForPass(event.date) : undefined
+            "barcode": {
+                "message": this.getBarcodeMessage(ticketData),
+                "format": "PKBarcodeFormatQR",
+                "messageEncoding": "iso-8859-1"
+            },
+            "relevantDate": this.formatDateForPass(ticketData.event.date)
         };
 
-        if (headerFields.length > 0) {
-            passTemplate.eventTicket.headerFields = headerFields;
-        }
-        if (secondaryFields.length > 0) {
-            passTemplate.eventTicket.secondaryFields = secondaryFields;
-        }
-        if (auxiliaryFields.length > 0) {
-            passTemplate.eventTicket.auxiliaryFields = auxiliaryFields;
-        }
-        if (backFields.length > 0) {
-            passTemplate.eventTicket.backFields = backFields;
-        }
-
-        const additionalFiles = await this.buildDynamicImages(ticketData);
-        return await this.signPass(passTemplate, additionalFiles);
+        return await this.signPass(passTemplate);
     }
 
     // Créer un pass pour un ticket de boîte de nuit
     async createNightclubTicketPass(ticketData) {
-        const association = ticketData.association || {};
-        const ticketType = ticketData.ticketType || ticketData.ticket_type || {};
-        const event = ticketData.event || {};
-        const ticketCode = this.resolveTicketCode(ticketData);
-        const attendeeName = this.formatCustomerName(ticketData);
-        const quantityLabel = this.formatQuantity(ticketData.quantity);
-        const location = association.location || event.location || ticketData.location || 'Lieu à confirmer';
-        const nightlifeDate = this.formatDateRange(
-            event.date || ticketType.date || ticketData.date,
-            event.endDate || ticketType.endDate || ticketData.endDate
-        );
-        const benefits = ticketType.benefits || ticketData.benefits;
-        const purchaseDate = ticketData.purchaseDate || ticketData.purchase_date;
-        const totalAmount = Number(ticketData.totalAmount || ticketData.total_amount || 0);
-        const barcode = this.buildBarcodeObject(ticketCode);
-
-        const headerFields = [];
-        if (ticketType.name) {
-            headerFields.push({
-                key: 'ticket_type',
-                label: 'Type',
-                value: ticketType.name
-            });
-        }
-
-        const secondaryFields = [
-            {
-                key: 'dates',
-                label: nightlifeDate && nightlifeDate.includes(' - ') ? 'Dates' : 'Date',
-                value: nightlifeDate
-            },
-            {
-                key: 'location',
-                label: 'Lieu',
-                value: location
-            }
-        ].filter(field => !!field.value);
-
-        const auxiliaryFields = [
-            {
-                key: 'attendee',
-                label: 'Participant',
-                value: attendeeName
-            },
-            {
-                key: 'quantity',
-                label: 'Billets',
-                value: quantityLabel
-            }
-        ].filter(field => !!field.value);
-
-        const backFields = [
-            {
-                key: 'description',
-                label: 'Description',
-                value: ticketType.description || `Billet pour ${association.name || 'Babylone'}`
-            },
-            {
-                key: 'benefits',
-                label: 'Avantages',
-                value: benefits || 'Aucun avantage spécifique'
-            },
-            {
-                key: 'ticket_code',
-                label: 'Code billet',
-                value: ticketCode
-            },
-            {
-                key: 'purchase_date',
-                label: "Date d'achat",
-                value: purchaseDate ? this.formatDisplayDate(purchaseDate) : null
-            },
-            {
-                key: 'total_amount',
-                label: 'Montant total',
-                value: totalAmount ? `${totalAmount.toFixed(2)} €` : null
-            }
-        ].filter(field => !!field.value);
-
         const passTemplate = {
-            formatVersion: 1,
-            passTypeIdentifier: this.passTypeIdentifier,
-            serialNumber: ticketCode,
-            teamIdentifier: this.teamIdentifier,
-            organizationName: this.organizationName,
-            description: `Billet pour ${association.name || ticketType.name || 'Soirée BDB'}`,
-            logoText: this.logoText,
-            foregroundColor: 'rgb(255, 255, 255)',
-            backgroundColor: 'rgb(54, 26, 137)',
-            labelColor: 'rgba(255, 255, 255, 0.85)',
-            groupingIdentifier: association.id ? `night-${association.id}` : undefined,
-            suppressStripShine: true,
-            eventTicket: {
-                primaryFields: [
+            "formatVersion": 1,
+            "passTypeIdentifier": this.passTypeIdentifier,
+            "serialNumber": ticketData.id.toString(),
+            "teamIdentifier": this.teamIdentifier,
+            "organizationName": this.organizationName,
+            "description": `Billet pour ${ticketData.association.name}`,
+            "logoText": this.logoText,
+            "foregroundColor": "rgb(255, 255, 255)",
+            "backgroundColor": "rgb(0, 0, 0)",
+            "labelColor": "rgb(255, 255, 255)",
+            "eventTicket": {
+                "primaryFields": [
                     {
-                        key: 'venue',
-                        label: 'Établissement',
-                        value: association.name || 'Babylone'
+                        "key": "venue",
+                        "label": "Établissement",
+                        "value": ticketData.association.name
+                    }
+                ],
+                "secondaryFields": [
+                    {
+                        "key": "ticket_type",
+                        "label": "Type de billet",
+                        "value": ticketData.ticketType.name
+                    },
+                    {
+                        "key": "purchase_date",
+                        "label": "Date d'achat",
+                        "value": this.formatDateForPass(ticketData.purchaseDate)
+                    }
+                ],
+                "auxiliaryFields": [
+                    {
+                        "key": "quantity",
+                        "label": "Quantité",
+                        "value": `${ticketData.quantity} billet${ticketData.quantity > 1 ? 's' : ''}`
+                    },
+                    {
+                        "key": "customer",
+                        "label": "Nom",
+                        "value": `${ticketData.customerFirstName} ${ticketData.customerLastName}`
+                    }
+                ],
+                "backFields": [
+                    {
+                        "key": "description",
+                        "label": "Description",
+                        "value": ticketData.ticketType.description || `Billet pour ${ticketData.association.name}`
+                    },
+                    {
+                        "key": "benefits",
+                        "label": "Avantages",
+                        "value": ticketData.ticketType.benefits || "Aucun avantage spécifique"
+                    },
+                    {
+                        "key": "total_amount",
+                        "label": "Montant total",
+                        "value": `${ticketData.totalAmount.toFixed(2)} €`
                     }
                 ]
             },
-            barcode,
-            barcodes: [barcode],
-            relevantDate: (event.date || ticketType.date) ? this.formatDateForPass(event.date || ticketType.date) : undefined
+            "barcode": {
+                "message": this.getBarcodeMessage(ticketData),
+                "format": "PKBarcodeFormatQR",
+                "messageEncoding": "iso-8859-1"
+            }
         };
 
-        if (headerFields.length > 0) {
-            passTemplate.eventTicket.headerFields = headerFields;
-        }
-        if (secondaryFields.length > 0) {
-            passTemplate.eventTicket.secondaryFields = secondaryFields;
-        }
-        if (auxiliaryFields.length > 0) {
-            passTemplate.eventTicket.auxiliaryFields = auxiliaryFields;
-        }
-        if (backFields.length > 0) {
-            passTemplate.eventTicket.backFields = backFields;
-        }
-
-        const additionalFiles = await this.buildDynamicImages(ticketData);
-        return await this.signPass(passTemplate, additionalFiles);
+        return await this.signPass(passTemplate);
     }
 
     // Signer le pass
-    async signPass(passData, additionalFiles = []) {
+    async signPass(passData) {
         try {
             console.log('Début de la signature du pass...');
             const { privateKey, certificate } = await this.loadCertificate();
@@ -478,7 +405,7 @@ class PassSigner {
             
             // Préparer les fichiers du pass
             console.log('Préparation des fichiers du pass...');
-            const files = this.preparePassFiles(passData, additionalFiles);
+            const files = this.preparePassFiles(passData);
 
             // Créer le manifest
             console.log('Création du manifest...');
@@ -502,19 +429,12 @@ class PassSigner {
     }
 
     // Préparer les fichiers à inclure dans le pass
-    preparePassFiles(passData, additionalFiles = []) {
-        const fileMap = new Map();
-
-        const addFile = (file) => {
-            if (!file || !file.name || !file.data) {
-                return;
-            }
-            fileMap.set(file.name, { name: file.name, data: file.data });
-        };
+    preparePassFiles(passData) {
+        const files = [];
 
         // pass.json
         const passJson = JSON.stringify(passData, null, 2);
-        addFile({
+        files.push({
             name: 'pass.json',
             data: Buffer.from(passJson, 'utf8')
         });
@@ -525,20 +445,13 @@ class PassSigner {
             const imagePath = path.join(__dirname, 'templates', imageName);
             if (fs.existsSync(imagePath)) {
                 const imageBuffer = fs.readFileSync(imagePath);
-                addFile({ name: imageName, data: imageBuffer });
+                files.push({ name: imageName, data: imageBuffer });
             } else if (FALLBACK_IMAGES[imageName]) {
-                addFile({ name: imageName, data: Buffer.from(FALLBACK_IMAGES[imageName], 'base64'), fallback: true });
+                files.push({ name: imageName, data: Buffer.from(FALLBACK_IMAGES[imageName], 'base64'), fallback: true });
             }
         }
 
-        // Images dynamiques ajoutées selon l'événement
-        if (Array.isArray(additionalFiles)) {
-            for (const file of additionalFiles) {
-                addFile(file);
-            }
-        }
-
-        return Array.from(fileMap.values());
+        return files;
     }
 
     // Créer le manifest
@@ -657,202 +570,6 @@ class PassSigner {
         }
     }
 
-    buildBarcodeObject(message) {
-        const barcodeValue = (message || '').toString();
-        return {
-            message: barcodeValue,
-            format: 'PKBarcodeFormatQR',
-            messageEncoding: 'iso-8859-1',
-            altText: barcodeValue
-        };
-    }
-
-    resolveTicketCode(ticketData = {}) {
-        const candidates = [
-            ticketData.ticketCode,
-            ticketData.ticket_code,
-            ticketData.ticket?.code,
-            ticketData.qrCode,
-            ticketData.qr_code,
-            ticketData.id
-        ];
-
-        const resolved = candidates.find(value => {
-            if (value === undefined || value === null) {
-                return false;
-            }
-            const stringValue = value.toString().trim();
-            return stringValue.length > 0;
-        });
-
-        return (resolved !== undefined && resolved !== null)
-            ? resolved.toString()
-            : `BDB-${Date.now()}`;
-    }
-
-    formatCustomerName(ticketData = {}) {
-        const first = (ticketData.customerFirstName || ticketData.customer_first_name || '').trim();
-        const last = (ticketData.customerLastName || ticketData.customer_last_name || '').trim();
-        const name = [first, last].filter(Boolean).join(' ');
-        return name || 'Invité BDB';
-    }
-
-    formatQuantity(quantity) {
-        if (quantity === undefined || quantity === null) {
-            return null;
-        }
-        const normalized = Number(quantity) || 0;
-        const safeQuantity = Math.max(1, Math.round(normalized));
-        return `${safeQuantity} billet${safeQuantity > 1 ? 's' : ''}`;
-    }
-
-    formatDisplayDate(inputDate) {
-        if (!inputDate) {
-            return null;
-        }
-
-        try {
-            const date = new Date(inputDate);
-            if (Number.isNaN(date.getTime())) {
-                return null;
-            }
-
-            const formatter = new Intl.DateTimeFormat('fr-FR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            return formatter.format(date);
-        } catch (error) {
-            console.warn('Impossible de formater la date pour affichage:', error.message);
-            return null;
-        }
-    }
-
-    formatDateRange(startDate, endDate) {
-        if (!startDate) {
-            return null;
-        }
-
-        const start = this.formatDisplayDate(startDate);
-        if (!endDate) {
-            return start;
-        }
-
-        const end = this.formatDisplayDate(endDate);
-        if (!start || !end) {
-            return start || end;
-        }
-
-        return `${start} - ${end}`;
-    }
-
-    resolveCoverImageUrl(ticketData = {}) {
-        const event = ticketData.event || {};
-        const association = ticketData.association || {};
-        const ticketType = ticketData.ticketType || ticketData.ticket_type || {};
-
-        const candidates = [
-            ticketData.coverImage,
-            ticketData.coverImageUrl,
-            ticketData.cover_image_url,
-            ticketData.imageUrl,
-            ticketData.image_url,
-            event.coverImage,
-            event.coverImageUrl,
-            event.cover_image_url,
-            event.image,
-            event.imageUrl,
-            event.image_url,
-            association.coverImage,
-            association.cover_image_url,
-            association.image,
-            association.image_url,
-            association.profile_image_url,
-            ticketType.image,
-            ticketType.image_url
-        ];
-
-        return candidates.find(url => typeof url === 'string' && url.startsWith('http')) || null;
-    }
-
-    async buildDynamicImages(ticketData = {}) {
-        const coverUrl = this.resolveCoverImageUrl(ticketData);
-        if (!coverUrl) {
-            return [];
-        }
-
-        try {
-            console.log('Téléchargement de la cover pour le pass:', coverUrl);
-            const response = await fetch(coverUrl);
-            if (!response.ok) {
-                console.warn('Impossible de télécharger la cover du pass:', response.status, response.statusText);
-                return [];
-            }
-
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-
-            const stripDefinitions = [
-                { name: 'strip.png', width: 320, height: 123 },
-                { name: 'strip@2x.png', width: 640, height: 246 },
-                { name: 'strip@3x.png', width: 960, height: 369 }
-            ];
-
-            const files = [];
-            for (const definition of stripDefinitions) {
-                const resized = await sharp(buffer)
-                    .resize(definition.width, definition.height, {
-                        fit: 'cover',
-                        position: 'entropy'
-                    })
-                    .png()
-                    .toBuffer();
-
-                files.push({
-                    name: definition.name,
-                    data: resized
-                });
-            }
-
-            // Ajouter une miniature pour les aperçus du pass
-            const thumbnail = await sharp(buffer)
-                .resize(90, 90, {
-                    fit: 'cover',
-                    position: 'entropy'
-                })
-                .png()
-                .toBuffer();
-
-            files.push({ name: 'thumbnail.png', data: thumbnail });
-
-            const thumbnail2x = await sharp(buffer)
-                .resize(180, 180, {
-                    fit: 'cover',
-                    position: 'entropy'
-                })
-                .png()
-                .toBuffer();
-
-            files.push({ name: 'thumbnail@2x.png', data: thumbnail2x });
-
-            const thumbnail3x = await sharp(buffer)
-                .resize(270, 270, {
-                    fit: 'cover',
-                    position: 'entropy'
-                })
-                .png()
-                .toBuffer();
-
-            files.push({ name: 'thumbnail@3x.png', data: thumbnail3x });
-
-            return files;
-        } catch (error) {
-            console.error('Erreur lors de la génération des images dynamiques du pass:', error);
-            return [];
-        }
-    }
-
     // Télécharger le certificat depuis Supabase
     async downloadCertificateFromSupabase(recordName, options = {}) {
         try {
@@ -943,12 +660,12 @@ class PassSigner {
     // Obtenir l'image en base64 (pour les images dynamiques)
     async getImageBase64(imageUrl) {
         try {
+            const fetch = require('node-fetch');
             const response = await fetch(imageUrl);
             if (!response.ok) {
                 throw new Error(`Erreur lors du téléchargement de l'image: ${response.statusText}`);
             }
-            const arrayBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
+            const buffer = await response.buffer();
             return buffer.toString('base64');
         } catch (error) {
             console.error('Erreur lors du téléchargement de l\'image:', error);
