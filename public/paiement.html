@@ -552,17 +552,29 @@
             gap: 0.5rem;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.04);
-            transition: border-color 0.2s ease, background 0.2s ease;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .ticket-type-card.selected {
             border-color: var(--primary-color);
             background: rgba(76, 175, 80, 0.12);
+            box-shadow: 0 12px 30px rgba(76, 175, 80, 0.25);
+            transform: translateY(-2px);
         }
 
         .ticket-type-card.disabled {
             opacity: 0.55;
             cursor: not-allowed;
+        }
+
+        @keyframes ticket-select-pop {
+            0% { transform: scale(1); }
+            60% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        .ticket-type-card.pulse {
+            animation: ticket-select-pop 0.32s ease;
         }
 
         .ticket-type-card input[type="radio"] {
@@ -606,6 +618,24 @@
             color: #f44336;
             font-size: 0.85rem;
             margin: 0;
+        }
+
+        .field-hint {
+            margin-top: 0.35rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .field-hint.success {
+            color: var(--success-color, #4CAF50);
+        }
+
+        .field-hint.error {
+            color: var(--error-color, #f44336);
+        }
+
+        .field-hint.info {
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .quantity-hint {
@@ -732,6 +762,7 @@
                     <div class="form-group">
                         <label for="email">Email *</label>
                         <input type="email" id="email" name="email" required>
+                        <p class="field-hint" id="email-account-message"></p>
                     </div>
 
                     <div class="form-group">
@@ -739,7 +770,7 @@
                         <input type="tel" id="phone" name="phone">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="password-group">
                         <label for="password">Mot de passe *</label>
                         <div class="password-container">
                             <input type="password" id="password" name="password" required placeholder="Créez votre mot de passe BDB">
@@ -753,7 +784,7 @@
                             </div>
                             <div class="strength-text" id="strength-text">Force du mot de passe</div>
                         </div>
-                        <small class="help-text">Un compte BDB sera créé avec vos informations pour gérer vos tickets</small>
+                        <small class="help-text" id="password-help-text">Choisissez un mot de passe pour créer automatiquement votre accès BDB.</small>
                     </div>
 
                     <div class="price-breakdown" id="price-breakdown">
@@ -800,6 +831,12 @@
         let elements = null;
         let ticketTypes = [];
         let selectedTicketTypeId = null;
+        let existingAccount = null;
+        let emailCheckTimeout = null;
+        let lastCheckedEmail = '';
+        let accountCheckController = null;
+        let checkingExistingAccount = false;
+        let defaultPasswordHelpText = '';
 
         // Initialiser Stripe
         function initStripe() {
@@ -829,6 +866,193 @@
             setTimeout(() => {
                 errorDiv.style.display = 'none';
             }, 5000);
+        }
+
+        function isValidEmail(value) {
+            if (!value) return false;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailPattern.test(value);
+        }
+
+        function setAccountMessage(variant, message) {
+            const hint = document.getElementById('email-account-message');
+            if (!hint) return;
+            hint.textContent = message || '';
+            hint.classList.remove('info', 'success', 'error');
+            if (message) {
+                hint.classList.add(variant || 'info');
+            }
+        }
+
+        function setPasswordFieldVisibility(show) {
+            const passwordGroup = document.getElementById('password-group');
+            const passwordInput = document.getElementById('password');
+            const passwordStrength = document.getElementById('password-strength');
+            const toggleButton = document.getElementById('toggle-password');
+            const passwordHelp = document.getElementById('password-help-text');
+
+            if (!passwordGroup || !passwordInput) {
+                return;
+            }
+
+            if (show) {
+                passwordGroup.style.display = '';
+                passwordInput.required = true;
+                passwordInput.disabled = false;
+                passwordInput.type = 'password';
+                if (passwordStrength) passwordStrength.style.display = '';
+                if (toggleButton) {
+                    toggleButton.disabled = false;
+                    toggleButton.setAttribute('aria-hidden', 'false');
+                }
+                const passwordIcon = document.getElementById('password-icon');
+                if (passwordIcon) {
+                    passwordIcon.textContent = '👁️';
+                }
+                if (passwordHelp && defaultPasswordHelpText) {
+                    passwordHelp.textContent = defaultPasswordHelpText;
+                }
+                updatePasswordStrength(passwordInput.value || '');
+            } else {
+                passwordGroup.style.display = 'none';
+                passwordInput.required = false;
+                passwordInput.disabled = true;
+                passwordInput.value = '';
+                if (passwordStrength) passwordStrength.style.display = 'none';
+                if (toggleButton) {
+                    toggleButton.disabled = true;
+                    toggleButton.setAttribute('aria-hidden', 'true');
+                }
+                updatePasswordStrength('');
+            }
+        }
+
+        function scheduleAccountLookup() {
+            clearTimeout(emailCheckTimeout);
+            emailCheckTimeout = setTimeout(() => {
+                checkExistingAccount(false);
+            }, 400);
+        }
+
+        async function checkExistingAccount(force) {
+            const emailInput = document.getElementById('email');
+            if (!emailInput) return;
+
+            const emailValue = (emailInput.value || '').trim().toLowerCase();
+            emailCheckTimeout = null;
+
+            if (!emailValue) {
+                if (accountCheckController) {
+                    accountCheckController.abort();
+                    accountCheckController = null;
+                }
+                existingAccount = null;
+                lastCheckedEmail = '';
+                setAccountMessage('info', '');
+                setPasswordFieldVisibility(true);
+                checkingExistingAccount = false;
+                updatePayButtonState();
+                return;
+            }
+
+            if (!isValidEmail(emailValue)) {
+                existingAccount = null;
+                setAccountMessage('info', '');
+                setPasswordFieldVisibility(true);
+                checkingExistingAccount = false;
+                updatePayButtonState();
+                return;
+            }
+
+            if (!force && emailValue === lastCheckedEmail && existingAccount !== null) {
+                // Already have a cached answer
+                if (existingAccount === true) {
+                    setPasswordFieldVisibility(false);
+                    setAccountMessage('success', 'Un compte BDB existe déjà pour cet e-mail. Nous rattacherons automatiquement vos billets.');
+                }
+                updatePayButtonState();
+                return;
+            }
+
+            if (accountCheckController) {
+                accountCheckController.abort();
+            }
+
+            accountCheckController = new AbortController();
+            checkingExistingAccount = true;
+            setAccountMessage('info', 'Vérification de l\'adresse email...');
+            updatePayButtonState();
+
+            try {
+                const response = await fetch('/.netlify/functions/checkUserExists', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: emailValue }),
+                    signal: accountCheckController.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error('Réponse invalide du serveur');
+                }
+
+                const result = await response.json();
+                existingAccount = Boolean(result?.exists);
+                lastCheckedEmail = emailValue;
+
+                if (existingAccount) {
+                    setAccountMessage('success', 'Un compte BDB existe déjà pour cet e-mail. Nous rattacherons automatiquement vos billets.');
+                    setPasswordFieldVisibility(false);
+                } else {
+                    setAccountMessage('info', 'Créez votre mot de passe pour accéder à vos billets via BDB.');
+                    setPasswordFieldVisibility(true);
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                console.error('Erreur lors de la vérification de l\'email:', error);
+                existingAccount = null;
+                lastCheckedEmail = '';
+                setAccountMessage('error', 'Impossible de vérifier cet e-mail. Vous pouvez continuer en créant un mot de passe.');
+                setPasswordFieldVisibility(true);
+            } finally {
+                checkingExistingAccount = false;
+                accountCheckController = null;
+                updatePayButtonState();
+            }
+        }
+
+        function handleEmailInput() {
+            const emailInput = document.getElementById('email');
+            if (!emailInput) return;
+
+            const value = (emailInput.value || '').trim().toLowerCase();
+
+            if (value !== lastCheckedEmail) {
+                existingAccount = null;
+                setPasswordFieldVisibility(true);
+                setAccountMessage('info', '');
+            } else if (existingAccount === true) {
+                setPasswordFieldVisibility(false);
+                setAccountMessage('success', 'Un compte BDB existe déjà pour cet e-mail. Nous rattacherons automatiquement vos billets.');
+            }
+
+            if (accountCheckController) {
+                accountCheckController.abort();
+                accountCheckController = null;
+            }
+
+            checkingExistingAccount = false;
+            scheduleAccountLookup();
+            updatePayButtonState();
+        }
+
+        function handleEmailBlur() {
+            clearTimeout(emailCheckTimeout);
+            emailCheckTimeout = null;
+            checkExistingAccount(true);
         }
 
         // Fonction pour charger les données de l'événement
@@ -967,19 +1191,49 @@
             return types
                 .map((type) => {
                     const price = parseFloat(type.price ?? type.amount ?? 0);
+                    const rawQuantityLimit = parseNullableInt(type.quantity_limit);
+                    const orderLimitFromPayload = parseNullableInt(
+                        type.limit_per_order ??
+                        type.order_limit ??
+                        type.max_per_order ??
+                        type.quantity_limit_per_order
+                    );
+
+                    const remainingCandidates = [
+                        type.remaining_quantity,
+                        type.quantity_remaining,
+                        type.available_quantity,
+                        type.stock_remaining,
+                        type.stock,
+                        type.remaining,
+                        type.quantity
+                    ];
+
+                    let remainingQuantity = null;
+                    for (const candidate of remainingCandidates) {
+                        const parsed = parseNullableInt(candidate);
+                        if (parsed !== null) {
+                            remainingQuantity = parsed;
+                            break;
+                        }
+                    }
+
+                    if (remainingQuantity === null && rawQuantityLimit !== null) {
+                        remainingQuantity = rawQuantityLimit;
+                    }
+
+                    let orderLimit = orderLimitFromPayload;
+                    if (orderLimit === null && rawQuantityLimit !== null && remainingQuantity !== null && rawQuantityLimit < remainingQuantity) {
+                        orderLimit = rawQuantityLimit;
+                    }
+
                     return {
                         id: type.id,
                         name: type.name || 'Billet',
                         description: type.description || '',
                         price: Number.isFinite(price) ? price : 0,
-                        quantity_limit: parseNullableInt(type.quantity_limit),
-                        remaining_quantity: parseNullableInt(
-                            type.remaining_quantity ??
-                            type.quantity_remaining ??
-                            type.available_quantity ??
-                            type.stock_remaining ??
-                            type.stock
-                        )
+                        remaining_quantity: remainingQuantity,
+                        order_limit: orderLimit
                     };
                 })
                 .filter((type) => type.id);
@@ -1034,6 +1288,10 @@
 
                 if (selectedTicketTypeId === type.id) {
                     card.classList.add('selected');
+                    requestAnimationFrame(() => {
+                        card.classList.add('pulse');
+                        setTimeout(() => card.classList.remove('pulse'), 320);
+                    });
                 }
                 if (soldOut) {
                     card.classList.add('disabled');
@@ -1072,8 +1330,8 @@
                     meta.appendChild(createMetaBadge(`${remaining} restant${remaining > 1 ? 's' : ''}`));
                 }
 
-                if (type.quantity_limit !== null) {
-                    meta.appendChild(createMetaBadge(`Limite ${type.quantity_limit} / commande`));
+                if (type.order_limit !== null) {
+                    meta.appendChild(createMetaBadge(`Limite ${type.order_limit} / commande`));
                 }
 
                 card.appendChild(header);
@@ -1204,8 +1462,8 @@
                 if (remaining !== null) {
                     max = Math.min(max, Math.max(remaining, 0));
                 }
-                if (selectedType.quantity_limit !== null) {
-                    max = Math.min(max, Math.max(selectedType.quantity_limit, 0));
+                if (selectedType.order_limit !== null) {
+                    max = Math.min(max, Math.max(selectedType.order_limit, 0));
                 }
             }
 
@@ -1254,7 +1512,7 @@
             }
 
             const remaining = selectedType ? getRemainingForType(selectedType) : parseNullableInt(eventData?.available_tickets);
-            const limit = selectedType?.quantity_limit;
+            const limit = selectedType?.order_limit;
             const hints = [];
 
             if (Number.isFinite(remaining)) {
@@ -1338,8 +1596,13 @@
             const quantityAvailable = getMaxAvailableQuantity();
             const hasValidQuantity = quantity > 0 && quantityAvailable > 0;
             const ticketSelected = ticketTypes.length === 0 || Boolean(selectedTicketTypeId);
+            const emailInput = document.getElementById('email');
+            const emailValid = emailInput ? isValidEmail((emailInput.value || '').trim()) : false;
+            const passwordInput = document.getElementById('password');
+            const passwordRequired = existingAccount !== true;
+            const passwordFilled = !passwordRequired || (passwordInput && passwordInput.value.trim().length > 0);
 
-            button.disabled = !(hasEvent && consentGiven && hasValidQuantity && ticketSelected);
+            button.disabled = !(hasEvent && consentGiven && hasValidQuantity && ticketSelected && emailValid && passwordFilled && !checkingExistingAccount);
         }
 
         function changeQuantity(newValue) {
@@ -1384,23 +1647,46 @@
                 return;
             }
 
+            if (checkingExistingAccount) {
+                showError('Vérification de l\'adresse email en cours...');
+                return;
+            }
+
             const formData = new FormData(e.target);
             const customerInfo = {
                 firstName: (formData.get('firstName') || '').trim(),
                 lastName: (formData.get('lastName') || '').trim(),
                 email: (formData.get('email') || '').trim(),
                 phone: (formData.get('phone') || '').trim(),
-                password: formData.get('password')
+                password: ''
             };
 
-            if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.password) {
+            const passwordRequired = existingAccount !== true;
+            const rawPassword = (formData.get('password') || '').trim();
+            customerInfo.password = passwordRequired ? rawPassword : '';
+
+            if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email) {
                 showError('Veuillez remplir tous les champs obligatoires');
                 return;
             }
 
-            if (!isPasswordValid(customerInfo.password)) {
-                showError('Le mot de passe ne respecte pas tous les critères de sécurité');
+            if (!isValidEmail(customerInfo.email)) {
+                showError('Veuillez saisir une adresse email valide');
                 return;
+            }
+
+            customerInfo.email = customerInfo.email.toLowerCase();
+
+            if (passwordRequired) {
+                if (!customerInfo.password) {
+                    showError('Veuillez définir un mot de passe pour créer votre compte BDB.');
+                    return;
+                }
+
+                if (!isPasswordValid(customerInfo.password)) {
+                    showError('Le mot de passe ne respecte pas tous les critères de sécurité');
+                    return;
+                }
             }
 
             const rgpdConsent = document.getElementById('rgpd-consent');
@@ -1603,9 +1889,31 @@
                     console.log('🔐 Mot de passe modifié:', password.length, 'caractères');
                     updatePasswordRequirements(password);
                     updatePasswordStrength(password);
+                    updatePayButtonState();
                 });
             } else {
                 console.log('❌ Champ mot de passe non trouvé');
+            }
+
+            const passwordHelp = document.getElementById('password-help-text');
+            if (passwordHelp) {
+                defaultPasswordHelpText = passwordHelp.textContent || '';
+            }
+
+            setPasswordFieldVisibility(true);
+            setAccountMessage('info', '');
+
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                emailInput.addEventListener('input', handleEmailInput);
+                emailInput.addEventListener('blur', handleEmailBlur);
+
+                if (emailInput.value) {
+                    handleEmailInput();
+                    clearTimeout(emailCheckTimeout);
+                    emailCheckTimeout = null;
+                    checkExistingAccount(true);
+                }
             }
         });
     </script>
