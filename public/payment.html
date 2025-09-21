@@ -1,19 +1,122 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BDB - Paiement</title>
+    <title>BDB - Secure Payment</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-        .payment-container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        :root {
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(218, 252, 59, 0.15);
+            --error-color: #f44336;
+            --success-color: #4CAF50;
+        }
+
+        body {
+            background: var(--background-color, #050505);
+            color: var(--text-color, #ffffff);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .payment-page {
+            max-width: 960px;
+            margin: 100px auto 60px;
+            padding: 0 24px 60px;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .payment-header h1 {
+            font-size: 2.4rem;
+            margin-bottom: 0.75rem;
+            color: var(--accent-color, #DAFC3B);
+        }
+
+        .payment-header p {
+            color: rgba(255, 255, 255, 0.75);
+            margin: 0;
+        }
+
+        .payment-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 24px;
+        }
+
+        .summary-card,
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .summary-image {
+            width: 100%;
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 14px;
+        }
+
+        .summary-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .summary-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .summary-meta-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .summary-selected-ticket {
+            margin-top: 12px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+
+        .summary-selected-ticket span {
+            display: block;
+        }
+
+        .summary-selected-ticket .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .summary-selected-ticket .value {
+            font-weight: 600;
+        }
+
+        #event-summary-content .loading {
+            color: rgba(255, 255, 255, 0.65);
+            text-align: center;
         }
 
         #payment-form {
@@ -22,126 +125,981 @@
             gap: 20px;
         }
 
-        #payment-element {
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
         }
 
-        .payment-button {
-            background: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(218, 252, 59, 0.18);
+            border-radius: 10px;
+            color: inherit;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color, #DAFC3B);
+        }
+
+        .ticket-type-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ticket-type-card {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 16px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            display: flex;
+            gap: 14px;
         }
 
-        .payment-button:hover {
-            background: #45a049;
+        .ticket-type-card.selected {
+            border-color: var(--accent-color, #DAFC3B);
+            background: rgba(218, 252, 59, 0.08);
         }
 
-        .payment-button:disabled {
-            background: #cccccc;
+        .ticket-type-card.disabled {
+            opacity: 0.55;
             cursor: not-allowed;
         }
 
-        #payment-message {
-            color: #4CAF50;
-            margin-top: 20px;
+        .ticket-type-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ticket-type-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .ticket-type-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .ticket-type-name {
+            font-weight: 600;
+        }
+
+        .ticket-type-price {
+            font-weight: 600;
+            color: var(--accent-color, #DAFC3B);
+        }
+
+        .ticket-type-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .quantity-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quantity-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--accent-color, #DAFC3B);
+            background: transparent;
+            color: inherit;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .quantity-btn:not(:disabled):hover {
+            background: var(--accent-color, #DAFC3B);
+            color: #050505;
+        }
+
+        #quantity {
+            width: 70px;
             text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .quantity-hint {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .price-breakdown {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .price-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+
+        .price-line.total {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 10px;
+            font-weight: 600;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .checkbox-row input {
+            margin-top: 4px;
+        }
+
+        .checkbox-row a {
+            color: var(--accent-color, #DAFC3B);
+            text-decoration: none;
+        }
+
+        .checkbox-row a:hover {
+            text-decoration: underline;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 999px;
+            border: 2px solid var(--accent-color, #DAFC3B);
+            background: transparent;
+            color: inherit;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .pay-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pay-button:not(:disabled):hover {
+            background: var(--accent-color, #DAFC3B);
+            color: #050505;
+        }
+
+        .button-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
             display: none;
         }
 
-        #payment-message.error {
-            color: #f44336;
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .field-error,
+        .submit-error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .submit-error {
+            text-align: center;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+            max-width: 320px;
+            font-size: 0.9rem;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification.success {
+            border-color: rgba(76, 175, 80, 0.4);
+            color: var(--success-color);
+        }
+
+        .notification.error {
+            border-color: rgba(244, 67, 54, 0.4);
+            color: var(--error-color);
+        }
+
+        @media (max-width: 900px) {
+            .payment-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-page {
+                margin-top: 80px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .payment-page {
+                padding: 0 18px 40px;
+            }
+
+            .summary-card,
+            .form-card {
+                padding: 20px;
+            }
+
+            .summary-image {
+                height: 150px;
+            }
+
+            .ticket-type-card {
+                flex-direction: column;
+            }
+
+            .checkbox-row {
+                flex-direction: row;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="payment-container">
-        <h2>Paiement sécurisé</h2>
-        <form id="payment-form">
-            <div id="payment-element"></div>
-            <button id="submit" class="payment-button">
-                <span id="button-text">Payer maintenant</span>
-                <div class="spinner hidden" id="spinner"></div>
-            </button>
-            <div id="payment-message"></div>
-        </form>
-    </div>
+    <main class="payment-page">
+        <header class="payment-header">
+            <h1>Secure Checkout</h1>
+            <p>Select your ticket type, review the order and complete your payment.</p>
+        </header>
+
+        <div class="payment-layout">
+            <aside class="summary-card">
+                <div id="event-summary-content">
+                    <p class="loading">Loading event information…</p>
+                </div>
+            </aside>
+
+            <section class="form-card">
+                <form id="payment-form">
+                    <div>
+                        <div class="section-title">Tickets</div>
+                        <div id="ticket-type-section" class="form-group">
+                            <label for="ticketType">Ticket type <span aria-hidden="true">*</span></label>
+                            <div id="ticket-type-options" class="ticket-type-list"></div>
+                            <p id="ticket-type-error" class="field-error"></p>
+                        </div>
+                        <div class="quantity-group">
+                            <label for="quantity">Quantity</label>
+                            <div class="quantity-controls">
+                                <button type="button" id="decrease-qty" class="quantity-btn" aria-label="Decrease quantity">−</button>
+                                <input id="quantity" name="quantity" type="number" min="1" value="1">
+                                <button type="button" id="increase-qty" class="quantity-btn" aria-label="Increase quantity">+</button>
+                            </div>
+                            <p id="quantity-hint" class="quantity-hint"></p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-title">Your details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First name</label>
+                                <input type="text" id="firstName" name="firstName" autocomplete="given-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last name</label>
+                                <input type="text" id="lastName" name="lastName" autocomplete="family-name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email address</label>
+                            <input type="email" id="email" name="email" autocomplete="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone number (optional)</label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password (optional)</label>
+                            <input type="password" id="password" name="password" autocomplete="new-password">
+                            <span class="quantity-hint">Add a password if you want to create or link your BDB account automatically.</span>
+                        </div>
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="terms-consent" required>
+                            <label for="terms-consent">I accept the <a href="conditions-utilisation.html" target="_blank" rel="noopener">Terms of Service</a> and the <a href="politique-confidentialite.html" target="_blank" rel="noopener">Privacy Policy</a>.</label>
+                        </div>
+                    </div>
+
+                    <div class="price-breakdown" id="price-breakdown"></div>
+
+                    <button type="submit" id="pay-button" class="pay-button" disabled>
+                        <div id="button-spinner" class="button-spinner"></div>
+                        <span id="pay-button-label">Pay</span>
+                    </button>
+                    <p id="submit-error" class="submit-error"></p>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <div id="notification" class="notification"></div>
 
     <script>
-        const stripe = Stripe(process.env.STRIPE_PUBLIC_KEY);
-        let elements;
+        const state = {
+            event: null,
+            ticketTypes: [],
+            selectedTicketTypeId: null,
+            quantity: 1,
+            stripe: null
+        };
 
-        async function initialize() {
+        document.addEventListener('DOMContentLoaded', () => {
+            initStripe();
+            loadEventData();
+            setupListeners();
+            updateQuantityUI();
+            updatePriceBreakdown();
+        });
+
+        function initStripe() {
             try {
-                const response = await fetch('/.netlify/functions/createPaymentIntent', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: 1000, // 10€ par exemple
-                        currency: 'eur',
-                        description: 'Test de paiement BDB'
-                    })
-                });
-
-                const { clientSecret } = await response.json();
-
-                elements = stripe.elements({ clientSecret });
-                const paymentElement = elements.create('payment');
-                paymentElement.mount('#payment-element');
+                state.stripe = Stripe('pk_live_51HLuKAAqjNmyAK5H83YcEqRZO4110oYLbUEQ0oDdfq7ptRQh48imbJ34aXhcxzyySLaSffMYGE1MRnSAvRH62AWO0023V6P7bR');
             } catch (error) {
-                console.error('Erreur:', error);
-                showMessage('Une erreur est survenue lors de l\'initialisation du paiement.', true);
+                console.error('Stripe initialisation failed:', error);
+                showNotification('Unable to initialise the payment service. Please refresh the page.', 'error');
             }
         }
 
-        async function handleSubmit(e) {
-            e.preventDefault();
+        function setupListeners() {
+            document.getElementById('decrease-qty').addEventListener('click', () => changeQuantity(state.quantity - 1));
+            document.getElementById('increase-qty').addEventListener('click', () => changeQuantity(state.quantity + 1));
+            document.getElementById('quantity').addEventListener('input', (event) => {
+                const value = parseInt(event.target.value, 10);
+                if (Number.isFinite(value)) {
+                    changeQuantity(value);
+                }
+            });
+
+            document.getElementById('terms-consent').addEventListener('change', updatePayButtonState);
+
+            document.getElementById('payment-form').addEventListener('submit', handleFormSubmit);
+        }
+
+        async function loadEventData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('id');
+
+            if (!eventId) {
+                showNotification('Missing event identifier in the URL.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/.netlify/functions/getEvent?id=${eventId}`);
+                const data = await response.json();
+
+                if (!response.ok || !data?.event) {
+                    const message = data?.error || 'Unable to load the event.';
+                    throw new Error(message);
+                }
+
+                state.event = data.event;
+                state.ticketTypes = normaliseTicketTypes(data.event.ticket_types || data.ticket_types || []);
+
+                autoSelectTicketType();
+                displayEventSummary();
+                renderTicketTypeSelector();
+                updateQuantityUI();
+                updatePriceBreakdown();
+                updatePayButtonState();
+            } catch (error) {
+                console.error('Event loading error:', error);
+                showNotification(error.message || 'Unable to load the event. Please try again later.', 'error');
+            }
+        }
+
+        function normaliseTicketTypes(types) {
+            if (!Array.isArray(types)) return [];
+
+            return types
+                .map((type) => {
+                    const price = parseFloat(type.price ?? type.amount ?? 0);
+                    return {
+                        id: type.id,
+                        name: type.name || 'Ticket',
+                        description: type.description || '',
+                        price: Number.isFinite(price) ? price : 0,
+                        quantity_limit: parseNullableInt(type.quantity_limit),
+                        remaining_quantity: parseNullableInt(
+                            type.remaining_quantity ??
+                            type.quantity_remaining ??
+                            type.available_quantity ??
+                            type.stock_remaining ??
+                            type.stock
+                        )
+                    };
+                })
+                .filter((type) => type.id);
+        }
+
+        function parseNullableInt(value) {
+            if (value === null || value === undefined) {
+                return null;
+            }
+            const parsed = parseInt(value, 10);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function autoSelectTicketType() {
+            if (!state.ticketTypes.length) {
+                state.selectedTicketTypeId = null;
+                return;
+            }
+
+            if (state.selectedTicketTypeId && state.ticketTypes.some((type) => type.id === state.selectedTicketTypeId)) {
+                const selectedType = getSelectedTicketType();
+                if (selectedType && getRemainingForType(selectedType) !== 0) {
+                    return;
+                }
+            }
+
+            if (state.ticketTypes.length === 1) {
+                const soleType = state.ticketTypes[0];
+                if (getRemainingForType(soleType) !== 0) {
+                    state.selectedTicketTypeId = soleType.id;
+                }
+            }
+        }
+
+        function displayEventSummary() {
+            const summaryContainer = document.getElementById('event-summary-content');
+
+            if (!state.event) {
+                summaryContainer.innerHTML = '<p class="loading">Event data not available.</p>';
+                return;
+            }
+
+            const imageUrl = state.event.image_url || 'Asset/EventPhare 01.png';
+            const dateLabel = formatEventDate(state.event.date);
+            const association = state.event.association_name || 'Hosted by BDB';
+            const basePrice = formatPrice(getUnitPrice());
+
+            summaryContainer.innerHTML = `
+                <div class="summary-image" style="background-image: url('${imageUrl}')"></div>
+                <div class="summary-title">${state.event.name}</div>
+                <div class="summary-meta">
+                    <div class="summary-meta-row">${dateLabel}</div>
+                    <div class="summary-meta-row">${state.event.location || ''}</div>
+                    <div class="summary-meta-row">${association}</div>
+                    <div class="summary-meta-row">Base price: ${basePrice}</div>
+                </div>
+                <div class="summary-selected-ticket">
+                    <span class="label">Selected ticket</span>
+                    <span class="value" id="selected-ticket-summary">${formatSelectedTicketSummary()}</span>
+                </div>
+            `;
+        }
+
+        function renderTicketTypeSelector() {
+            const section = document.getElementById('ticket-type-section');
+            const container = document.getElementById('ticket-type-options');
+            const error = document.getElementById('ticket-type-error');
+
+            if (!state.ticketTypes.length) {
+                section.style.display = 'none';
+                error.textContent = '';
+                return;
+            }
+
+            section.style.display = 'flex';
+            section.style.flexDirection = 'column';
+            container.innerHTML = '';
+
+            state.ticketTypes.forEach((type) => {
+                const card = document.createElement('label');
+                card.className = 'ticket-type-card';
+
+                const remaining = getRemainingForType(type);
+                const soldOut = remaining !== null && remaining <= 0;
+                if (soldOut) {
+                    card.classList.add('disabled');
+                }
+
+                if (state.selectedTicketTypeId === type.id) {
+                    card.classList.add('selected');
+                }
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'ticketType';
+                radio.value = type.id;
+                radio.checked = state.selectedTicketTypeId === type.id;
+                radio.disabled = soldOut;
+                card.appendChild(radio);
+
+                const content = document.createElement('div');
+                content.className = 'ticket-type-content';
+
+                const header = document.createElement('div');
+                header.className = 'ticket-type-header';
+
+                const name = document.createElement('span');
+                name.className = 'ticket-type-name';
+                name.textContent = type.name;
+
+                const price = document.createElement('span');
+                price.className = 'ticket-type-price';
+                price.textContent = formatPrice(type.price);
+
+                header.appendChild(name);
+                header.appendChild(price);
+
+                const meta = document.createElement('div');
+                meta.className = 'ticket-type-meta';
+
+                if (remaining === null) {
+                    meta.appendChild(createMetaPill('Available'));
+                } else if (remaining > 0) {
+                    meta.appendChild(createMetaPill(`${remaining} ticket${remaining > 1 ? 's' : ''} left`));
+                } else {
+                    meta.appendChild(createMetaPill('Sold out'));
+                }
+
+                if (type.quantity_limit !== null) {
+                    meta.appendChild(createMetaPill(`Limit per order: ${type.quantity_limit}`));
+                }
+
+                if (type.description) {
+                    const description = document.createElement('span');
+                    description.textContent = type.description;
+                    description.style.display = 'block';
+                    description.style.color = 'rgba(255, 255, 255, 0.6)';
+                    description.style.fontSize = '0.85rem';
+                    description.style.marginTop = '4px';
+                    content.appendChild(description);
+                }
+
+                content.appendChild(header);
+                content.appendChild(meta);
+                card.appendChild(content);
+
+                card.addEventListener('click', (event) => {
+                    if (soldOut) return;
+                    if (event.target.tagName !== 'INPUT') {
+                        radio.checked = true;
+                    }
+                    handleTicketTypeSelection(type.id);
+                });
+
+                radio.addEventListener('change', () => handleTicketTypeSelection(type.id));
+
+                container.appendChild(card);
+            });
+        }
+
+        function handleTicketTypeSelection(typeId) {
+            state.selectedTicketTypeId = typeId;
+            document.getElementById('ticket-type-error').textContent = '';
+            renderTicketTypeSelector();
+            ensureQuantityWithinBounds();
+            updateQuantityUI();
+            updatePriceBreakdown();
+            updateSelectedTicketSummary();
+            updatePayButtonState();
+        }
+
+        function createMetaPill(text) {
+            const pill = document.createElement('span');
+            pill.textContent = text;
+            return pill;
+        }
+
+        function getSelectedTicketType() {
+            return state.ticketTypes.find((type) => type.id === state.selectedTicketTypeId) || null;
+        }
+
+        function getRemainingForType(type) {
+            if (type.remaining_quantity === null || type.remaining_quantity === undefined) {
+                return null;
+            }
+            return type.remaining_quantity;
+        }
+
+        function formatSelectedTicketSummary() {
+            const selectedType = getSelectedTicketType();
+            if (selectedType) {
+                return `${selectedType.name} • ${formatPrice(selectedType.price)}`;
+            }
+            return `${formatPrice(getUnitPrice())}`;
+        }
+
+        function updateSelectedTicketSummary() {
+            const element = document.getElementById('selected-ticket-summary');
+            if (!element) return;
+            element.textContent = formatSelectedTicketSummary();
+        }
+
+        function changeQuantity(newValue) {
+            if (!Number.isFinite(newValue)) return;
+            const bounded = Math.max(1, Math.floor(newValue));
+            state.quantity = bounded;
+            ensureQuantityWithinBounds();
+            updateQuantityUI();
+            updatePriceBreakdown();
+            updatePayButtonState();
+        }
+
+        function ensureQuantityWithinBounds() {
+            const maxQuantity = getMaxAvailableQuantity();
+            if (maxQuantity === 0) {
+                state.quantity = 0;
+                return;
+            }
+            if (state.quantity < 1) {
+                state.quantity = 1;
+            }
+            if (Number.isFinite(maxQuantity) && maxQuantity > 0) {
+                state.quantity = Math.min(state.quantity, maxQuantity);
+            }
+        }
+
+        function getMaxAvailableQuantity() {
+            let max = Infinity;
+
+            const selectedType = getSelectedTicketType();
+            if (selectedType) {
+                const remaining = getRemainingForType(selectedType);
+                if (remaining !== null) {
+                    max = Math.min(max, Math.max(remaining, 0));
+                }
+                if (selectedType.quantity_limit !== null) {
+                    max = Math.min(max, Math.max(selectedType.quantity_limit, 0));
+                }
+            }
+
+            const eventAvailable = parseNullableInt(state.event?.available_tickets);
+            if (eventAvailable !== null) {
+                max = Math.min(max, Math.max(eventAvailable, 0));
+            }
+
+            if (!Number.isFinite(max)) {
+                max = 10;
+            }
+
+            return Math.max(0, Math.floor(max));
+        }
+
+        function updateQuantityUI() {
+            const quantityInput = document.getElementById('quantity');
+            const decreaseBtn = document.getElementById('decrease-qty');
+            const increaseBtn = document.getElementById('increase-qty');
+            const hint = document.getElementById('quantity-hint');
+
+            const maxQuantity = getMaxAvailableQuantity();
+
+            if (maxQuantity === 0) {
+                quantityInput.value = 0;
+                decreaseBtn.disabled = true;
+                increaseBtn.disabled = true;
+                hint.textContent = 'This ticket type is sold out.';
+                return;
+            }
+
+            if (state.quantity === 0) {
+                state.quantity = 1;
+            }
+
+            quantityInput.value = state.quantity;
+            decreaseBtn.disabled = state.quantity <= 1;
+            increaseBtn.disabled = state.quantity >= maxQuantity;
+
+            const selectedType = getSelectedTicketType();
+            const remaining = selectedType ? getRemainingForType(selectedType) : parseNullableInt(state.event?.available_tickets);
+            const limit = selectedType?.quantity_limit;
+            const hints = [];
+
+            if (Number.isFinite(remaining)) {
+                hints.push(`${remaining} ticket${remaining > 1 ? 's' : ''} remaining`);
+            }
+            if (Number.isFinite(limit)) {
+                hints.push(`Maximum ${limit} per order`);
+            }
+
+            hint.textContent = hints.join(' • ');
+        }
+
+        function updatePriceBreakdown() {
+            const breakdown = document.getElementById('price-breakdown');
+            if (!breakdown) return;
+
+            const unitPrice = getUnitPrice();
+            const quantity = state.quantity || 0;
+            const baseAmount = unitPrice * quantity;
+            const feePercentage = Number(state.event?.platform_fee_percentage ?? state.event?.platform_fee ?? 5);
+            const feeAmount = baseAmount * (feePercentage / 100);
+            const totalAmount = baseAmount + feeAmount;
+
+            if (quantity === 0) {
+                breakdown.innerHTML = '<div class="price-line"><span>Please select another ticket type.</span><span></span></div>';
+                updatePayButtonLabel(0);
+                return;
+            }
+
+            const selectedType = getSelectedTicketType();
+            const ticketLabel = selectedType ? `${selectedType.name} (${quantity} × ${formatPrice(unitPrice)})` : `Ticket (${quantity} × ${formatPrice(unitPrice)})`;
+
+            breakdown.innerHTML = `
+                <div class="price-line">
+                    <span>${ticketLabel}</span>
+                    <span>${formatPrice(baseAmount)}</span>
+                </div>
+                <div class="price-line">
+                    <span>Service fees (${feePercentage.toFixed(2).replace(/\.00$/, '')}%)</span>
+                    <span>${formatPrice(feeAmount)}</span>
+                </div>
+                <div class="price-line total">
+                    <span>Total</span>
+                    <span>${formatPrice(totalAmount)}</span>
+                </div>
+            `;
+
+            updatePayButtonLabel(totalAmount);
+            updateSelectedTicketSummary();
+        }
+
+        function getUnitPrice() {
+            const selectedType = getSelectedTicketType();
+            if (selectedType) {
+                return Number(selectedType.price) || 0;
+            }
+            return Number(state.event?.price) || 0;
+        }
+
+        function updatePayButtonLabel(amount) {
+            const label = document.getElementById('pay-button-label');
+            if (!label) return;
+            if (!Number.isFinite(amount) || amount <= 0) {
+                label.textContent = 'Unavailable';
+            } else {
+                label.textContent = `Pay ${formatPrice(amount)}`;
+            }
+        }
+
+        function updatePayButtonState() {
+            const button = document.getElementById('pay-button');
+            if (!button) return;
+
+            const consentGiven = document.getElementById('terms-consent').checked;
+            const hasEvent = Boolean(state.event);
+            const quantityAvailable = getMaxAvailableQuantity();
+            const hasValidQuantity = state.quantity > 0 && quantityAvailable > 0;
+            const ticketSelected = state.ticketTypes.length === 0 || Boolean(state.selectedTicketTypeId);
+
+            button.disabled = !(hasEvent && consentGiven && hasValidQuantity && ticketSelected);
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            clearSubmitError();
+
+            if (!state.event) {
+                showSubmitError('Event data not loaded yet.');
+                return;
+            }
+
+            if (state.ticketTypes.length > 0 && !state.selectedTicketTypeId) {
+                document.getElementById('ticket-type-error').textContent = 'Please choose a ticket type to continue.';
+                return;
+            }
+
+            if (getMaxAvailableQuantity() === 0) {
+                showSubmitError('This ticket type is no longer available.');
+                return;
+            }
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const customerInfo = {
+                firstName: (formData.get('firstName') || '').trim(),
+                lastName: (formData.get('lastName') || '').trim(),
+                email: (formData.get('email') || '').trim(),
+                phone: (formData.get('phone') || '').trim(),
+                password: (formData.get('password') || '').trim()
+            };
+
+            if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email) {
+                showSubmitError('Please fill in your first name, last name and email.');
+                return;
+            }
+
+            if (!document.getElementById('terms-consent').checked) {
+                showSubmitError('Please accept the terms to proceed.');
+                return;
+            }
+
+            const payload = {
+                event_id: state.event.id,
+                quantity: state.quantity,
+                customerInfo,
+                association_id: state.event.association_id,
+                ticket_type_id: state.selectedTicketTypeId || null
+            };
+
             setLoading(true);
 
             try {
-                const { error } = await stripe.confirmPayment({
-                    elements,
-                    confirmParams: {
-                        return_url: `${window.location.origin}/payment-success.html`,
+                const response = await fetch('/.netlify/functions/createWebPaymentIntent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
+                    body: JSON.stringify(payload)
                 });
 
-                if (error) {
-                    showMessage(error.message, true);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data?.error || 'Unable to create the payment session.');
+                }
+
+                const result = await state.stripe.redirectToCheckout({ sessionId: data.sessionId });
+                if (result.error) {
+                    throw new Error(result.error.message);
                 }
             } catch (error) {
-                console.error('Erreur:', error);
-                showMessage('Une erreur est survenue lors du paiement.', true);
+                console.error('Checkout error:', error);
+                showSubmitError(error.message || 'Payment failed. Please try again.');
+                setLoading(false);
             }
-
-            setLoading(false);
-        }
-
-        function showMessage(messageText, isError = false) {
-            const messageContainer = document.querySelector('#payment-message');
-            messageContainer.classList.toggle('error', isError);
-            messageContainer.textContent = messageText;
-            messageContainer.style.display = 'block';
         }
 
         function setLoading(isLoading) {
-            const submit = document.querySelector('#submit');
-            const spinner = document.querySelector('#spinner');
-            const buttonText = document.querySelector('#button-text');
+            const button = document.getElementById('pay-button');
+            const spinner = document.getElementById('button-spinner');
+            const label = document.getElementById('pay-button-label');
 
-            submit.disabled = isLoading;
-            spinner.classList.toggle('hidden', !isLoading);
-            buttonText.classList.toggle('hidden', isLoading);
+            if (isLoading) {
+                button.disabled = true;
+                spinner.style.display = 'inline-block';
+                label.textContent = 'Redirecting…';
+            } else {
+                spinner.style.display = 'none';
+                updatePriceBreakdown();
+                updatePayButtonState();
+            }
         }
 
-        document.querySelector('#payment-form').addEventListener('submit', handleSubmit);
-        initialize();
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification show ${type}`;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function formatEventDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return new Intl.DateTimeFormat('en-GB', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(date);
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        function formatPrice(amount) {
+            if (!Number.isFinite(amount)) {
+                return '€0.00';
+            }
+            return new Intl.NumberFormat('fr-FR', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount);
+        }
+
+        function clearSubmitError() {
+            document.getElementById('submit-error').textContent = '';
+        }
+
+        function showSubmitError(message) {
+            document.getElementById('submit-error').textContent = message;
+        }
     </script>
 </body>
-</html> 
+</html>
