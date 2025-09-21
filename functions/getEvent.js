@@ -68,7 +68,9 @@ exports.handler = async (event) => {
                 price,
                 image_url,
                 platform_fee,
+                available_tickets,
                 association_id,
+                event_ticket_types (*),
                 associations (
                     id,
                     name,
@@ -142,6 +144,54 @@ exports.handler = async (event) => {
         console.log('✅ Événement récupéré:', eventData.name);
 
         // Transformer les données pour le frontend
+        const ticketTypes = Array.isArray(eventData.event_ticket_types)
+            ? eventData.event_ticket_types.map((ticketType) => {
+                const parseNullableNumber = (value) => {
+                    if (value === null || value === undefined) {
+                        return null;
+                    }
+                    const parsed = Number(value);
+                    return Number.isFinite(parsed) ? parsed : null;
+                };
+
+                const parseNullableInt = (value) => {
+                    if (value === null || value === undefined) {
+                        return null;
+                    }
+                    const parsed = parseInt(value, 10);
+                    return Number.isFinite(parsed) ? parsed : null;
+                };
+
+                const remainingFields = [
+                    ticketType.remaining_quantity,
+                    ticketType.quantity_remaining,
+                    ticketType.available_quantity,
+                    ticketType.stock_remaining,
+                    ticketType.stock,
+                    ticketType.remaining,
+                    ticketType.quantity
+                ];
+
+                let remainingQuantity = null;
+                for (const field of remainingFields) {
+                    const parsed = parseNullableInt(field);
+                    if (parsed !== null) {
+                        remainingQuantity = parsed;
+                        break;
+                    }
+                }
+
+                return {
+                    id: ticketType.id,
+                    name: ticketType.name,
+                    description: ticketType.description,
+                    price: parseNullableNumber(ticketType.price) ?? 0,
+                    quantity_limit: parseNullableInt(ticketType.quantity_limit),
+                    remaining_quantity: remainingQuantity
+                };
+            }).filter((ticketType) => Boolean(ticketType.id))
+            : [];
+
         const formattedEvent = {
             id: eventData.id,
             name: eventData.name,
@@ -154,7 +204,8 @@ exports.handler = async (event) => {
             association_id: eventData.association_id,
             association_name: eventData.associations?.name || 'Association',
             association_logo: eventData.associations?.profile_image_url || eventData.associations?.cover_image_url,
-            available_tickets: eventData.available_tickets
+            available_tickets: eventData.available_tickets,
+            ticket_types: ticketTypes
         };
 
         return {

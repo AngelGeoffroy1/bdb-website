@@ -575,6 +575,7 @@
                 state.ticketTypes = normaliseTicketTypes(data.event.ticket_types || data.ticket_types || []);
 
                 autoSelectTicketType();
+                ensureQuantityWithinBounds();
                 displayEventSummary();
                 renderTicketTypeSelector();
                 updateQuantityUI();
@@ -650,7 +651,30 @@
             const imageUrl = state.event.image_url || 'Asset/EventPhare 01.png';
             const dateLabel = formatEventDate(state.event.date);
             const association = state.event.association_name || 'Hosted by BDB';
-            const basePrice = formatPrice(getUnitPrice());
+            const priceLabel = (() => {
+                if (state.ticketTypes.length === 1) {
+                    const soleTypePrice = Number(state.ticketTypes[0].price);
+                    return Number.isFinite(soleTypePrice)
+                        ? `Ticket price: ${formatPrice(soleTypePrice)}`
+                        : 'Ticket price: N/A';
+                }
+
+                if (state.ticketTypes.length > 1) {
+                    const finitePrices = state.ticketTypes
+                        .map((type) => Number(type.price))
+                        .filter((price) => Number.isFinite(price) && price >= 0);
+                    if (finitePrices.length) {
+                        const lowestPrice = Math.min(...finitePrices);
+                        return `Tickets from: ${formatPrice(lowestPrice)}`;
+                    }
+                    return 'Tickets: pricing to be announced';
+                }
+
+                const eventPrice = Number(state.event?.price);
+                return Number.isFinite(eventPrice)
+                    ? `Ticket price: ${formatPrice(eventPrice)}`
+                    : 'Ticket price: N/A';
+            })();
 
             summaryContainer.innerHTML = `
                 <div class="summary-image" style="background-image: url('${imageUrl}')"></div>
@@ -659,7 +683,7 @@
                     <div class="summary-meta-row">${dateLabel}</div>
                     <div class="summary-meta-row">${state.event.location || ''}</div>
                     <div class="summary-meta-row">${association}</div>
-                    <div class="summary-meta-row">Base price: ${basePrice}</div>
+                    <div class="summary-meta-row">${priceLabel}</div>
                 </div>
                 <div class="summary-selected-ticket">
                     <span class="label">Selected ticket</span>
@@ -795,10 +819,24 @@
 
         function formatSelectedTicketSummary() {
             const selectedType = getSelectedTicketType();
-            if (selectedType) {
-                return `${selectedType.name} • ${formatPrice(selectedType.price)}`;
+            const unitPrice = getUnitPrice();
+            const quantity = Number.isFinite(state.quantity) ? state.quantity : 0;
+
+            if (unitPrice === null) {
+                return 'Select a ticket type to continue';
             }
-            return `${formatPrice(getUnitPrice())}`;
+
+            if (!Number.isFinite(unitPrice) || quantity <= 0) {
+                return 'Tickets unavailable';
+            }
+
+            const label = selectedType ? selectedType.name : 'Ticket';
+            if (quantity > 1) {
+                const total = unitPrice * quantity;
+                return `${label} • ${quantity} × ${formatPrice(unitPrice)} = ${formatPrice(total)}`;
+            }
+
+            return `${label} • ${formatPrice(unitPrice)}`;
         }
 
         function updateSelectedTicketSummary() {
@@ -808,6 +846,7 @@
         }
 
         function changeQuantity(newValue) {
+            ensureEventLoaded();
             if (!Number.isFinite(newValue)) return;
             const bounded = Math.max(1, Math.floor(newValue));
             state.quantity = bounded;
@@ -882,6 +921,11 @@
             increaseBtn.disabled = state.quantity >= maxQuantity;
 
             const selectedType = getSelectedTicketType();
+            if (state.ticketTypes.length > 0 && !selectedType) {
+                hint.textContent = 'Select a ticket type to view availability.';
+                return;
+            }
+
             const remaining = selectedType ? getRemainingForType(selectedType) : parseNullableInt(state.event?.available_tickets);
             const limit = selectedType?.quantity_limit;
             const hints = [];
@@ -901,6 +945,13 @@
             if (!breakdown) return;
 
             const unitPrice = getUnitPrice();
+            if (unitPrice === null) {
+                breakdown.innerHTML = '<div class="price-line"><span>Select a ticket type to view the price.</span><span></span></div>';
+                updatePayButtonLabel(null);
+                updateSelectedTicketSummary();
+                return;
+            }
+
             const quantity = state.quantity || 0;
             const baseAmount = unitPrice * quantity;
             const feePercentage = Number(state.event?.platform_fee_percentage ?? state.event?.platform_fee ?? 5);
@@ -910,6 +961,7 @@
             if (quantity === 0) {
                 breakdown.innerHTML = '<div class="price-line"><span>Please select another ticket type.</span><span></span></div>';
                 updatePayButtonLabel(0);
+                updateSelectedTicketSummary();
                 return;
             }
 
@@ -940,13 +992,18 @@
             if (selectedType) {
                 return Number(selectedType.price) || 0;
             }
+            if (state.ticketTypes.length > 0) {
+                return null;
+            }
             return Number(state.event?.price) || 0;
         }
 
         function updatePayButtonLabel(amount) {
             const label = document.getElementById('pay-button-label');
             if (!label) return;
-            if (!Number.isFinite(amount) || amount <= 0) {
+            if (amount === null) {
+                label.textContent = 'Select a ticket type';
+            } else if (!Number.isFinite(amount) || amount <= 0) {
                 label.textContent = 'Unavailable';
             } else {
                 label.textContent = `Pay ${formatPrice(amount)}`;
@@ -964,6 +1021,12 @@
             const ticketSelected = state.ticketTypes.length === 0 || Boolean(state.selectedTicketTypeId);
 
             button.disabled = !(hasEvent && consentGiven && hasValidQuantity && ticketSelected);
+        }
+
+        function ensureEventLoaded() {
+            if (!state.event) {
+                throw new Error('Event data is not loaded yet.');
+            }
         }
 
         async function handleFormSubmit(event) {

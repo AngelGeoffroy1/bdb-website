@@ -6,6 +6,43 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+const parseNullableInt = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+const parseNullableNumber = (value) => {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+};
+
+const resolveRemainingQuantity = (ticketType = {}) => {
+    const candidates = [
+        ticketType.remaining_quantity,
+        ticketType.quantity_remaining,
+        ticketType.available_quantity,
+        ticketType.stock_remaining,
+        ticketType.stock,
+        ticketType.remaining,
+        ticketType.quantity
+    ];
+
+    for (const candidate of candidates) {
+        const parsed = parseNullableInt(candidate);
+        if (parsed !== null) {
+            return parsed;
+        }
+    }
+
+    return null;
+};
+
 exports.handler = async (event) => {
     console.log('💳 Fonction createWebPaymentIntent appelée');
 
@@ -38,8 +75,13 @@ exports.handler = async (event) => {
 
     try {
         // Récupérer les données de la requête
-        const { event_id, quantity, customerInfo, association_id } = JSON.parse(event.body);
-        console.log('📝 Données reçues:', { event_id, quantity, customerInfo });
+        const payload = JSON.parse(event.body);
+        const event_id = payload.event_id;
+        const ticket_type_id = payload.ticket_type_id || null;
+        const quantity = parseNullableInt(payload.quantity);
+        const customerInfo = payload.customerInfo;
+
+        console.log('📝 Données reçues:', { event_id, quantity, ticket_type_id, customerInfo });
 
         // Validation des paramètres
         if (!event_id || !quantity || !customerInfo) {
@@ -52,6 +94,19 @@ exports.handler = async (event) => {
                     'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
                 body: JSON.stringify({ error: 'Paramètres manquants' })
+            };
+        }
+
+        if (quantity <= 0) {
+            console.log('❌ Quantité invalide:', quantity);
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                body: JSON.stringify({ error: 'La quantité doit être supérieure à zéro' })
             };
         }
 
@@ -77,6 +132,7 @@ exports.handler = async (event) => {
                 name,
                 price,
                 platform_fee,
+                available_tickets,
                 association_id,
                 associations (
                     name
@@ -101,17 +157,157 @@ exports.handler = async (event) => {
 
         console.log('✅ Événement trouvé:', eventData.name);
 
-        // Calculer les montants
-        const baseAmount = eventData.price * quantity;
-        const feePercentage = eventData.platform_fee || 5;
-        const feeAmount = (baseAmount * feePercentage) / 100;
-        const totalAmount = baseAmount + feeAmount;
+        const eventAvailable = parseNullableInt(eventData.available_tickets);
+        if (eventAvailable !== null && quantity > eventAvailable) {
+            console.log('❌ Quantité demandée supérieure aux billets restants pour l\'événement', {
+                quantityDemanded: quantity,
+                available: eventAvailable
+            });
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                body: JSON.stringify({ error: 'Il ne reste plus assez de billets pour cet événement.' })
+            };
+        }
+
+        let unitPrice = parseNullableNumber(eventData.price);
+        let ticketTypeName = null;
+        let ticketTypeLimit = null;
+        let ticketTypeRemaining = null;
+
+        if (ticket_type_id) {
+            console.log('🎟️ Récupération du type de billet sélectionné…', ticket_type_id);
+            const { data: ticketTypeData, error: ticketTypeError } = await supabase
+                .from('event_ticket_types')
+                .select('*')
+                .eq('id', ticket_type_id)
+                .eq('event_id', event_id)
+                .single();
+
+            if (ticketTypeError || !ticketTypeData) {
+                console.error('❌ Type de billet introuvable ou invalide:', ticketTypeError);
+                return {
+                    statusCode: 400,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    body: JSON.stringify({ error: 'Le type de billet sélectionné est invalide.' })
+                };
+            }
+
+            const ticketPrice = parseNullableNumber(ticketTypeData.price);
+            if (ticketPrice === null) {
+                return {
+                    statusCode: 400,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    body: JSON.stringify({ error: 'Le prix du billet sélectionné est invalide.' })
+                };
+            }
+
+            unitPrice = ticketPrice;
+            ticketTypeName = ticketTypeData.name || 'Billet';
+            ticketTypeLimit = parseNullableInt(ticketTypeData.quantity_limit);
+            ticketTypeRemaining = resolveRemainingQuantity(ticketTypeData);
+
+            if (ticketTypeLimit !== null && quantity > ticketTypeLimit) {
+                console.log('❌ Quantité demandée supérieure à la limite par commande pour ce type de billet', {
+                    quantityDemanded: quantity,
+                    limit: ticketTypeLimit
+                });
+                return {
+                    statusCode: 400,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    body: JSON.stringify({ error: 'Vous avez dépassé la quantité autorisée par commande pour ce billet.' })
+                };
+            }
+
+            if (ticketTypeRemaining !== null && quantity > ticketTypeRemaining) {
+                console.log('❌ Quantité demandée supérieure au stock restant pour ce type de billet', {
+                    quantityDemanded: quantity,
+                    remaining: ticketTypeRemaining
+                });
+                return {
+                    statusCode: 400,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                    },
+                    body: JSON.stringify({ error: 'Il ne reste plus assez de billets de ce type.' })
+                };
+            }
+
+            console.log('🎟️ Type de billet confirmé:', {
+                ticket_type_id,
+                ticketTypeName,
+                ticketPrice,
+                ticketTypeLimit,
+                ticketTypeRemaining
+            });
+        }
+
+        if (unitPrice === null) {
+            console.log('❌ Prix de billet indisponible pour l\'événement');
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                body: JSON.stringify({ error: 'Le prix du billet est introuvable.' })
+            };
+        }
+
+        const feePercentage = parseNullableNumber(eventData.platform_fee) ?? 5;
+        const unitPriceCents = Math.round(unitPrice * 100);
+        const unitFeeCents = Math.round(unitPriceCents * feePercentage / 100);
+        const unitTotalCents = unitPriceCents + unitFeeCents;
+
+        if (unitTotalCents <= 0) {
+            console.log('❌ Montant total invalide pour Stripe', { unitPrice, feePercentage, unitTotalCents });
+            return {
+                statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+                },
+                body: JSON.stringify({ error: 'Le montant du billet sélectionné est invalide.' })
+            };
+        }
+
+        const baseAmountCents = unitPriceCents * quantity;
+        const feeAmountCents = unitFeeCents * quantity;
+        const totalAmountCents = unitTotalCents * quantity;
+
+        const baseAmount = baseAmountCents / 100;
+        const feeAmount = feeAmountCents / 100;
+        const totalAmount = totalAmountCents / 100;
 
         console.log('💰 Calcul des montants:', {
-            baseAmount,
+            unitPrice,
             feePercentage,
+            quantity,
+            unitFee: unitFeeCents / 100,
+            baseAmount,
             feeAmount,
-            totalAmount
+            totalAmount,
+            ticket_type_id
         });
 
         // Vérifier si on doit utiliser Stripe Connect
@@ -159,7 +355,8 @@ exports.handler = async (event) => {
                     phone: customerInfo.phone || undefined,
                     metadata: {
                         source: 'bdb_web',
-                        event_id: event_id
+                        event_id: String(event_id),
+                        ticket_type_id: ticket_type_id ? String(ticket_type_id) : ''
                     }
                 });
                 console.log('✅ Nouveau client créé:', customer.id);
@@ -180,6 +377,55 @@ exports.handler = async (event) => {
         // Créer la session Stripe Checkout
         console.log('🛒 Création de la session Stripe Checkout...');
         
+        const productName = ticketTypeName ? `${eventData.name} - ${ticketTypeName}` : `${eventData.name} - Ticket`;
+        const productDescription = ticketTypeName
+            ? `${quantity} × ${ticketTypeName} pour l'événement "${eventData.name}"`
+            : `${quantity} ticket(s) pour l'événement "${eventData.name}"`;
+
+        const stripeMetadata = {
+            event_id: String(event_id),
+            quantity: quantity.toString(),
+            customer_email: customerInfo.email,
+            customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
+            customer_phone: customerInfo.phone || '',
+            customer_password: customerInfo.password || '',
+            association_id: eventData.association_id ? String(eventData.association_id) : '',
+            base_amount: baseAmount.toFixed(2),
+            fee_amount: feeAmount.toFixed(2),
+            platform_fee_percentage: String(feePercentage),
+            ticket_unit_amount: (unitPriceCents / 100).toFixed(2),
+            ticket_unit_fee: (unitFeeCents / 100).toFixed(2),
+            source: 'bdb_web'
+        };
+
+        if (ticket_type_id) {
+            stripeMetadata.ticket_type_id = String(ticket_type_id);
+            stripeMetadata.ticket_type_name = ticketTypeName || '';
+            if (ticketTypeLimit !== null) {
+                stripeMetadata.ticket_type_limit = ticketTypeLimit.toString();
+            }
+            if (ticketTypeRemaining !== null) {
+                stripeMetadata.ticket_type_remaining = ticketTypeRemaining.toString();
+            }
+        }
+
+        const paymentIntentMetadata = {
+            ...stripeMetadata,
+            environment: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test'
+        };
+
+        const productMetadata = {
+            event_id: String(event_id),
+            association_id: eventData.association_id ? String(eventData.association_id) : ''
+        };
+
+        if (ticket_type_id) {
+            productMetadata.ticket_type_id = String(ticket_type_id);
+            if (ticketTypeName) {
+                productMetadata.ticket_type_name = ticketTypeName;
+            }
+        }
+
         const sessionParams = {
             payment_method_types: ['card'],
             line_items: [
@@ -187,14 +433,11 @@ exports.handler = async (event) => {
                     price_data: {
                         currency: 'eur',
                         product_data: {
-                            name: `${eventData.name} - Ticket(s)`,
-                            description: `${quantity} ticket(s) pour l'événement "${eventData.name}"`,
-                            metadata: {
-                                event_id: event_id,
-                                association_id: eventData.association_id || ''
-                            }
+                            name: productName,
+                            description: productDescription,
+                            metadata: productMetadata
                         },
-                        unit_amount: Math.round(totalAmount * 100 / quantity) // Prix unitaire en centimes
+                        unit_amount: unitTotalCents
                     },
                     quantity: quantity
                 }
@@ -203,40 +446,15 @@ exports.handler = async (event) => {
             customer: customer.id,
             success_url: `${event.headers.origin || 'https://bureaudesbureaux.com'}/paiement-success.html?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${event.headers.origin || 'https://bureaudesbureaux.com'}/paiement.html?id=${event_id}`,
-            metadata: {
-                event_id: event_id,
-                quantity: quantity.toString(),
-                customer_email: customerInfo.email,
-                customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-                customer_phone: customerInfo.phone || '',
-                customer_password: customerInfo.password || '',
-                association_id: eventData.association_id || '',
-                base_amount: baseAmount.toString(),
-                fee_amount: feeAmount.toString(),
-                platform_fee_percentage: feePercentage.toString(),
-                source: 'bdb_web'
-            },
+            metadata: stripeMetadata,
             payment_intent_data: {
-                metadata: {
-                    event_id: event_id,
-                    quantity: quantity.toString(),
-                    customer_email: customerInfo.email,
-                    customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-                    customer_phone: customerInfo.phone || '',
-                    customer_password: customerInfo.password || '',
-                    association_id: eventData.association_id || '',
-                    base_amount: baseAmount.toString(),
-                    fee_amount: feeAmount.toString(),
-                    platform_fee_percentage: feePercentage.toString(),
-                    source: 'bdb_web',
-                    environment: process.env.STRIPE_SECRET_KEY.startsWith('sk_live') ? 'production' : 'test'
-                }
+                metadata: paymentIntentMetadata
             }
         };
 
         // Ajouter les paramètres Stripe Connect si nécessaire
-        if (useConnectAccount && connectAccount && feeAmount > 0) {
-            sessionParams.payment_intent_data.application_fee_amount = Math.round(feeAmount * 100);
+        if (useConnectAccount && connectAccount && feeAmountCents > 0) {
+            sessionParams.payment_intent_data.application_fee_amount = feeAmountCents;
             sessionParams.payment_intent_data.transfer_data = {
                 destination: connectAccount.stripe_account_id
             };
