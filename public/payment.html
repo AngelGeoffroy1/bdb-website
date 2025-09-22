@@ -593,19 +593,40 @@
             return types
                 .map((type) => {
                     const price = parseFloat(type.price ?? type.amount ?? 0);
+                    const remainingCandidates = [
+                        type.quantity_limit,
+                        type.remaining_quantity,
+                        type.quantity_remaining,
+                        type.available_quantity,
+                        type.stock_remaining,
+                        type.stock,
+                        type.remaining,
+                        type.quantity
+                    ];
+
+                    let remainingQuantity = null;
+                    for (const candidate of remainingCandidates) {
+                        const parsed = parseNullableInt(candidate);
+                        if (parsed !== null) {
+                            remainingQuantity = parsed;
+                            break;
+                        }
+                    }
+
+                    const orderLimit = parseNullableInt(
+                        type.limit_per_order ??
+                        type.order_limit ??
+                        type.max_per_order ??
+                        type.quantity_limit_per_order
+                    );
+
                     return {
                         id: type.id,
                         name: type.name || 'Ticket',
                         description: type.description || '',
                         price: Number.isFinite(price) ? price : 0,
-                        quantity_limit: parseNullableInt(type.quantity_limit),
-                        remaining_quantity: parseNullableInt(
-                            type.remaining_quantity ??
-                            type.quantity_remaining ??
-                            type.available_quantity ??
-                            type.stock_remaining ??
-                            type.stock
-                        )
+                        remaining_quantity: remainingQuantity,
+                        order_limit: orderLimit
                     };
                 })
                 .filter((type) => type.id);
@@ -757,8 +778,8 @@
                     meta.appendChild(createMetaPill('Sold out'));
                 }
 
-                if (type.quantity_limit !== null) {
-                    meta.appendChild(createMetaPill(`Limit per order: ${type.quantity_limit}`));
+                if (type.order_limit !== null) {
+                    meta.appendChild(createMetaPill(`Limit per order: ${type.order_limit}`));
                 }
 
                 if (type.description) {
@@ -879,8 +900,8 @@
                 if (remaining !== null) {
                     max = Math.min(max, Math.max(remaining, 0));
                 }
-                if (selectedType.quantity_limit !== null) {
-                    max = Math.min(max, Math.max(selectedType.quantity_limit, 0));
+                if (selectedType.order_limit !== null) {
+                    max = Math.min(max, Math.max(selectedType.order_limit, 0));
                 }
             }
 
@@ -927,7 +948,7 @@
             }
 
             const remaining = selectedType ? getRemainingForType(selectedType) : parseNullableInt(state.event?.available_tickets);
-            const limit = selectedType?.quantity_limit;
+            const limit = selectedType?.order_limit;
             const hints = [];
 
             if (Number.isFinite(remaining)) {

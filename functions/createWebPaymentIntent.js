@@ -178,6 +178,7 @@ exports.handler = async (event) => {
         let ticketTypeName = null;
         let ticketTypeLimit = null;
         let ticketTypeRemaining = null;
+        let ticketTypePerOrderLimit = null;
 
         if (ticket_type_id) {
             console.log('🎟️ Récupération du type de billet sélectionné…', ticket_type_id);
@@ -216,8 +217,21 @@ exports.handler = async (event) => {
 
             unitPrice = ticketPrice;
             ticketTypeName = ticketTypeData.name || 'Billet';
-            ticketTypeLimit = parseNullableInt(ticketTypeData.quantity_limit);
+            ticketTypeLimit = parseNullableInt(
+                ticketTypeData.limit_per_order ??
+                ticketTypeData.order_limit ??
+                ticketTypeData.max_per_order ??
+                ticketTypeData.quantity_limit_per_order
+            );
+            ticketTypePerOrderLimit = ticketTypeLimit;
             ticketTypeRemaining = resolveRemainingQuantity(ticketTypeData);
+
+            if (ticketTypeRemaining === null) {
+                const quantityFromSchema = parseNullableInt(ticketTypeData.quantity_limit);
+                if (quantityFromSchema !== null) {
+                    ticketTypeRemaining = quantityFromSchema;
+                }
+            }
 
             if (ticketTypeLimit !== null && quantity > ticketTypeLimit) {
                 console.log('❌ Quantité demandée supérieure à la limite par commande pour ce type de billet', {
@@ -255,7 +269,7 @@ exports.handler = async (event) => {
                 ticket_type_id,
                 ticketTypeName,
                 ticketPrice,
-                ticketTypeLimit,
+                ticketTypePerOrderLimit,
                 ticketTypeRemaining
             });
         }
@@ -307,7 +321,8 @@ exports.handler = async (event) => {
             baseAmount,
             feeAmount,
             totalAmount,
-            ticket_type_id
+            ticket_type_id,
+            ticket_type_order_limit: ticketTypePerOrderLimit
         });
 
         // Vérifier si on doit utiliser Stripe Connect
@@ -401,8 +416,8 @@ exports.handler = async (event) => {
         if (ticket_type_id) {
             stripeMetadata.ticket_type_id = String(ticket_type_id);
             stripeMetadata.ticket_type_name = ticketTypeName || '';
-            if (ticketTypeLimit !== null) {
-                stripeMetadata.ticket_type_limit = ticketTypeLimit.toString();
+            if (ticketTypePerOrderLimit !== null) {
+                stripeMetadata.ticket_type_limit = ticketTypePerOrderLimit.toString();
             }
             if (ticketTypeRemaining !== null) {
                 stripeMetadata.ticket_type_remaining = ticketTypeRemaining.toString();

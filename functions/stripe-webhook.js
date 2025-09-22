@@ -221,6 +221,35 @@ exports.handler = async (event) => {
                         }
                     }
 
+                    if (ticketTypeId) {
+                        console.log('🔄 Mise à jour du stock pour le type de billet:', ticketTypeId);
+
+                        const { data: ticketTypeData, error: ticketTypeFetchError } = await supabase
+                            .from('event_ticket_types')
+                            .select('quantity_limit')
+                            .eq('id', ticketTypeId)
+                            .single();
+
+                        if (ticketTypeFetchError) {
+                            console.error('❌ Erreur lors de la récupération du type de billet:', ticketTypeFetchError);
+                        } else if (ticketTypeData?.quantity_limit === null || ticketTypeData?.quantity_limit === undefined) {
+                            console.log('ℹ️ Aucun suivi de stock pour ce type de billet (quantity_limit null)');
+                        } else {
+                            const updatedQuantityLimit = Math.max(0, Number(ticketTypeData.quantity_limit) - quantity);
+
+                            const { error: updateTicketTypeError } = await supabase
+                                .from('event_ticket_types')
+                                .update({ quantity_limit: updatedQuantityLimit })
+                                .eq('id', ticketTypeId);
+
+                            if (updateTicketTypeError) {
+                                console.error('❌ Erreur lors de la mise à jour du stock du type de billet:', updateTicketTypeError);
+                            } else {
+                                console.log('✅ Stock du type de billet mis à jour:', updatedQuantityLimit);
+                            }
+                        }
+                    }
+
                     console.log('🎉 Paiement web traité avec succès');
 
                     // Envoyer l'email de confirmation avec les QR codes

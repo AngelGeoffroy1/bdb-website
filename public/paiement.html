@@ -1191,8 +1191,8 @@
             return types
                 .map((type) => {
                     const price = parseFloat(type.price ?? type.amount ?? 0);
-                    const rawQuantityLimit = parseNullableInt(type.quantity_limit);
-                    const orderLimitFromPayload = parseNullableInt(
+                    const quantityFromSchema = parseNullableInt(type.quantity_limit);
+                    const orderLimit = parseNullableInt(
                         type.limit_per_order ??
                         type.order_limit ??
                         type.max_per_order ??
@@ -1200,6 +1200,7 @@
                     );
 
                     const remainingCandidates = [
+                        quantityFromSchema,
                         type.remaining_quantity,
                         type.quantity_remaining,
                         type.available_quantity,
@@ -1216,15 +1217,6 @@
                             remainingQuantity = parsed;
                             break;
                         }
-                    }
-
-                    if (remainingQuantity === null && rawQuantityLimit !== null) {
-                        remainingQuantity = rawQuantityLimit;
-                    }
-
-                    let orderLimit = orderLimitFromPayload;
-                    if (orderLimit === null && rawQuantityLimit !== null && remainingQuantity !== null && rawQuantityLimit < remainingQuantity) {
-                        orderLimit = rawQuantityLimit;
                     }
 
                     return {
