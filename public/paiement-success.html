@@ -371,6 +371,10 @@
         }
 
         async function pollForTickets(sessionId, retries = 6, delayMs = 1500) {
+            if (sessionData && Array.isArray(sessionData.tickets) && sessionData.tickets.length > 0) {
+                return;
+            }
+
             for (let attempt = 0; attempt < retries; attempt++) {
                 try {
                     const response = await fetch(`/.netlify/functions/getSessionData?session_id=${sessionId}&_t=${Date.now()}`);

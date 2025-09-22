@@ -1,4 +1,5 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { randomUUID } = require('crypto');
 
 exports.handler = async (event) => {
     if (event.httpMethod !== 'POST') {
@@ -37,7 +38,7 @@ exports.handler = async (event) => {
             case 'payment_intent.succeeded':
                 const paymentIntent = stripeEvent.data.object;
                 const metadata = paymentIntent.metadata;
-                
+                const ticketTypeId = metadata.ticket_type_id || metadata.ticketTypeId || null;
                 console.log('Paiement réussi:', {
                     paymentIntentId: paymentIntent.id,
                     amount: paymentIntent.amount,
@@ -135,35 +136,57 @@ exports.handler = async (event) => {
                     }
 
                     // Créer les tickets (un ticket par quantité)
-                    const tickets = [];
-                    for (let i = 0; i < quantity; i++) {
-                        const ticketData = {
-                            event_id: metadata.event_id,
-                            user_id: webUserId, // ID du compte Supabase créé
-                            quantity: 1, // Chaque ticket représente 1 place
-                            total_amount: totalAmount / quantity, // Montant unitaire
-                            customer_first_name: firstName,
-                            customer_last_name: lastName,
-                            customer_email: metadata.customer_email,
-                            customer_phone: metadata.customer_phone || null,
-                            ticket_code: require('crypto').randomUUID(),
-                            is_used: false,
-                            is_golden: false,
-                            skip_points_update: true, // Pas de mise à jour des points pour les achats web
-                            purchase_date: new Date().toISOString(),
-                            created_at: new Date().toISOString()
-                        };
-                        tickets.push(ticketData);
+                    const baseTicketPayload = {
+                        event_id: metadata.event_id,
+                        user_id: webUserId,
+                        quantity: 1,
+                        total_amount: totalAmount / quantity,
+                        customer_first_name: firstName,
+                        customer_last_name: lastName,
+                        customer_email: metadata.customer_email,
+                        customer_phone: metadata.customer_phone || null,
+                        ticket_code: randomUUID(),
+                        is_used: false,
+                        is_golden: false,
+                        skip_points_update: true,
+                        purchase_date: new Date().toISOString(),
+                        created_at: new Date().toISOString()
+                    };
+
+                    const tickets = Array.from({ length: quantity }, () => ({ ...baseTicketPayload, ticket_code: randomUUID() }));
+
+                    if (ticketTypeId) {
+                        tickets.forEach((ticket) => {
+                            ticket.ticket_type_id = ticketTypeId;
+                        });
                     }
 
                     // Insérer les tickets dans Supabase
-                    const { data: insertedTickets, error: ticketsError } = await supabase
+                    let { data: insertedTickets, error: ticketsError } = await supabase
                         .from('tickets')
                         .insert(tickets);
 
                     if (ticketsError) {
-                        console.error('❌ Erreur lors de l\'insertion des tickets:', ticketsError);
-                        throw new Error(`Erreur insertion tickets: ${ticketsError.message}`);
+                        const columnMissing = ticketTypeId &&
+                            (ticketsError?.message?.includes('ticket_type_id') || ticketsError?.details?.includes('ticket_type_id'));
+
+                        if (columnMissing) {
+                            console.warn('⚠️ Colonne ticket_type_id absente dans la table tickets. Réinsertion sans référence de type.');
+                            const fallbackTickets = tickets.map(({ ticket_type_id, ...rest }) => rest);
+                            const fallbackResult = await supabase
+                                .from('tickets')
+                                .insert(fallbackTickets);
+
+                            if (fallbackResult.error) {
+                                console.error('❌ Erreur lors de la réinsertion sans ticket_type_id:', fallbackResult.error);
+                                throw new Error(`Erreur insertion tickets: ${fallbackResult.error.message}`);
+                            }
+
+                            insertedTickets = fallbackResult.data;
+                        } else {
+                            console.error('❌ Erreur lors de l\'insertion des tickets:', ticketsError);
+                            throw new Error(`Erreur insertion tickets: ${ticketsError.message}`);
+                        }
                     }
 
                     console.log('✅ Tickets créés avec succès:', insertedTickets?.length || quantity);
