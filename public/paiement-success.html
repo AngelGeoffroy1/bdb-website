@@ -370,6 +370,27 @@
             }
         }
 
+        async function pollForTickets(sessionId, retries = 6, delayMs = 1500) {
+            for (let attempt = 0; attempt < retries; attempt++) {
+                try {
+                    const response = await fetch(`/.netlify/functions/getSessionData?session_id=${sessionId}&_t=${Date.now()}`);
+                    const data = await response.json();
+
+                    if (response.ok && data?.session) {
+                        if (Array.isArray(data.session.tickets) && data.session.tickets.length > 0) {
+                            sessionData = data.session;
+                            displaySuccessContent();
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Erreur lors du rafraîchissement automatique des tickets:', error);
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
+            }
+        }
+
         // Fonction pour générer un QR code
         function generateQRCode(text, containerId) {
             // Utiliser l'API QR Server pour générer le QR code
@@ -422,7 +443,7 @@
             `;
 
             // Afficher les QR codes si des tickets sont disponibles
-            if (sessionData.tickets && sessionData.tickets.length > 0) {
+            if (Array.isArray(sessionData.tickets) && sessionData.tickets.length > 0) {
                 console.log('🎫 Affichage des QR codes pour', sessionData.tickets.length, 'tickets');
                 
                 qrCodesContainer.innerHTML = '';
@@ -440,7 +461,8 @@
                 qrCodesSection.style.display = 'block';
             } else {
                 console.log('⚠️ Aucun ticket trouvé pour afficher les QR codes');
-                qrCodesSection.style.display = 'none';
+                qrCodesContainer.innerHTML = '<p>⚠️ Aucun ticket trouvé pour afficher les QR codes</p>';
+                qrCodesSection.style.display = 'block';
             }
 
             successContent.style.display = 'block';
@@ -484,6 +506,12 @@
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
             loadSessionData();
+
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session_id');
+            if (sessionId) {
+                pollForTickets(sessionId);
+            }
         });
     </script>
 </body>
