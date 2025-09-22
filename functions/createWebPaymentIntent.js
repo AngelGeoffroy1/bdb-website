@@ -414,6 +414,7 @@ exports.handler = async (event) => {
         };
 
         if (ticket_type_id) {
+            console.log('🎟️ Ajout du ticket_type_id aux métadonnées Stripe:', ticket_type_id);
             stripeMetadata.ticket_type_id = String(ticket_type_id);
             stripeMetadata.ticket_type_name = ticketTypeName || '';
             if (ticketTypePerOrderLimit !== null) {
@@ -422,6 +423,8 @@ exports.handler = async (event) => {
             if (ticketTypeRemaining !== null) {
                 stripeMetadata.ticket_type_remaining = ticketTypeRemaining.toString();
             }
+        } else {
+            console.log('ℹ️ Aucun ticket_type_id à ajouter aux métadonnées');
         }
 
         const paymentIntentMetadata = {

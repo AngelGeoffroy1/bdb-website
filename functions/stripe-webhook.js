@@ -43,7 +43,8 @@ exports.handler = async (event) => {
                     paymentIntentId: paymentIntent.id,
                     amount: paymentIntent.amount,
                     customerId: paymentIntent.customer,
-                    metadata: metadata
+                    metadata: metadata,
+                    ticketTypeId: ticketTypeId
                 });
 
                 try {
@@ -155,10 +156,14 @@ exports.handler = async (event) => {
 
                     const tickets = Array.from({ length: quantity }, () => ({ ...baseTicketPayload, ticket_code: randomUUID() }));
 
+                    // Ajouter le ticket_type_id à tous les tickets si disponible
                     if (ticketTypeId) {
+                        console.log('🎟️ Ajout du ticket_type_id aux tickets:', ticketTypeId);
                         tickets.forEach((ticket) => {
                             ticket.ticket_type_id = ticketTypeId;
                         });
+                    } else {
+                        console.log('ℹ️ Aucun ticket_type_id trouvé dans les métadonnées');
                     }
 
                     // Insérer les tickets dans Supabase
@@ -167,12 +172,25 @@ exports.handler = async (event) => {
                         .insert(tickets);
 
                     if (ticketsError) {
-                        const columnMissing = ticketTypeId &&
-                            (ticketsError?.message?.includes('ticket_type_id') || ticketsError?.details?.includes('ticket_type_id'));
+                        console.error('❌ Erreur lors de l\'insertion des tickets:', {
+                            error: ticketsError,
+                            ticketTypeId: ticketTypeId,
+                            ticketsCount: tickets.length
+                        });
+                        
+                        // Vérifier si l'erreur est liée à ticket_type_id
+                        const isTicketTypeIdError = ticketTypeId && 
+                            (ticketsError?.message?.includes('ticket_type_id') || 
+                             ticketsError?.details?.includes('ticket_type_id') ||
+                             ticketsError?.code === '23503'); // Foreign key constraint
 
-                        if (columnMissing) {
-                            console.warn('⚠️ Colonne ticket_type_id absente dans la table tickets. Réinsertion sans référence de type.');
+                        if (isTicketTypeIdError) {
+                            console.warn('⚠️ Erreur liée au ticket_type_id. Tentative de réinsertion sans cette référence.');
+                            
+                            // Créer des tickets sans ticket_type_id
                             const fallbackTickets = tickets.map(({ ticket_type_id, ...rest }) => rest);
+                            
+                            console.log('🔄 Réinsertion des tickets sans ticket_type_id...');
                             const fallbackResult = await supabase
                                 .from('tickets')
                                 .insert(fallbackTickets);
@@ -182,9 +200,10 @@ exports.handler = async (event) => {
                                 throw new Error(`Erreur insertion tickets: ${fallbackResult.error.message}`);
                             }
 
+                            console.log('✅ Tickets insérés sans ticket_type_id');
                             insertedTickets = fallbackResult.data;
                         } else {
-                            console.error('❌ Erreur lors de l\'insertion des tickets:', ticketsError);
+                            console.error('❌ Erreur non liée au ticket_type_id lors de l\'insertion des tickets');
                             throw new Error(`Erreur insertion tickets: ${ticketsError.message}`);
                         }
                     }
