@@ -2033,17 +2033,25 @@
                 }
             });
 
-            upcomingEvents.sort((a, b) => {
+            const getCreationDate = (event) => {
+                if (!event || !event.created_at) return 0;
+                const created = new Date(event.created_at);
+                return Number.isNaN(created.getTime()) ? 0 : created.getTime();
+            };
+
+            const compareByCreationThenEventDate = (a, b, isPast = false) => {
+                const creationDiff = getCreationDate(b) - getCreationDate(a);
+                if (creationDiff !== 0) {
+                    return creationDiff;
+                }
+
                 const dateA = parseEventDate(a.date) || new Date();
                 const dateB = parseEventDate(b.date) || new Date();
-                return dateA - dateB;
-            });
+                return isPast ? dateB - dateA : dateA - dateB;
+            };
 
-            pastEvents.sort((a, b) => {
-                const dateA = parseEventDate(a.date) || new Date(0);
-                const dateB = parseEventDate(b.date) || new Date(0);
-                return dateB - dateA;
-            });
+            upcomingEvents.sort((a, b) => compareByCreationThenEventDate(a, b, false));
+            pastEvents.sort((a, b) => compareByCreationThenEventDate(a, b, true));
 
             eventsGrid.innerHTML = upcomingEvents.map(event => createEventCard(event, false)).join('');
             pastEventsGrid.innerHTML = pastEvents.map(event => createEventCard(event, true)).join('');

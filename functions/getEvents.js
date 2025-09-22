@@ -53,6 +53,7 @@ exports.handler = async (event) => {
                 platform_fee,
                 association_id,
                 available_tickets,
+                created_at,
                 associations (
                     id,
                     name,
@@ -60,7 +61,7 @@ exports.handler = async (event) => {
                     cover_image_url
                 )
             `)
-            .order('date', { ascending: true });
+            .order('created_at', { ascending: false });
 
         if (eventsError) {
             console.error('❌ Erreur lors de la récupération des événements:', eventsError);
@@ -94,7 +95,8 @@ exports.handler = async (event) => {
             association_id: event.association_id,
             association_name: event.associations?.name || 'Association',
             association_logo: event.associations?.profile_image_url || event.associations?.cover_image_url,
-            available_tickets: event.available_tickets
+            available_tickets: event.available_tickets,
+            created_at: event.created_at
         }));
 
         return {
