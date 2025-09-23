@@ -271,48 +271,6 @@ exports.handler = async (event) => {
 
                     console.log('🎉 Paiement web traité avec succès');
 
-                    // Envoyer la notification aux admins de l'association
-                    try {
-                        console.log('🔔 Envoi de la notification aux admins...');
-                        
-                        // Récupérer les informations de l'événement pour la notification
-                        const { data: eventInfo, error: eventInfoError } = await supabase
-                            .from('events')
-                            .select('name, association_id')
-                            .eq('id', metadata.event_id)
-                            .single();
-
-                        if (!eventInfoError && eventInfo) {
-                            const notificationResponse = await fetch(`${process.env.URL || 'https://bureaudesbureaux.com'}/.netlify/functions/notify-admin-ticket-sale`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${process.env.NOTIFICATION_SERVER_API_KEY}`
-                                },
-                                body: JSON.stringify({
-                                    associationId: eventInfo.association_id,
-                                    eventId: metadata.event_id,
-                                    buyerId: webUserId,
-                                    eventName: eventInfo.name,
-                                    buyerName: `${firstName} ${lastName}`,
-                                    buyerProfileURL: null // TODO: Récupérer depuis la DB si nécessaire
-                                })
-                            });
-
-                            if (notificationResponse.ok) {
-                                const notificationData = await notificationResponse.json();
-                                console.log('✅ Notification aux admins envoyée:', notificationData.summary);
-                            } else {
-                                console.error('❌ Erreur lors de l\'envoi de la notification aux admins:', await notificationResponse.text());
-                            }
-                        } else {
-                            console.error('❌ Impossible de récupérer les informations de l\'événement pour la notification');
-                        }
-                    } catch (notificationError) {
-                        console.error('❌ Erreur lors de l\'envoi de la notification aux admins:', notificationError);
-                        // Ne pas faire échouer le webhook pour une erreur de notification
-                    }
-
                     // Envoyer l'email de confirmation avec les QR codes
                     try {
                         console.log('📧 Envoi de l\'email de confirmation...');

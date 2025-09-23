@@ -54,6 +54,10 @@ exports.handler = async (event) => {
                 association_id,
                 available_tickets,
                 created_at,
+                is_shotgun,
+                ticket_sale_start_date,
+                hide_available_tickets,
+                allows_golden_tickets,
                 associations (
                     id,
                     name,
@@ -96,7 +100,11 @@ exports.handler = async (event) => {
             association_name: event.associations?.name || 'Association',
             association_logo: event.associations?.profile_image_url || event.associations?.cover_image_url,
             available_tickets: event.available_tickets,
-            created_at: event.created_at
+            created_at: event.created_at,
+            is_shotgun: event.is_shotgun || false,
+            ticket_sale_start_date: event.ticket_sale_start_date,
+            hide_available_tickets: event.hide_available_tickets || false,
+            allows_golden_tickets: event.allows_golden_tickets !== false
         }));
 
         return {
