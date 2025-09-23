@@ -636,6 +636,16 @@
             box-shadow: none !important;
         }
 
+        .event-modal__buy:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(218,252,59,0.25);
+            background: linear-gradient(135deg, #DAFC3B, rgba(218,252,59,0.9)) !important;
+        }
+
+        .event-modal__buy:not(:disabled) {
+            transition: all 0.3s ease;
+        }
+
         .event-modal__close {
             position: absolute;
             top: 1.2rem;
