@@ -444,42 +444,6 @@
             pointer-events: none;
         }
 
-        .shotgun-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(218, 252, 59, 0.95);
-            color: #050505;
-            padding: 1rem 1.5rem;
-            border-radius: 15px;
-            text-align: center;
-            z-index: 11;
-            pointer-events: none;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .shotgun-overlay h4 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .shotgun-countdown {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .shotgun-countdown .time-unit {
-            display: inline-block;
-            background: rgba(5, 5, 5, 0.2);
-            padding: 0.2rem 0.4rem;
-            border-radius: 6px;
-            margin: 0 0.1rem;
-            min-width: 2rem;
-            text-align: center;
-        }
 
         .event-card.shotgun .buy-ticket-btn {
             display: none;
@@ -487,22 +451,25 @@
 
         .shotgun-badge {
             position: absolute;
-            top: 1rem;
-            left: 1rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: linear-gradient(135deg, #ff6b6b, #ee5a24);
             color: white;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             z-index: 12;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            text-align: center;
+            min-width: 120px;
         }
 
         .shotgun-badge i {
-            margin-right: 0.3rem;
+            margin-right: 0.4rem;
         }
 
         .past-badge {
@@ -1059,31 +1026,16 @@
                 font-size: 1.2rem;
             }
 
-            .shotgun-overlay {
-                padding: 0.8rem 1rem;
-            }
-
-            .shotgun-overlay h4 {
-                font-size: 1rem;
-                margin-bottom: 0.4rem;
-            }
-
-            .shotgun-countdown {
-                font-size: 0.8rem;
-            }
-
-            .shotgun-countdown .time-unit {
-                padding: 0.15rem 0.3rem;
-                margin: 0 0.05rem;
-                min-width: 1.5rem;
-                font-size: 0.75rem;
-            }
-
             .shotgun-badge {
-                padding: 0.3rem 0.6rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+                min-width: 100px;
+            }
+
+            .shotgun-badge small {
                 font-size: 0.7rem;
-                top: 0.8rem;
-                left: 0.8rem;
+                display: block;
+                margin-top: 0.2rem;
             }
         }
 
@@ -1454,7 +1406,6 @@
         let mapMarker = null;
         let geocoder = null;
         let pendingMapEvent = null;
-        let countdownIntervals = new Map();
 
         const modalElement = document.getElementById('event-modal');
         const modalCloseButton = modalElement.querySelector('.event-modal__close');
@@ -1804,6 +1755,19 @@
             });
         }
 
+        function formatShotgunDate(date) {
+            if (!(date instanceof Date)) {
+                return '';
+            }
+            return date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit'
+            }) + ' à ' + date.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
         function formatEventPriceBadge(value) {
             const price = Number(value);
             if (!Number.isFinite(price) || price <= 0) {
@@ -1846,22 +1810,14 @@
                 cardClasses += ' shotgun';
             }
 
-            let shotgunOverlay = '';
+            let shotgunBadge = '';
             if (isShotgun && !isSaleOpen && saleStartDate) {
-                const countdownId = `countdown-${event.id}`;
-                shotgunOverlay = `
+                const formattedDate = formatShotgunDate(saleStartDate);
+                shotgunBadge = `
                     <div class="shotgun-badge">
                         <i class="fas fa-clock"></i>
-                        Shotgun
-                    </div>
-                    <div class="shotgun-overlay">
-                        <h4>Billetterie fermée</h4>
-                        <p class="shotgun-countdown" id="${countdownId}">
-                            Ouverture dans <span class="time-unit" id="days-${event.id}">00</span>j 
-                            <span class="time-unit" id="hours-${event.id}">00</span>h 
-                            <span class="time-unit" id="minutes-${event.id}">00</span>m 
-                            <span class="time-unit" id="seconds-${event.id}">00</span>s
-                        </p>
+                        Shotgun<br>
+                        <small>Ouverture ${formattedDate}</small>
                     </div>
                 `;
             }
@@ -1870,7 +1826,7 @@
                 <article class="event-card${cardClasses}" data-event-id="${event.id}" tabindex="0" data-aos="fade-up" role="listitem">
                     <div class="event-image" style="background-image: url('${imageUrl}')">
                         <div class="event-price">${priceBadge}</div>
-                        ${shotgunOverlay}
+                        ${shotgunBadge}
                     </div>
                     <div class="event-content">
                         ${isPast ? '<div class="past-badge"><i class="fas fa-check-circle"></i>Évènement terminé</div>' : ''}
@@ -1894,59 +1850,6 @@
             `;
         }
 
-        function startCountdown(eventId, targetDate) {
-            // Nettoyer l'intervalle existant s'il y en a un
-            if (countdownIntervals.has(eventId)) {
-                clearInterval(countdownIntervals.get(eventId));
-            }
-
-            const updateCountdown = () => {
-                const now = new Date().getTime();
-                const distance = targetDate.getTime() - now;
-
-                if (distance < 0) {
-                    // Le décompte est terminé, recharger la page pour mettre à jour l'affichage
-                    clearInterval(countdownIntervals.get(eventId));
-                    countdownIntervals.delete(eventId);
-                    location.reload();
-                    return;
-                }
-
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                // Mettre à jour les éléments du DOM
-                const daysEl = document.getElementById(`days-${eventId}`);
-                const hoursEl = document.getElementById(`hours-${eventId}`);
-                const minutesEl = document.getElementById(`minutes-${eventId}`);
-                const secondsEl = document.getElementById(`seconds-${eventId}`);
-
-                if (daysEl) daysEl.textContent = days.toString().padStart(2, '0');
-                if (hoursEl) hoursEl.textContent = hours.toString().padStart(2, '0');
-                if (minutesEl) minutesEl.textContent = minutes.toString().padStart(2, '0');
-                if (secondsEl) secondsEl.textContent = seconds.toString().padStart(2, '0');
-            };
-
-            // Mettre à jour immédiatement
-            updateCountdown();
-            
-            // Puis toutes les secondes
-            const interval = setInterval(updateCountdown, 1000);
-            countdownIntervals.set(eventId, interval);
-        }
-
-        function startAllCountdowns() {
-            allEvents.forEach(event => {
-                if (event.is_shotgun && event.ticket_sale_start_date) {
-                    const saleStartDate = parseEventDate(event.ticket_sale_start_date);
-                    if (saleStartDate && saleStartDate > new Date()) {
-                        startCountdown(event.id, saleStartDate);
-                    }
-                }
-            });
-        }
 
         function attachEventInteractions(container) {
             if (!container) {
@@ -2268,8 +2171,6 @@
 
             renderOverviewMap(upcomingEvents, pastEvents);
 
-            // Démarrer les décomptes pour les événements en shotgun
-            startAllCountdowns();
 
             if (window.AOS && typeof window.AOS.refreshHard === 'function') {
                 window.AOS.refreshHard();
@@ -2298,13 +2199,6 @@
             window.location.href = `paiement.html?id=${eventId}`;
         }
 
-        // Nettoyer les intervalles de décompte
-        function clearAllCountdowns() {
-            countdownIntervals.forEach((interval, eventId) => {
-                clearInterval(interval);
-            });
-            countdownIntervals.clear();
-        }
 
         // Charger les événements au chargement de la page
         document.addEventListener('DOMContentLoaded', () => {
@@ -2319,8 +2213,6 @@
             });
         });
 
-        // Nettoyer les intervalles avant de quitter la page
-        window.addEventListener('beforeunload', clearAllCountdowns);
     </script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCOrw2XWhogK99BWNSZ1brDXqGuFOAW8c&callback=initEventMap"></script>
 </body>
