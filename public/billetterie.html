@@ -625,6 +625,17 @@
             box-shadow: 0 12px 30px rgba(218,252,59,0.25);
         }
 
+        .event-modal__buy:disabled {
+            transform: none !important;
+            box-shadow: none !important;
+            opacity: 0.8;
+        }
+
+        .event-modal__buy:disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
         .event-modal__close {
             position: absolute;
             top: 1.2rem;
@@ -1932,10 +1943,37 @@
                 modalStatus.hidden = false;
                 modalBuyButton.style.display = 'none';
             } else {
-                modalStatus.textContent = 'Évènement à venir';
-                modalStatus.classList.remove('past');
-                modalStatus.hidden = false;
-                modalBuyButton.style.display = 'inline-flex';
+                // Vérifier si l'événement est en shotgun et si la vente n'est pas encore ouverte
+                const isShotgun = event.is_shotgun && event.ticket_sale_start_date;
+                const saleStartDate = isShotgun ? parseEventDate(event.ticket_sale_start_date) : null;
+                const now = new Date();
+                const isSaleOpen = isShotgun ? (saleStartDate && now >= saleStartDate) : true;
+
+                if (isShotgun && !isSaleOpen && saleStartDate) {
+                    // Événement en shotgun fermé - afficher la date d'ouverture
+                    modalStatus.textContent = 'Shotgun - Billetterie fermée';
+                    modalStatus.classList.remove('past');
+                    modalStatus.hidden = false;
+                    modalBuyButton.style.display = 'none';
+                    
+                    // Remplacer le bouton par la date d'ouverture
+                    const formattedDate = formatShotgunDate(saleStartDate);
+                    modalBuyButton.innerHTML = `<i class="fas fa-clock"></i> Ouverture le ${formattedDate}`;
+                    modalBuyButton.style.display = 'inline-flex';
+                    modalBuyButton.style.background = 'rgba(255, 107, 107, 0.9)';
+                    modalBuyButton.style.cursor = 'not-allowed';
+                    modalBuyButton.disabled = true;
+                } else {
+                    // Événement normal ou shotgun ouvert
+                    modalStatus.textContent = 'Évènement à venir';
+                    modalStatus.classList.remove('past');
+                    modalStatus.hidden = false;
+                    modalBuyButton.innerHTML = '<i class="fas fa-ticket-alt"></i> Acheter un ticket';
+                    modalBuyButton.style.display = 'inline-flex';
+                    modalBuyButton.style.background = 'linear-gradient(135deg, var(--accent-color), rgba(218,252,59,0.8))';
+                    modalBuyButton.style.cursor = 'pointer';
+                    modalBuyButton.disabled = false;
+                }
             }
 
             modalElement.classList.add('active');
@@ -1969,7 +2007,7 @@
         });
 
         modalBuyButton.addEventListener('click', () => {
-            if (activeEvent) {
+            if (activeEvent && !modalBuyButton.disabled) {
                 buyTicket(activeEvent.id);
             }
         });
