@@ -636,14 +636,25 @@
             box-shadow: none !important;
         }
 
-        .event-modal__buy:not(:disabled):hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(218,252,59,0.25);
-            background: linear-gradient(135deg, #DAFC3B, rgba(218,252,59,0.9)) !important;
+        /* Animation de surbrillance pour le bouton shotgun fermé */
+        .event-modal__buy:disabled {
+            position: relative;
+            overflow: hidden;
         }
 
-        .event-modal__buy:not(:disabled) {
-            transition: all 0.3s ease;
+        .event-modal__buy:disabled::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .event-modal__buy:disabled:hover::before {
+            left: 100%;
         }
 
         .event-modal__close {
@@ -1968,7 +1979,7 @@
                     
                     // Remplacer le bouton par la date d'ouverture
                     const formattedDate = formatShotgunDate(saleStartDate);
-                    modalBuyButton.innerHTML = `<i class="fas fa-clock"></i> Ouverture le ${formattedDate}`;
+                    modalBuyButton.innerHTML = `Ouverture le ${formattedDate}`;
                     modalBuyButton.style.display = 'inline-flex';
                     modalBuyButton.style.background = 'rgba(255, 107, 107, 0.9)';
                     modalBuyButton.style.cursor = 'not-allowed';
