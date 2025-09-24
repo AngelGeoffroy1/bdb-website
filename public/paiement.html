@@ -853,6 +853,8 @@
     <div id="notification" class="notification"></div>
 
     <script>
+        console.log('🚀 Script de paiement chargé !');
+        
         // Variables globales
         let eventData = null;
         let quantity = 1;
@@ -1086,8 +1088,10 @@
 
         // Fonction pour charger les données de l'événement
         async function loadEventData() {
+            console.log('📡 Chargement des données de l\'événement...');
             const urlParams = new URLSearchParams(window.location.search);
             const eventId = urlParams.get('id');
+            console.log('🆔 ID de l\'événement:', eventId);
 
             if (!eventId) {
                 showError('ID d\'événement manquant');
@@ -1099,8 +1103,10 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    console.log('✅ Données de l\'événement reçues:', data.event);
                     eventData = data.event;
                     ticketTypes = normaliseTicketTypes(data.event.ticket_types || data.ticket_types || []);
+                    console.log('🎫 Types de tickets normalisés:', ticketTypes);
                     autoSelectTicketType();
                     ensureQuantityWithinBounds();
                     displayEventSummary();
