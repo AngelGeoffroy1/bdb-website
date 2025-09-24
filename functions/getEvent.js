@@ -187,7 +187,8 @@ exports.handler = async (event) => {
                     description: ticketType.description,
                     price: parseNullableNumber(ticketType.price) ?? 0,
                     quantity_limit: parseNullableInt(ticketType.quantity_limit),
-                    remaining_quantity: remainingQuantity
+                    remaining_quantity: remainingQuantity,
+                    members_only: Boolean(ticketType.members_only)
                 };
             }).filter((ticketType) => Boolean(ticketType.id))
             : [];
