@@ -1216,6 +1216,8 @@
 
         function normaliseTicketTypes(types) {
             if (!Array.isArray(types)) return [];
+            
+            console.log('🔍 Types de tickets reçus:', types);
 
             return types
                 .map((type) => {
@@ -1248,7 +1250,7 @@
                         }
                     }
 
-                    return {
+                    const normalizedType = {
                         id: type.id,
                         name: type.name || 'Billet',
                         description: type.description || '',
@@ -1257,6 +1259,12 @@
                         order_limit: orderLimit,
                         members_only: Boolean(type.members_only)
                     };
+                    
+                    if (normalizedType.members_only) {
+                        console.log('👑 Ticket réservé aux adhérents trouvé:', normalizedType.name);
+                    }
+                    
+                    return normalizedType;
                 })
                 .filter((type) => type.id);
         }
@@ -1372,6 +1380,7 @@
 
                 // Ajouter le message pour les tickets réservés aux adhérents
                 if (type.members_only) {
+                    console.log('🎨 Ajout du message orange pour:', type.name);
                     const membersNotice = document.createElement('div');
                     membersNotice.className = 'members-only-notice';
                     membersNotice.innerHTML = `
