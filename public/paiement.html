@@ -567,6 +567,18 @@
             cursor: not-allowed;
         }
 
+        .ticket-type-card.members-only {
+            opacity: 0.6;
+            cursor: not-allowed;
+            border-color: rgba(255, 165, 0, 0.3);
+            background: rgba(255, 165, 0, 0.05);
+        }
+
+        .ticket-type-card.members-only:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
         @keyframes ticket-select-pop {
             0% { transform: scale(1); }
             60% { transform: scale(1.04); }
@@ -664,6 +676,23 @@
 
         .selected-ticket-summary .value {
             font-weight: 600;
+        }
+
+        .members-only-notice {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            color: #ffa500;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .members-only-notice i {
+            font-size: 0.9rem;
         }
 
         @media (max-width: 768px) {
@@ -1225,7 +1254,8 @@
                         description: type.description || '',
                         price: Number.isFinite(price) ? price : 0,
                         remaining_quantity: remainingQuantity,
-                        order_limit: orderLimit
+                        order_limit: orderLimit,
+                        members_only: Boolean(type.members_only)
                     };
                 })
                 .filter((type) => type.id);
@@ -1246,7 +1276,7 @@
 
             if (ticketTypes.length === 1) {
                 const soleType = ticketTypes[0];
-                if (getRemainingForType(soleType) !== 0) {
+                if (getRemainingForType(soleType) !== 0 && !soleType.members_only) {
                     selectedTicketTypeId = soleType.id;
                 }
             } else {
@@ -1277,6 +1307,7 @@
 
                 const remaining = getRemainingForType(type);
                 const soldOut = remaining !== null && remaining <= 0;
+                const isMembersOnly = type.members_only;
 
                 if (selectedTicketTypeId === type.id) {
                     card.classList.add('selected');
@@ -1288,13 +1319,16 @@
                 if (soldOut) {
                     card.classList.add('disabled');
                 }
+                if (isMembersOnly) {
+                    card.classList.add('members-only');
+                }
 
                 const radio = document.createElement('input');
                 radio.type = 'radio';
                 radio.name = 'ticketType';
                 radio.value = type.id;
                 radio.checked = selectedTicketTypeId === type.id;
-                radio.disabled = soldOut;
+                radio.disabled = soldOut || isMembersOnly;
                 card.appendChild(radio);
 
                 const header = document.createElement('div');
@@ -1336,8 +1370,19 @@
                     card.appendChild(description);
                 }
 
+                // Ajouter le message pour les tickets réservés aux adhérents
+                if (type.members_only) {
+                    const membersNotice = document.createElement('div');
+                    membersNotice.className = 'members-only-notice';
+                    membersNotice.innerHTML = `
+                        <i class="fas fa-crown"></i>
+                        <span>Ce ticket est réservé aux adhérents. Installez l'app BDB pour y accéder.</span>
+                    `;
+                    card.appendChild(membersNotice);
+                }
+
                 card.addEventListener('click', (event) => {
-                    if (soldOut) return;
+                    if (soldOut || isMembersOnly) return;
                     if (event.target.tagName !== 'INPUT') {
                         radio.checked = true;
                     }
@@ -1357,6 +1402,12 @@
         }
 
         function handleTicketTypeSelection(typeId) {
+            const selectedType = ticketTypes.find(type => type.id === typeId);
+            if (selectedType && selectedType.members_only) {
+                // Empêcher la sélection des tickets réservés aux adhérents
+                return;
+            }
+            
             selectedTicketTypeId = typeId;
             const error = document.getElementById('ticket-type-error');
             if (error) {
